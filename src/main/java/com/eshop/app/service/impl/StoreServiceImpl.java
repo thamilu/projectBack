@@ -80,6 +80,7 @@ public class StoreServiceImpl implements StoreService {
 
         Store store = Store.builder()
                 .storeName(request.getStoreName())
+                .shopHandle(request.getShopHandle())
                 .description(description)
                 .addressLine1(request.getAddressLine1())
                 .addressLine2(request.getAddressLine2())
@@ -111,6 +112,7 @@ public class StoreServiceImpl implements StoreService {
         }
 
         store.setStoreName(request.getStoreName());
+        store.setShopHandle(request.getShopHandle());
         String description = request.getDescription();
         if (description == null || description.isBlank()) {
             description = "Welcome to " + request.getStoreName();
@@ -229,31 +231,7 @@ public class StoreServiceImpl implements StoreService {
                         log.info("JIT: Synced SellerProfile status to ACTIVE");
                     }
 
-                    String fName = user.getUserProfile() != null ? user.getUserProfile().getFirstName() : null;
-                    String lName = user.getUserProfile() != null ? user.getUserProfile().getLastName() : null;
-                    String fullName = (fName != null ? fName : "") + (lName != null ? " " + lName : "");
-                    fullName = fullName.trim();
-
-                    String storeName = profile.getBusinessName() != null && !profile.getBusinessName().isBlank()
-                            ? profile.getBusinessName()
-                            : (!fullName.isEmpty() ? fullName
-                                    : "Store-" + user.getKeycloakId().substring(0, 8));
-
-                    Store newStore = Store.builder()
-                            .sellerProfile(profile)
-                            .storeName(storeName)
-                            .description("Welcome to " + storeName)
-                            .phone(profile.getBusinessMobileNumber() != null ? profile.getBusinessMobileNumber() : (user.getUserProfile() != null ? user.getUserProfile().getPhone() : null))
-                            .addressLine1(profile.getStoreAddressLine1() != null ? profile.getStoreAddressLine1() : profile.getAddressLine1())
-                            .addressLine2(profile.getStoreAddressLine2() != null ? profile.getStoreAddressLine2() : profile.getAddressLine2())
-                            .city(profile.getStoreCity() != null ? profile.getStoreCity() : profile.getCity())
-                            .district(profile.getStoreDistrict() != null ? profile.getStoreDistrict() : profile.getDistrict())
-                            .state(profile.getStoreState() != null ? profile.getStoreState() : profile.getState())
-                            .country(profile.getStoreCountry() != null ? profile.getStoreCountry() : profile.getCountry())
-                            .postalCode(profile.getStorePincode() != null ? profile.getStorePincode() : profile.getPincode())
-                            .googleMapsUrl(profile.getGoogleMapsUrl())
-                            .active(true)
-                            .build();
+                    Store newStore = storeMapper.toStore(profile);
 
                     Store saved = storeRepository.save(newStore);
                     log.info("JIT: Successfully created store ID: {} for user: {}", saved.getId(), identifiedUserId);
@@ -303,32 +281,7 @@ public class StoreServiceImpl implements StoreService {
     }
 
     private boolean syncMissingStoreData(Store store) {
-        com.eshop.app.entity.SellerProfile profile = store.getSellerProfile();
-        if (profile == null) return false;
-        
-        boolean changed = false;
-        if (isBlank(store.getAddressLine1()) && !isBlank(profile.getStoreAddressLine1())) { store.setAddressLine1(profile.getStoreAddressLine1()); changed = true; }
-        if (isBlank(store.getAddressLine1()) && !isBlank(profile.getAddressLine1())) { store.setAddressLine1(profile.getAddressLine1()); changed = true; }
-        
-        if (isBlank(store.getCity()) && !isBlank(profile.getStoreCity())) { store.setCity(profile.getStoreCity()); changed = true; }
-        if (isBlank(store.getCity()) && !isBlank(profile.getCity())) { store.setCity(profile.getCity()); changed = true; }
-        
-        if (isBlank(store.getState()) && !isBlank(profile.getStoreState())) { store.setState(profile.getStoreState()); changed = true; }
-        if (isBlank(store.getState()) && !isBlank(profile.getState())) { store.setState(profile.getState()); changed = true; }
-        
-        if (isBlank(store.getPhone()) && !isBlank(profile.getBusinessMobileNumber())) { store.setPhone(profile.getBusinessMobileNumber()); changed = true; }
-        
-        if (isBlank(store.getPostalCode()) && !isBlank(profile.getStorePincode())) { store.setPostalCode(profile.getStorePincode()); changed = true; }
-        if (isBlank(store.getPostalCode()) && !isBlank(profile.getPincode())) { store.setPostalCode(profile.getPincode()); changed = true; }
-
-        // Description Sync: If store has default "Welcome to..." and profile has a custom one, sync it
-        if (!isBlank(profile.getDescription()) && 
-            (isBlank(store.getDescription()) || store.getDescription().startsWith("Welcome to "))) {
-            store.setDescription(profile.getDescription());
-            changed = true;
-        }
-
-        return changed;
+        return storeMapper.syncMissingData(store, store.getSellerProfile());
     }
 
     private boolean isBlank(String s) {

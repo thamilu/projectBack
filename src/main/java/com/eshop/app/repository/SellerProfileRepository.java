@@ -18,6 +18,12 @@ public interface SellerProfileRepository extends JpaRepository<SellerProfile, Lo
 
     boolean existsByUser_Id(Long userId);
 
+    boolean existsByShopName(String shopName);
+    
+    boolean existsByShopHandle(String shopHandle);
+    
+    boolean existsByShopHandleAndIdNot(String shopHandle, Long id);
+
     @Query("SELECT COUNT(sp) FROM SellerProfile sp WHERE sp.identityType = :type")
     long countByIdentityType(@Param("type") SellerIdentityType type);
 

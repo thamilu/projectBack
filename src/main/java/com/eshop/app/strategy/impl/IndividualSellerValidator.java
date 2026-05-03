@@ -21,7 +21,8 @@ public class IndividualSellerValidator implements SellerRegistrationValidator {
             throw new ValidationException("PAN number is required for INDIVIDUAL sellers", "MISSING_PAN_NUMBER");
         }
 
-        if (!request.getPanNumber().matches("^[A-Z]{5}[0-9]{4}[A-Z]{1}$")) {
+        String pan = request.getPanNumber();
+        if (pan == null || !pan.trim().matches("^[A-Z]{5}[0-9]{4}[A-Z]{1}$")) {
             throw new ValidationException("Invalid PAN number format", "INVALID_PAN_FORMAT");
         }
     }

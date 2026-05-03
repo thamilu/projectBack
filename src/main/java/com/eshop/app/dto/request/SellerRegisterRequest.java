@@ -39,9 +39,31 @@ public class SellerRegisterRequest {
     @Size(min = 2, max = 200, message = "Business name must be between 2 and 200 characters")
     private String businessName;
 
+    @Size(min = 2, max = 250, message = "Shop handle must be between 2 and 250 characters")
+    @Pattern(regexp = "^[a-z0-9-]+$", message = "Shop handle must be lowercase alphanumeric with hyphens")
+    private String shopHandle;
+
+    private String shopLogoUrl;
+
+    private String firstName;
+    private String lastName;
+
+    @NotBlank(message = "Personal phone number is required")
     @Size(max = 20, message = "Phone must not exceed 20 characters")
     private String phone;
 
+    @Size(max = 20, message = "Alternate phone must not exceed 20 characters")
+    private String alternatePhone;
+
+    @Size(max = 20, message = "Gender must not exceed 20 characters")
+    private String gender;
+
+    @Size(max = 20, message = "Preferred language must not exceed 20 characters")
+    private String preferredLanguage;
+
+    private java.time.LocalDate dateOfBirth;
+
+    @NotBlank(message = "Business phone number is required")
     @Size(max = 20, message = "Business Phone must not exceed 20 characters")
     private String businessPhone;
 
@@ -96,12 +118,24 @@ public class SellerRegisterRequest {
     private Integer minOrderQuantity;
 
     // ─── Step 5: Address Details ───────────────────────────────
+    @NotBlank(message = "Address Line 1 is required")
     private String addressLine1;
+    
     private String addressLine2;
+
+    @NotBlank(message = "City is required")
     private String city;
+    
     private String district;
+
+    @NotBlank(message = "State is required")
     private String state;
+
+    @NotBlank(message = "Pincode is required")
+    @Pattern(regexp = "^[0-9]{6}$", message = "Pincode must be exactly 6 digits")
     private String pincode;
+
+    @NotBlank(message = "Country is required")
     private String country;
 
     // Store / Warehouse Address (Distinct from personal address)

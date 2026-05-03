@@ -15,6 +15,7 @@ public class StoreResponse {
     
     private Long id;
     private String storeName;
+    private String shopHandle;
     private String description;
     private String addressLine1;
     private String addressLine2;
@@ -30,7 +31,9 @@ public class StoreResponse {
     private String logoUrl;
     private String domain;
     private Boolean active;
+    private Boolean isVerified;
     private Double rating;
+    private Long totalRatings;
     private Long sellerId;
     private String sellerUsername;
     private LocalDateTime createdAt;

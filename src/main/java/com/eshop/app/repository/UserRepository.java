@@ -17,6 +17,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByKeycloakId(String keycloakId);
 
     Page<User> findByRole(UserRole role, Pageable pageable);
+    java.util.List<User> findAllByRole(UserRole role);
 
     @Query("SELECT u FROM User u JOIN u.userProfile up WHERE " +
             "LOWER(up.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +

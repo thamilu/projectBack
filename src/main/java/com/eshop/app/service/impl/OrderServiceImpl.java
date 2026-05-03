@@ -444,6 +444,17 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
+    public com.eshop.app.dto.response.SellerAggregationMetricsDTO getSellerAggregationMetrics(Long sellerId) {
+        return orderRepository.getSellerAggregationMetrics(
+                sellerId,
+                com.eshop.app.util.DateTimeUtils.startOfDay(),
+                com.eshop.app.util.DateTimeUtils.startOfWeek(),
+                com.eshop.app.util.DateTimeUtils.startOfMonth()
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> getRecentOrdersBySellerId(Long sellerId, int limit) {
         return orderRepository
                 .findRecentOrdersBySellerId(sellerId, org.springframework.data.domain.PageRequest.of(0, limit))

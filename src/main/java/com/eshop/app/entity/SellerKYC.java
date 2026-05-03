@@ -40,6 +40,9 @@ public class SellerKYC extends BaseEntity {
     @Column(name = "gstin", length = 20)
     private String gstin;
 
+    @Column(name = "aadhar", length = 20)
+    private String aadhar;
+
     @Column(name = "gst_registered")
     @Builder.Default
     private Boolean gstRegistered = false;

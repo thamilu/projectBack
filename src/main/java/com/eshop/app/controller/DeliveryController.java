@@ -3,7 +3,7 @@ package com.eshop.app.controller;
 import com.eshop.app.dto.request.DeliveryAgentRegisterRequest;
 import com.eshop.app.dto.response.DeliveryAgentProfileResponse;
 import com.eshop.app.service.DeliveryAgentService;
-import com.eshop.app.service.SellerService; // Reusing user resolution logic or I should extract it
+import com.eshop.app.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 public class DeliveryController {
 
     private final DeliveryAgentService deliveryAgentService;
-    private final SellerService sellerService; // Using this for resolveUserId for now to avoid duplication
 
     @PostMapping("/register")
     @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('CUSTOMER', 'DELIVERY_AGENT', 'ADMIN')")
@@ -30,7 +29,7 @@ public class DeliveryController {
             @Valid @RequestBody DeliveryAgentRegisterRequest request,
             Authentication authentication) {
 
-        Long userId = sellerService.resolveUserId(authentication);
+        Long userId = SecurityUtils.getAuthenticatedUserId();
         return ResponseEntity.ok(deliveryAgentService.registerDeliveryAgent(userId, request));
     }
 }

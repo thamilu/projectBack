@@ -90,4 +90,24 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         @EntityGraph(attributePaths = { "items" })
         @Query("SELECT o FROM Order o JOIN o.items oi WHERE oi.product.store.sellerProfile.user.id = :sellerId ORDER BY o.createdAt DESC")
         java.util.List<Order> findRecentOrdersBySellerId(@Param("sellerId") Long sellerId, Pageable pageable);
+
+        /**
+         * Enterprise-optimized aggregation query to fetch all seller metrics in a single database round-trip.
+         * Prevents N+1 service-level calls by using conditional aggregation.
+         */
+        @Query("SELECT new com.eshop.app.dto.response.SellerAggregationMetricsDTO(" +
+               "COALESCE(SUM(CASE WHEN o.createdAt >= :today THEN o.totalAmount ELSE 0 END), 0), " +
+               "COALESCE(SUM(CASE WHEN o.createdAt >= :week THEN o.totalAmount ELSE 0 END), 0), " +
+               "COALESCE(SUM(CASE WHEN o.createdAt >= :month THEN o.totalAmount ELSE 0 END), 0), " +
+               "COALESCE(SUM(o.totalAmount), 0), " +
+               "COUNT(CASE WHEN o.orderStatus = com.eshop.app.entity.Order.OrderStatus.PLACED THEN 1 END), " +
+               "COUNT(CASE WHEN o.orderStatus = com.eshop.app.entity.Order.OrderStatus.CONFIRMED THEN 1 END), " +
+               "COUNT(CASE WHEN o.orderStatus = com.eshop.app.entity.Order.OrderStatus.SHIPPED THEN 1 END), " +
+               "COUNT(CASE WHEN o.orderStatus = com.eshop.app.entity.Order.OrderStatus.DELIVERED THEN 1 END)" +
+               ") FROM Order o JOIN o.items oi WHERE oi.product.store.sellerProfile.user.id = :sellerId")
+        com.eshop.app.dto.response.SellerAggregationMetricsDTO getSellerAggregationMetrics(
+                @Param("sellerId") Long sellerId,
+                @Param("today") LocalDateTime today,
+                @Param("week") LocalDateTime week,
+                @Param("month") LocalDateTime month);
 }

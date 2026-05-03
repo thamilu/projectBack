@@ -20,9 +20,12 @@ public class SellerDashboardService {
         private final com.eshop.app.service.analytics.SellerAggregationService sellerAggregationService;
 
     public SellerDashboardResponse getDashboard(Long sellerId) {
+        // Fetch all order/sales metrics in ONE single database query
+        com.eshop.app.dto.response.SellerAggregationMetricsDTO metrics = orderService.getSellerAggregationMetrics(sellerId);
+
         SellerDashboardResponse.StoreOverview storeOverview = sellerAggregationService.buildStoreOverview(sellerId);
-        SellerDashboardResponse.SalesMetrics sales = sellerAggregationService.buildSalesMetrics(sellerId);
-        SellerDashboardResponse.OrderManagement om = sellerAggregationService.buildOrderManagement(sellerId);
+        SellerDashboardResponse.SalesMetrics sales = sellerAggregationService.buildSalesMetrics(sellerId, metrics);
+        SellerDashboardResponse.OrderManagement om = sellerAggregationService.buildOrderManagement(sellerId, metrics);
 
         return SellerDashboardResponse.builder()
                 .storeOverview(storeOverview)

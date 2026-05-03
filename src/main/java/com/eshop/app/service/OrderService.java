@@ -59,6 +59,12 @@ public interface OrderService {
 
     long getCompletedOrderCountBySellerId(Long sellerId);
 
+    /**
+     * Enterprise-optimized method to fetch all seller aggregation metrics in a single database call.
+     * Replaces multiple sequential repository calls to improve performance.
+     */
+    com.eshop.app.dto.response.SellerAggregationMetricsDTO getSellerAggregationMetrics(Long sellerId);
+
     java.util.List<java.util.Map<String, Object>> getRecentOrdersBySellerId(Long sellerId, int limit);
 
     java.util.List<java.util.Map<String, Object>> getDailySalesData();

@@ -32,7 +32,13 @@ import static org.mockito.Mockito.doNothing;
 public class SellerProfileReproductionTest {
 
     @Autowired
-    private SellerService sellerService;
+    private SellerRegistrationService sellerRegistrationService;
+    
+    @Autowired
+    private SellerProfileService sellerProfileService;
+    
+    @Autowired
+    private SellerAdminService sellerAdminService;
 
     @Autowired
     private UserRepository userRepository;
@@ -50,12 +56,20 @@ public class SellerProfileReproductionTest {
         // Mock Keycloak calls
         doNothing().when(keycloakService).assignRole(anyString(), anyString());
 
-        // Create a test user
+        // Create a test user with proper back-reference
         testUser = User.builder()
                 .keycloakId("test-keycloak-id")
                 .role(UserRole.CUSTOMER) // Starts as CUSTOMER
-                .userProfile(UserProfile.builder().firstName("Test").lastName("Seller").phone("9876543210").build())
                 .build();
+        
+        UserProfile profile = UserProfile.builder()
+                .user(testUser)
+                .firstName("Test")
+                .lastName("Seller")
+                .phone("9876543210")
+                .build();
+        
+        testUser.setUserProfile(profile);
         testUser = userRepository.save(testUser);
     }
 
@@ -67,13 +81,37 @@ public class SellerProfileReproductionTest {
         request.setIdentityType(SellerIdentityType.INDIVIDUAL);
         request.setBusinessTypes(Set.of(com.eshop.app.enums.SellerBusinessType.FARMER));
         request.setShopName("Test Farm Repro");
-        request.setBusinessName("Test Farm Business"); // Required for some logic potentially?
+        request.setShopHandle("test-farm-repro");
+        request.setBusinessName("Test Farm Business"); 
         request.setDescription("Test Description");
         request.setAcceptedTerms(true);
         request.setFarmLocationVillage("Test Village");
         request.setLandArea("5 Acres");
+        request.setIsOwnProduce(true);
+        
+        // Verification details
+        request.setPanNumber("ABCDE1234F");
+        request.setAadhar("123456789012");
+        
+        // Use proper address fields as required by validators/processors
+        request.setAddressLine1("123 Test St");
+        request.setCity("Test City");
+        request.setDistrict("Test District");
+        request.setState("Test State");
+        request.setPincode("123456");
+        request.setCountry("India");
+        request.setPhone("9876543210");
+        request.setBusinessPhone("9876543211");
+        
+        // Store/Warehouse address (Physical presence check)
+        request.setStoreAddressLine1("456 Warehouse Way");
+        request.setStoreCity("Test City");
+        request.setStoreDistrict("Test District");
+        request.setStoreState("Test State");
+        request.setStorePincode("123456");
+        request.setStoreCountry("India");
 
-        SellerProfileResponse registerResponse = sellerService.registerSeller(testUser.getId(), request);
+        SellerProfileResponse registerResponse = sellerRegistrationService.registerSeller(testUser.getId(), request);
 
         assertNotNull(registerResponse);
         assertEquals(SellerStatus.PENDING, registerResponse.getStatus());
@@ -83,16 +121,14 @@ public class SellerProfileReproductionTest {
         assertTrue(sellerProfileRepository.existsByUser_Id(testUser.getId()));
 
         // 2. Approve Seller (Admin action)
-        sellerService.approveSeller(registerResponse.getId(), "admin-user");
+        sellerAdminService.approveSeller(registerResponse.getId(), "admin-user");
 
         // Verify Status is ACTIVE
         SellerProfile approvedProfile = sellerProfileRepository.findById(registerResponse.getId()).orElseThrow();
         assertEquals(SellerStatus.ACTIVE, approvedProfile.getStatus());
 
         // 3. Retrieve Profile via Service (Simulating controller call)
-        // Note: In real flow, the user role might update in Keycloak but here we mock
-        // it/or assert DB state
-        SellerProfileResponse fetchedResponse = sellerService.getSellerProfile(testUser.getId());
+        SellerProfileResponse fetchedResponse = sellerProfileService.getSellerProfile(testUser.getId());
 
         assertNotNull(fetchedResponse);
         assertEquals(SellerStatus.ACTIVE, fetchedResponse.getStatus());

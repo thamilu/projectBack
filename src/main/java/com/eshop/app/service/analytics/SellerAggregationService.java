@@ -38,13 +38,14 @@ public class SellerAggregationService {
         }
     }
 
-    public SellerDashboardResponse.SalesMetrics buildSalesMetrics(Long sellerId) {
+    public SellerDashboardResponse.SalesMetrics buildSalesMetrics(Long sellerId, com.eshop.app.dto.response.SellerAggregationMetricsDTO metrics) {
         try {
+            if (metrics == null) metrics = orderService.getSellerAggregationMetrics(sellerId);
             return SellerDashboardResponse.SalesMetrics.builder()
-                    .todaySales(orderService.getTodayRevenueBySellerId(sellerId))
-                    .weeklySales(orderService.getWeeklyRevenueBySellerId(sellerId))
-                    .monthlySales(orderService.getMonthlyRevenueBySellerId(sellerId))
-                    .totalSales(orderService.getTotalRevenueBySellerId(sellerId))
+                    .todaySales(metrics.getTodaySales())
+                    .weeklySales(metrics.getWeeklySales())
+                    .monthlySales(metrics.getMonthlySales())
+                    .totalSales(metrics.getTotalSales())
                     .build();
         } catch (Exception e) {
             log.error("Failed to build sales metrics for {}: {}", sellerId, e.getMessage(), e);
@@ -52,13 +53,14 @@ public class SellerAggregationService {
         }
     }
 
-    public SellerDashboardResponse.OrderManagement buildOrderManagement(Long sellerId) {
+    public SellerDashboardResponse.OrderManagement buildOrderManagement(Long sellerId, com.eshop.app.dto.response.SellerAggregationMetricsDTO metrics) {
         try {
+            if (metrics == null) metrics = orderService.getSellerAggregationMetrics(sellerId);
             return SellerDashboardResponse.OrderManagement.builder()
-                    .newOrders(orderService.getNewOrderCountBySellerId(sellerId))
-                    .processingOrders(orderService.getProcessingOrderCountBySellerId(sellerId))
-                    .shippedOrders(orderService.getShippedOrderCountBySellerId(sellerId))
-                    .completedOrders(orderService.getCompletedOrderCountBySellerId(sellerId))
+                    .newOrders(metrics.getNewOrders())
+                    .processingOrders(metrics.getProcessingOrders())
+                    .shippedOrders(metrics.getShippedOrders())
+                    .completedOrders(metrics.getCompletedOrders())
                     .build();
         } catch (Exception e) {
             log.error("Failed to build order management for {}: {}", sellerId, e.getMessage(), e);
@@ -70,11 +72,11 @@ public class SellerAggregationService {
         return CompletableFuture.supplyAsync(() -> buildStoreOverview(sellerId), dashboardExecutor);
     }
 
-    public CompletableFuture<SellerDashboardResponse.SalesMetrics> buildSalesMetricsAsync(Long sellerId) {
-        return CompletableFuture.supplyAsync(() -> buildSalesMetrics(sellerId), dashboardExecutor);
+    public CompletableFuture<SellerDashboardResponse.SalesMetrics> buildSalesMetricsAsync(Long sellerId, com.eshop.app.dto.response.SellerAggregationMetricsDTO metrics) {
+        return CompletableFuture.supplyAsync(() -> buildSalesMetrics(sellerId, metrics), dashboardExecutor);
     }
 
-    public CompletableFuture<SellerDashboardResponse.OrderManagement> buildOrderManagementAsync(Long sellerId) {
-        return CompletableFuture.supplyAsync(() -> buildOrderManagement(sellerId), dashboardExecutor);
+    public CompletableFuture<SellerDashboardResponse.OrderManagement> buildOrderManagementAsync(Long sellerId, com.eshop.app.dto.response.SellerAggregationMetricsDTO metrics) {
+        return CompletableFuture.supplyAsync(() -> buildOrderManagement(sellerId, metrics), dashboardExecutor);
     }
 }

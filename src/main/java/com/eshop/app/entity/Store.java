@@ -29,6 +29,9 @@ public class Store extends BaseEntity {
     @Column(nullable = false, length = 1000)
     private String description;
     
+    @Column(name = "shop_handle", length = 100, unique = true)
+    private String shopHandle;
+    
     @Column(name = "address_line1", length = 500)
     private String addressLine1;
 

@@ -1,173 +1,95 @@
 package com.eshop.app.mapper;
 
+import com.eshop.app.dto.request.SellerRegisterRequest;
+import com.eshop.app.dto.request.SellerProfileUpdateRequest;
 import com.eshop.app.dto.response.*;
 import com.eshop.app.entity.*;
-import org.springframework.stereotype.Component;
+import org.mapstruct.*;
 
-import java.util.HashSet;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Set;
 
 /**
- * Dedicated mapper for {@link SellerProfile} → {@link SellerProfileResponse}.
- * <p>
- * Maps the core profile and all sub-entities (KYC, documents, bank accounts,
- * farmer details, business details, wholesale config) into a single response DTO.
+ * Enterprise-grade MapStruct mapper for {@link SellerProfile}.
+ * Automatically generates high-performance mapping code at compile time.
  */
-@Component
-public class SellerMapper {
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, builder = @Builder(disableBuilder = true))
+public interface SellerMapper {
 
-    /**
-     * Convert a {@link SellerProfile} entity to its API response DTO.
-     *
-     * @param profile the seller profile entity (must not be null)
-     * @return populated {@link SellerProfileResponse}
-     */
-    public SellerProfileResponse toResponse(SellerProfile profile) {
-        // Fetch personal info from UserProfile via the shared user_id FK chain:
-        // seller_profiles.user_id → users.id → user_profiles.user_id
-        // No direct FK from seller_profiles to user_profiles is needed.
-        UserProfile up = (profile.getUser() != null) ? profile.getUser().getUserProfile() : null;
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "email", source = "user.email")
+    // Personal Info from UserProfile
+    @Mapping(target = "firstName", source = "user.userProfile.firstName")
+    @Mapping(target = "lastName", source = "user.userProfile.lastName")
+    @Mapping(target = "profileImageUrl", source = "user.userProfile.profileImageUrl")
+    @Mapping(target = "gender", source = "user.userProfile.gender")
+    @Mapping(target = "dateOfBirth", source = "user.userProfile.dateOfBirth")
+    @Mapping(target = "preferredLanguage", source = "user.userProfile.preferredLanguage")
+    @Mapping(target = "personalMobileNumber", source = "user.userProfile.phone")
+    @Mapping(target = "alternatePhone", source = "user.userProfile.alternatePhone")
+    // Identity label
+    @Mapping(target = "identityTypeLabel", expression = "java(profile.getIdentityType() != null ? profile.getIdentityType().getDisplayName() : null)")
+    // Address Fallbacks logic handled via custom after-mapping if needed, but simple ones here:
+    @Mapping(target = "addressLine1", expression = "java(profile.getUser() != null && profile.getUser().getUserProfile() != null && !profile.getUser().getUserProfile().getAddresses().isEmpty() ? profile.getUser().getUserProfile().getAddresses().get(0).getAddressLine1() : null)")
+    @Mapping(target = "city", expression = "java(profile.getUser() != null && profile.getUser().getUserProfile() != null && !profile.getUser().getUserProfile().getAddresses().isEmpty() ? profile.getUser().getUserProfile().getAddresses().get(0).getCity() : null)")
+    @Mapping(target = "state", expression = "java(profile.getUser() != null && profile.getUser().getUserProfile() != null && !profile.getUser().getUserProfile().getAddresses().isEmpty() ? profile.getUser().getUserProfile().getAddresses().get(0).getState() : null)")
+    @Mapping(target = "pincode", expression = "java(profile.getUser() != null && profile.getUser().getUserProfile() != null && !profile.getUser().getUserProfile().getAddresses().isEmpty() ? profile.getUser().getUserProfile().getAddresses().get(0).getPincode() : null)")
+    // Store logic
+    @Mapping(target = "storeName", expression = "java(profile.getStores() != null && !profile.getStores().isEmpty() ? profile.getStores().iterator().next().getStoreName() : null)")
+    // Global Identity
+    @Mapping(target = "displayIdentity", expression = "java(profile.getShopName() + \" (\" + profile.getCity() + \")\")")
+    SellerProfileResponse toResponse(SellerProfile profile);
 
-        // Fetch store info (if exists)
+    @Mapping(target = "businessMobileNumber", source = "businessPhone")
+    @Mapping(target = "status", constant = "PENDING")
+    @Mapping(target = "shopHandle", source = "shopHandle") // Handled by service if null
+    @Mapping(target = "storeAddressLine1", source = "storeAddressLine1")
+    @Mapping(target = "storeAddressLine2", source = "storeAddressLine2")
+    @Mapping(target = "storeCity", source = "storeCity")
+    @Mapping(target = "storeDistrict", source = "storeDistrict")
+    @Mapping(target = "storeState", source = "storeState")
+    @Mapping(target = "storePincode", source = "storePincode")
+    @Mapping(target = "storeCountry", source = "storeCountry")
+    @Mapping(target = "googleMapsUrl", source = "googleMapsUrl")
+    void updateProfileFromRequest(SellerRegisterRequest request, @MappingTarget SellerProfile profile);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "version", ignore = true)
+    @Mapping(target = "businessMobileNumber", source = "businessPhone")
+    void updateProfileFromUpdateRequest(SellerProfileUpdateRequest request, @MappingTarget SellerProfile profile);
+
+    SellerKYCResponse toKycResponse(SellerKYC kyc);
+
+    SellerFarmerDetailsResponse toFarmerResponse(SellerFarmerDetails details);
+
+    SellerBusinessDetailsResponse toBusinessResponse(SellerBusinessDetails details);
+
+    SellerWholesaleConfigResponse toWholesaleResponse(SellerWholesaleConfig config);
+
+    SellerBankAccountResponse toBankAccountResponse(SellerBankAccount ba);
+
+    SellerDocumentResponse toDocumentResponse(SellerDocument doc);
+
+    List<SellerBankAccountResponse> toBankAccountResponseList(Set<SellerBankAccount> set);
+
+    List<SellerDocumentResponse> toDocumentResponseList(Set<SellerDocument> set);
+
+    @AfterMapping
+    default void handleStoreFallbacks(SellerProfile profile, @MappingTarget SellerProfileResponse.SellerProfileResponseBuilder response) {
         Store firstStore = (profile.getStores() != null && !profile.getStores().isEmpty())
                 ? profile.getStores().iterator().next()
                 : null;
 
-        return SellerProfileResponse.builder()
-                // Core IDs
-                .id(profile.getId())
-                .userId(profile.getUser() != null ? profile.getUser().getId() : null)
-                // Personal Info (from UserProfile)
-                .firstName(up != null ? up.getFirstName() : null)
-                .lastName(up != null ? up.getLastName() : null)
-                .profileImageUrl(up != null ? up.getProfileImageUrl() : null)
-                .gender(up != null ? up.getGender() : null)
-                .dateOfBirth(up != null ? up.getDateOfBirth() : null)
-                .preferredLanguage(up != null ? up.getPreferredLanguage() : null)
-                // Auth Info (from User)
-                .email(profile.getUser() != null ? profile.getUser().getEmail() : null)
-                .personalMobileNumber(up != null ? up.getPhone() : null)
-                .businessMobileNumber(profile.getBusinessMobileNumber())
-                // Seller / Business Info
-                .identityType(profile.getIdentityType())
-                .identityTypeLabel(profile.getIdentityType() != null ? profile.getIdentityType().getDisplayName() : null)
-                .businessTypes(
-                        profile.getBusinessTypes() != null
-                                ? new HashSet<>(profile.getBusinessTypes())
-                                : null)
-                .shopName(profile.getShopName())
-                .businessName(profile.getBusinessName())
-                .description(profile.getDescription())
-                .addressLine1(up != null && up.getAddresses() != null && !up.getAddresses().isEmpty() ? up.getAddresses().get(0).getAddressLine1() : null)
-                .addressLine2(up != null && up.getAddresses() != null && !up.getAddresses().isEmpty() ? up.getAddresses().get(0).getAddressLine2() : null)
-                .city(up != null && up.getAddresses() != null && !up.getAddresses().isEmpty() ? up.getAddresses().get(0).getCity() : null)
-                .district(up != null && up.getAddresses() != null && !up.getAddresses().isEmpty() ? up.getAddresses().get(0).getDistrict() : null)
-                .state(up != null && up.getAddresses() != null && !up.getAddresses().isEmpty() ? up.getAddresses().get(0).getState() : null)
-                .pincode(up != null && up.getAddresses() != null && !up.getAddresses().isEmpty() ? up.getAddresses().get(0).getPincode() : null)
-                .country(up != null && up.getAddresses() != null && !up.getAddresses().isEmpty() ? up.getAddresses().get(0).getCountry() : null)
-                // Store Address (Fallback chain: Profile Store Fields -> Store Entity -> Profile Personal Fields)
-                .storeAddressLine1(profile.getStoreAddressLine1() != null ? profile.getStoreAddressLine1() : (firstStore != null && firstStore.getAddressLine1() != null ? firstStore.getAddressLine1() : profile.getAddressLine1()))
-                .storeAddressLine2(profile.getStoreAddressLine2() != null ? profile.getStoreAddressLine2() : (firstStore != null && firstStore.getAddressLine2() != null ? firstStore.getAddressLine2() : profile.getAddressLine2()))
-                .storeCity(profile.getStoreCity() != null ? profile.getStoreCity() : (firstStore != null ? firstStore.getCity() : profile.getCity()))
-                .storeDistrict(profile.getStoreDistrict() != null ? profile.getStoreDistrict() : (firstStore != null ? firstStore.getDistrict() : profile.getDistrict()))
-                .storeState(profile.getStoreState() != null ? profile.getStoreState() : (firstStore != null ? firstStore.getState() : profile.getState()))
-                .storePincode(profile.getStorePincode() != null ? profile.getStorePincode() : (firstStore != null ? firstStore.getPostalCode() : profile.getPincode()))
-                .storeCountry(profile.getStoreCountry() != null ? profile.getStoreCountry() : (firstStore != null ? firstStore.getCountry() : profile.getCountry()))
-                .googleMapsUrl(profile.getGoogleMapsUrl() != null ? profile.getGoogleMapsUrl() : (firstStore != null ? firstStore.getGoogleMapsUrl() : null))
-                .status(profile.getStatus())
-                .createdAt(profile.getCreatedAt())
-                .updatedAt(profile.getUpdatedAt())
-                .storeName(firstStore != null ? firstStore.getStoreName() : null)
-                // Sub-entities
-                .kyc(mapKyc(profile.getKyc()))
-                .farmerDetails(mapFarmerDetails(profile.getFarmerDetails()))
-                .businessDetails(mapBusinessDetails(profile.getBusinessDetails()))
-                .wholesaleConfig(mapWholesaleConfig(profile.getWholesaleConfig()))
-                .bankAccounts(profile.getBankAccounts() != null
-                        ? profile.getBankAccounts().stream()
-                                .map(this::mapBankAccount)
-                                .collect(Collectors.toList())
-                        : null)
-                .documents(profile.getDocuments() != null
-                        ? profile.getDocuments().stream()
-                                .map(this::mapDocument)
-                                .collect(Collectors.toList())
-                        : null)
-                // Audit
-                .rejectionReason(profile.getRejectionReason())
-                .approvedBy(profile.getApprovedBy())
-                .approvedAt(profile.getApprovedAt())
-                .build();
-    }
-
-
-    private SellerKYCResponse mapKyc(SellerKYC kyc) {
-        if (kyc == null) return null;
-        return SellerKYCResponse.builder()
-                .id(kyc.getId())
-                .panNumber(kyc.getPanNumber())
-                .panName(kyc.getPanName())
-                .gstin(kyc.getGstin())
-                .gstRegistered(kyc.getGstRegistered())
-                .businessType(kyc.getBusinessType())
-                .verificationStatus(kyc.getVerificationStatus())
-                .verifiedAt(kyc.getVerifiedAt())
-                .verifiedBy(kyc.getVerifiedBy())
-                .build();
-    }
-
-    private SellerFarmerDetailsResponse mapFarmerDetails(SellerFarmerDetails details) {
-        if (details == null) return null;
-        return SellerFarmerDetailsResponse.builder()
-                .id(details.getId())
-                .isOwnProduce(details.getIsOwnProduce())
-                .farmLocation(details.getFarmLocation())
-                .landArea(details.getLandArea())
-                .cropTypes(details.getCropTypes())
-                .build();
-    }
-
-    private SellerBusinessDetailsResponse mapBusinessDetails(SellerBusinessDetails details) {
-        if (details == null) return null;
-        return SellerBusinessDetailsResponse.builder()
-                .id(details.getId())
-                .legalBusinessName(details.getLegalBusinessName())
-                .authorizedSignatory(details.getAuthorizedSignatory())
-                .warehouseLocation(details.getWarehouseLocation())
-                .build();
-    }
-
-    private SellerWholesaleConfigResponse mapWholesaleConfig(SellerWholesaleConfig config) {
-        if (config == null) return null;
-        return SellerWholesaleConfigResponse.builder()
-                .id(config.getId())
-                .bulkPricingEnabled(config.getBulkPricingEnabled())
-                .minOrderQuantity(config.getMinOrderQuantity())
-                .build();
-    }
-
-    private SellerBankAccountResponse mapBankAccount(SellerBankAccount ba) {
-        return SellerBankAccountResponse.builder()
-                .id(ba.getId())
-                .accountHolderName(ba.getAccountHolderName())
-                .accountNumber(ba.getAccountNumber())
-                .ifscCode(ba.getIfscCode())
-                .bankName(ba.getBankName())
-                .isPrimary(ba.getIsPrimary())
-                .verificationStatus(ba.getVerificationStatus())
-                .build();
-    }
-
-    private SellerDocumentResponse mapDocument(SellerDocument doc) {
-        return SellerDocumentResponse.builder()
-                .id(doc.getId())
-                .documentType(doc.getDocumentType())
-                .documentNumber(doc.getDocumentNumber())
-                .documentUrl(doc.getDocumentUrl())
-                .verificationStatus(doc.getVerificationStatus())
-                .verifiedAt(doc.getVerifiedAt())
-                .verifiedBy(doc.getVerifiedBy())
-                .rejectionReason(doc.getRejectionReason())
-                .build();
+        response.storeAddressLine1(profile.getStoreAddressLine1() != null ? profile.getStoreAddressLine1() : (firstStore != null ? firstStore.getAddressLine1() : profile.getAddressLine1()));
+        response.storeCity(profile.getStoreCity() != null ? profile.getStoreCity() : (firstStore != null ? firstStore.getCity() : profile.getCity()));
+        response.storeDistrict(profile.getStoreDistrict() != null ? profile.getStoreDistrict() : (firstStore != null ? firstStore.getDistrict() : profile.getDistrict()));
+        response.storeState(profile.getStoreState() != null ? profile.getStoreState() : (firstStore != null ? firstStore.getState() : profile.getState()));
+        response.storePincode(profile.getStorePincode() != null ? profile.getStorePincode() : (firstStore != null ? firstStore.getPostalCode() : profile.getPincode()));
+        response.googleMapsUrl(profile.getGoogleMapsUrl() != null ? profile.getGoogleMapsUrl() : (firstStore != null ? firstStore.getGoogleMapsUrl() : null));
     }
 }

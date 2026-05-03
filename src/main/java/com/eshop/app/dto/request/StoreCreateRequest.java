@@ -21,6 +21,9 @@ public class StoreCreateRequest {
     @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private String description;
 
+    @Size(max = 100, message = "Shop Handle must not exceed 100 characters")
+    private String shopHandle;
+
     @Size(max = 500, message = "Address Line 1 must not exceed 500 characters")
     private String addressLine1;
 

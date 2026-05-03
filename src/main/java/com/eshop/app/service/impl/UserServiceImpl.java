@@ -1,7 +1,6 @@
 package com.eshop.app.service.impl;
 
 import com.eshop.app.dto.request.UserUpdateRequest;
-import com.eshop.app.dto.request.UserSelfUpdateRequest;
 import com.eshop.app.dto.response.BulkOperationResult;
 import com.eshop.app.enums.ExportFormat;
 import com.eshop.app.dto.response.PageResponse;
@@ -13,7 +12,7 @@ import com.eshop.app.repository.UserRepository;
 import com.eshop.app.service.UserService;
 import com.eshop.app.service.KeycloakService;
 
-import com.eshop.app.entity.UserProfile;
+import com.eshop.app.entity.SellerProfile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,12 +28,17 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final KeycloakService keycloakService;
+    private final com.eshop.app.service.ExportService exportService;
+    private final com.eshop.app.service.ProfileSyncService profileSyncService;
 
     public UserServiceImpl(UserRepository userRepository, UserMapper userMapper,
-            KeycloakService keycloakService) {
+            KeycloakService keycloakService, com.eshop.app.service.ExportService exportService,
+            com.eshop.app.service.ProfileSyncService profileSyncService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.keycloakService = keycloakService;
+        this.exportService = exportService;
+        this.profileSyncService = profileSyncService;
     }
 
     @Override
@@ -75,69 +79,37 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse updateSelf(Long id, UserSelfUpdateRequest request) {
+    @Transactional
+    public UserResponse updateSelf(Long id, com.eshop.app.dto.request.UserSelfUpdateRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        if (user.getUserProfile() == null) {
-            user.setUserProfile(new com.eshop.app.entity.UserProfile());
-            user.getUserProfile().setUser(user);
+        // Use reusable service to ensure profile exists and sync personal info
+        profileSyncService.ensureProfileExists(user, request.getFirstName(), request.getLastName(), request.getPhone(),
+                request.getAlternatePhone(), request.getGender(), request.getPreferredLanguage(), request.getDateOfBirth());
+        
+        // Handle Address Sync if provided
+        if (hasAddressInfo(request)) {
+            // Map request to temporary SellerProfile for sync (reusing the sync logic)
+            SellerProfile tempProfile = new SellerProfile();
+            tempProfile.setAddressLine1(request.getAddressLine1() != null ? request.getAddressLine1() : request.getAddress());
+            tempProfile.setAddressLine2(request.getAddressLine2());
+            tempProfile.setCity(request.getCity());
+            tempProfile.setDistrict(request.getDistrict());
+            tempProfile.setState(request.getState());
+            tempProfile.setPincode(request.getPincode());
+            tempProfile.setCountry(request.getCountry());
+            
+            profileSyncService.syncSellerAddressToUser(user, tempProfile);
         }
-        if (request.getFirstName() != null)
-            user.getUserProfile().setFirstName(request.getFirstName());
-        if (request.getLastName() != null)
-            user.getUserProfile().setLastName(request.getLastName());
-        if (request.getPhone() != null)
-            user.getUserProfile().setPhone(request.getPhone());
-
-        // Handle Address
-        if (request.getAddress() != null || request.getAddressLine1() != null || request.getAddressLine2() != null || 
-            request.getCity() != null || request.getPincode() != null || request.getState() != null || request.getDistrict() != null) {
-            com.eshop.app.entity.UserAddress address;
-            if (user.getUserProfile().getAddresses() == null) {
-                user.getUserProfile().setAddresses(new java.util.ArrayList<>());
-            }
-
-            if (!user.getUserProfile().getAddresses().isEmpty()) {
-                address = user.getUserProfile().getAddresses().get(0);
-            } else {
-                address = com.eshop.app.entity.UserAddress.builder()
-                        .userProfile(user.getUserProfile())
-                        .isDefault(true)
-                        .build();
-                user.getUserProfile().getAddresses().add(address);
-            }
-
-            if (request.getAddressLine1() != null)
-                address.setAddressLine1(request.getAddressLine1());
-            else if (request.getAddress() != null)
-                address.setAddressLine1(request.getAddress());
-
-            if (request.getAddressLine2() != null)
-                address.setAddressLine2(request.getAddressLine2());
-            if (request.getCity() != null)
-                address.setCity(request.getCity());
-            if (request.getDistrict() != null)
-                address.setDistrict(request.getDistrict());
-            if (request.getState() != null)
-                address.setState(request.getState());
-            if (request.getPincode() != null)
-                address.setPincode(request.getPincode());
-            if (request.getCountry() != null)
-                address.setCountry(request.getCountry());
-        }
-
-        if (request.getDateOfBirth() != null)
-            user.getUserProfile().setDateOfBirth(request.getDateOfBirth());
-        if (request.getGender() != null)
-            user.getUserProfile().setGender(request.getGender());
-        if (request.getAlternatePhone() != null)
-            user.getUserProfile().setAlternatePhone(request.getAlternatePhone());
-        if (request.getPreferredLanguage() != null)
-            user.getUserProfile().setPreferredLanguage(request.getPreferredLanguage());
 
         user = userRepository.save(user);
         return userMapper.toUserResponse(user);
+    }
+
+    private boolean hasAddressInfo(com.eshop.app.dto.request.UserSelfUpdateRequest request) {
+        return request.getAddress() != null || request.getAddressLine1() != null || request.getCity() != null || 
+               request.getPincode() != null || request.getState() != null;
     }
 
     @Override
@@ -278,75 +250,45 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public byte[] exportUsers(ExportFormat format, com.eshop.app.enums.UserRole role, Boolean active) {
-        java.util.List<User> all = userRepository.findAll();
-        java.util.List<User> filtered = new java.util.ArrayList<>();
-        for (User u : all) {
-            if (role != null) {
-                try {
-                    if (!u.getRole().name().equals(role.name()))
-                        continue;
-                } catch (Exception ignored) {
-                    continue;
-                }
-            }
-            // Active status filter skipped as it's in Keycloak
-            filtered.add(u);
+        log.info("Exporting users with role: {}, format: {}", role, format);
+        
+        java.util.List<User> users;
+        if (role != null) {
+            UserRole entityRole = UserRole.valueOf(role.name());
+            users = userRepository.findAllByRole(entityRole);
+        } else {
+            users = userRepository.findAll();
         }
 
+        // Active status filtering is skipped as it resides in Keycloak, 
+        // but we've at least limited the set by role if provided.
+        
         try {
+            String[] headers = new String[] { "Id", "KeycloakId", "FirstName", "LastName", "Role" };
+            java.util.List<java.util.Map<String, Object>> data = users.stream().map(u -> {
+                java.util.Map<String, Object> map = new java.util.HashMap<>();
+                map.put("Id", u.getId());
+                map.put("KeycloakId", u.getKeycloakId());
+                map.put("FirstName", u.getUserProfile() != null ? u.getUserProfile().getFirstName() : "");
+                map.put("LastName", u.getUserProfile() != null ? u.getUserProfile().getLastName() : "");
+                map.put("Role", u.getRole() != null ? u.getRole().name() : "");
+                return map;
+            }).toList();
+
             if (format == ExportFormat.EXCEL) {
-                org.apache.poi.xssf.usermodel.XSSFWorkbook wb = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
-                org.apache.poi.ss.usermodel.Sheet sheet = wb.createSheet("Users");
-                org.apache.poi.ss.usermodel.Row header = sheet.createRow(0);
-                String[] cols = new String[] { "Id", "KeycloakId", "FirstName", "LastName", "Role" };
-                for (int i = 0; i < cols.length; i++)
-                    header.createCell(i).setCellValue(cols[i]);
-                int r = 1;
-                for (User u : filtered) {
-                    org.apache.poi.ss.usermodel.Row row = sheet.createRow(r++);
-                    row.createCell(0).setCellValue(u.getId());
-                    row.createCell(1).setCellValue(u.getKeycloakId());
-                    String fName = (u.getUserProfile() != null && u.getUserProfile().getFirstName() != null)
-                            ? u.getUserProfile().getFirstName()
-                            : "";
-                    String lName = (u.getUserProfile() != null && u.getUserProfile().getLastName() != null)
-                            ? u.getUserProfile().getLastName()
-                            : "";
-                    row.createCell(2).setCellValue(fName);
-                    row.createCell(3).setCellValue(lName);
-                    row.createCell(4).setCellValue(u.getRole() == null ? "" : u.getRole().name());
-                }
-                try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
-                    wb.write(out);
-                    wb.close();
-                    return out.toByteArray();
-                }
+                return exportService.exportToExcel("Users", headers, data);
             } else {
-                // CSV
-                StringBuilder sb = new StringBuilder();
-                sb.append("Id,KeycloakId,FirstName,LastName,Role\n");
-                for (User u : filtered) {
-                    sb.append(u.getId()).append(',')
-                            .append('"').append(u.getKeycloakId()).append('"').append(',')
-                            .append('"')
-                            .append((u.getUserProfile() != null && u.getUserProfile().getFirstName() != null)
-                                    ? u.getUserProfile().getFirstName()
-                                    : "")
-                            .append('"').append(',')
-                            .append('"')
-                            .append((u.getUserProfile() != null && u.getUserProfile().getLastName() != null)
-                                    ? u.getUserProfile().getLastName()
-                                    : "")
-                            .append('"').append(',')
-                            .append(u.getRole() == null ? "" : u.getRole().name()).append('\n');
-                }
-                return sb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                return exportService.exportToCsv(headers, data);
             }
         } catch (Exception e) {
+            log.error("Failed to export users: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to export users", e);
         }
     }
+
+    // --- Private generation methods removed (logic centralized in ExportService) ---
 
     // Dashboard Analytics Methods Implementation
     @Override
@@ -421,19 +363,13 @@ public class UserServiceImpl implements UserService {
         User user;
         if (existingUserOpt.isPresent()) {
             user = existingUserOpt.get();
-            // Update fields from Keycloak
+            // Update core auth fields from Keycloak
             user.setUsername(username);
             user.setEmail(email);
-            if (emailVerified != null) {
-                user.setEmailVerified(emailVerified);
-            }
-            if (user.getUserProfile() != null) {
-                user.getUserProfile().setFirstName(firstName);
-                user.getUserProfile().setLastName(lastName);
-                if (phoneNumber != null && !phoneNumber.isBlank()) {
-                    user.getUserProfile().setPhone(phoneNumber);
-                }
-            }
+            if (emailVerified != null) user.setEmailVerified(emailVerified);
+            
+            // Sync profile info using reusable service
+            profileSyncService.ensureProfileExists(user, firstName, lastName, phoneNumber, null, null, null, null);
         } else {
             user = User.builder()
                     .keycloakId(keycloakId)
@@ -442,14 +378,8 @@ public class UserServiceImpl implements UserService {
                     .emailVerified(emailVerified != null ? emailVerified : false)
                     .role(UserRole.CUSTOMER)
                     .build();
-
-            UserProfile profile = UserProfile.builder()
-                    .user(user)
-                    .firstName(firstName)
-                    .lastName(lastName)
-                    .phone(phoneNumber)
-                    .build();
-            user.setUserProfile(profile);
+            
+            profileSyncService.ensureProfileExists(user, firstName, lastName, phoneNumber, null, null, null, null);
         }
 
         user = userRepository.save(user);

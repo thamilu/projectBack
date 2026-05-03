@@ -18,6 +18,7 @@ public class SellerKYCResponse {
     private String panNumber;
     private String panName;
     private String gstin;
+    private String aadhar;
     private Boolean gstRegistered;
     private KycBusinessType businessType;
     private KycVerificationStatus verificationStatus;

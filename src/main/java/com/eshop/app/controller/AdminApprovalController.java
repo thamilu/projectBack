@@ -3,7 +3,7 @@ package com.eshop.app.controller;
 import com.eshop.app.dto.response.DeliveryAgentProfileResponse;
 import com.eshop.app.dto.response.SellerProfileResponse;
 import com.eshop.app.service.DeliveryAgentService;
-import com.eshop.app.service.SellerService;
+import com.eshop.app.service.SellerAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,7 +23,7 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminApprovalController {
 
-    private final SellerService sellerService;
+    private final SellerAdminService sellerAdminService;
     private final DeliveryAgentService deliveryAgentService;
 
     // --- Sellers ---
@@ -31,7 +31,7 @@ public class AdminApprovalController {
     @GetMapping("/sellers")
     @Operation(summary = "List all pending seller applications")
     public ResponseEntity<List<SellerProfileResponse>> getPendingSellers() {
-        return ResponseEntity.ok(sellerService.getPendingSellers());
+        return ResponseEntity.ok(sellerAdminService.getPendingSellers());
     }
 
     @PostMapping("/sellers/{id}/{action}")
@@ -44,9 +44,9 @@ public class AdminApprovalController {
         String processedBy = (authentication != null) ? authentication.getName() : "system";
 
         if ("APPROVE".equalsIgnoreCase(action)) {
-            sellerService.approveSeller(id, processedBy);
+            sellerAdminService.approveSeller(id, processedBy);
         } else if ("REJECT".equalsIgnoreCase(action)) {
-            sellerService.rejectSeller(id, "Rejected by administrative action", processedBy);
+            sellerAdminService.rejectSeller(id, "Rejected by administrative action", processedBy);
         } else {
             return ResponseEntity.badRequest().build();
         }

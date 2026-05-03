@@ -20,6 +20,7 @@ import java.util.Optional;
 @Configuration
 @RequiredArgsConstructor
 @Slf4j
+@org.springframework.context.annotation.Profile("!test")
 public class MultiTenantJwtConfiguration {
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")

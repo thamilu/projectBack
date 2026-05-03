@@ -66,6 +66,12 @@ public class SellerProfile extends BaseEntity {
     @Column(name = "shop_name", nullable = false, length = 200)
     private String shopName;
 
+    @Column(name = "shop_handle", nullable = false, unique = true, length = 250)
+    private String shopHandle;
+
+    @Column(name = "shop_logo_url", length = 500)
+    private String shopLogoUrl;
+
     @ElementCollection(targetClass = SellerBusinessType.class)
     @CollectionTable(name = "seller_business_types", joinColumns = @JoinColumn(name = "seller_profile_id"))
     @Enumerated(EnumType.STRING)
@@ -83,25 +89,25 @@ public class SellerProfile extends BaseEntity {
 
     // ─── Address & Location ─────────────────────────────────────
 
-    @Column(name = "address_line_1", length = 500)
+    @Column(name = "address_line_1", nullable = false, length = 500)
     private String addressLine1;
 
     @Column(name = "address_line_2", length = 500)
     private String addressLine2;
 
-    @Column(length = 100)
+    @Column(nullable = false, length = 100)
     private String city;
 
     @Column(length = 100)
     private String district;
 
-    @Column(length = 100)
+    @Column(nullable = false, length = 100)
     private String state;
 
-    @Column(length = 20)
+    @Column(nullable = false, length = 20)
     private String pincode;
 
-    @Column(length = 100)
+    @Column(nullable = false, length = 100)
     private String country;
 
     // ─── Store / Warehouse Location ─────────────────────────────

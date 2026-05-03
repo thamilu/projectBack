@@ -44,6 +44,9 @@ public class SellerProfileUpdateRequest {
     @Pattern(regexp = "^(\\+?[0-9]{7,15})?$", message = "Invalid phone number format")
     private String phone;
 
+    @Size(max = 20, message = "Alternate phone cannot exceed 20 characters")
+    private String alternatePhone;
+
     // ─── Basic Seller Profile ────────────────────────────────────
 
     @Size(min = 2, max = 200, message = "Shop name must be between 2 and 200 characters")
@@ -51,6 +54,12 @@ public class SellerProfileUpdateRequest {
 
     @Size(min = 2, max = 200, message = "Business name must be between 2 and 200 characters")
     private String businessName;
+
+    @Size(min = 2, max = 250, message = "Shop handle must be between 2 and 250 characters")
+    @Pattern(regexp = "^[a-z0-9-]+$", message = "Shop handle must be lowercase alphanumeric with hyphens")
+    private String shopHandle;
+
+    private String shopLogoUrl;
 
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;

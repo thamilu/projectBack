@@ -21,6 +21,7 @@ public class KycProcessor implements SellerModuleProcessor {
         kyc.setSellerProfile(profile);
         kyc.setPanNumber(request.getPanNumber());
         kyc.setGstin(request.getGstin());
+        kyc.setAadhar(request.getAadhar());
         kyc.setGstRegistered(request.getGstin() != null && !request.getGstin().isBlank());
         
         profile.setKyc(kyc);
@@ -28,7 +29,7 @@ public class KycProcessor implements SellerModuleProcessor {
 
     @Override
     public boolean isApplicable(SellerRegisterRequest request) {
-        return request.getPanNumber() != null || request.getGstin() != null;
+        return request.getPanNumber() != null || request.getGstin() != null || request.getAadhar() != null;
     }
     
     @Override

@@ -39,6 +39,9 @@ public class SellerProfileResponse {
     /** Personal phone stored in user_profiles.phone (for 2FA/security) */
     private String personalMobileNumber;
 
+    /** Alternate phone stored in user_profiles.alternate_phone */
+    private String alternatePhone;
+
     /** Business/Support phone stored in seller_profiles.businessMobileNumber (shown to customers) */
     private String businessMobileNumber;
 
@@ -47,6 +50,11 @@ public class SellerProfileResponse {
     private String identityTypeLabel;
     private Set<SellerBusinessType> businessTypes;
     private String shopName;
+    private String shopHandle;
+    private String shopLogoUrl;
+    /** Computed field: "ShopName (City)" for zero confusion */
+    private String displayIdentity;
+    
     private String businessName;
     private String description;
     private String addressLine1;

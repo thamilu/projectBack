@@ -5,7 +5,10 @@ import com.eshop.app.dto.request.SellerProfileUpdateRequest;
 import com.eshop.app.dto.request.SellerRegisterRequest;
 import com.eshop.app.dto.response.ApiResponse;
 import com.eshop.app.dto.response.SellerProfileResponse;
-import com.eshop.app.service.SellerService;
+import com.eshop.app.service.SellerAdminService;
+import com.eshop.app.service.SellerProfileService;
+import com.eshop.app.service.SellerRegistrationService;
+import com.eshop.app.util.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -39,7 +42,9 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class SellerController {
 
-    private final SellerService sellerService;
+    private final SellerProfileService sellerProfileService;
+    private final SellerRegistrationService sellerRegistrationService;
+    private final SellerAdminService sellerAdminService;
     private final com.eshop.app.service.UserService userService;
 
     /**
@@ -130,10 +135,11 @@ public class SellerController {
         })) @Valid @RequestBody SellerRegisterRequest request,
             @Parameter(hidden = true) Authentication authentication) {
 
-        Long userId = sellerService.resolveUserId(authentication);
-        log.info("Seller registration request for userId: {}, identityType: {}", userId, request.getIdentityType());
-
-        SellerProfileResponse response = sellerService.registerSeller(userId, request);
+        Long userId = SecurityUtils.getAuthenticatedUserId();
+        log.info("Seller registration request for userId: {}, identityType: {}, PAN: '{}'", 
+            userId, request.getIdentityType(), request.getPanNumber());
+        
+        SellerProfileResponse response = sellerRegistrationService.registerSeller(userId, request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -185,7 +191,7 @@ public class SellerController {
       log.info("DEBUG: getProfile called. Auth: {}",
           authentication != null ? authentication.getClass().getName() : "null");
       try {
-        SellerProfileResponse response = sellerService.getSellerProfile(authentication);
+        SellerProfileResponse response = sellerProfileService.getSellerProfile(authentication);
         return ResponseEntity.ok(ApiResponse.success(response));
       } catch (Exception e) {
         log.error("DEBUG: Exception in getProfile: " + e.getClass().getName() + " - " + e.getMessage(), e);
@@ -244,10 +250,10 @@ public class SellerController {
             """))) @Valid @RequestBody SellerProfileUpdateRequest request,
             @Parameter(hidden = true) Authentication authentication) {
 
-        Long userId = sellerService.resolveUserId(authentication);
+        Long userId = SecurityUtils.getAuthenticatedUserId();
         log.info("Updating seller profile for userId: {}", userId);
-
-        SellerProfileResponse response = sellerService.updateSellerProfile(userId, request);
+ 
+        SellerProfileResponse response = sellerProfileService.updateSellerProfile(userId, request);
 
         return ResponseEntity.ok(ApiResponse.success("Seller profile updated successfully", response));
     }
@@ -271,7 +277,7 @@ public class SellerController {
     public ResponseEntity<ApiResponse<Boolean>> checkProfileExists(
             @Parameter(hidden = true) Authentication authentication) {
 
-        boolean exists = sellerService.hasProfile(authentication);
+        boolean exists = sellerProfileService.hasProfile(authentication);
         log.info("DEBUG: checkProfileExists returned: {}", exists);
 
         return ResponseEntity.ok(ApiResponse.success(exists));
@@ -290,7 +296,7 @@ public class SellerController {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - ADMIN role required")
     })
     public ResponseEntity<ApiResponse<java.util.List<SellerProfileResponse>>> getPendingRequests() {
-      java.util.List<SellerProfileResponse> requests = sellerService.getPendingSellers();
+      java.util.List<SellerProfileResponse> requests = sellerAdminService.getPendingSellers();
       return ResponseEntity.ok(ApiResponse.success(requests));
     }
 
@@ -309,7 +315,7 @@ public class SellerController {
         @Parameter(hidden = true) Authentication authentication) {
 
       String adminName = authentication != null ? authentication.getName() : "system";
-      sellerService.approveSeller(id, adminName);
+      sellerAdminService.approveSeller(id, adminName);
       return ResponseEntity.ok(ApiResponse.success("Seller approved successfully", null));
     }
 
@@ -329,7 +335,7 @@ public class SellerController {
         @Parameter(hidden = true) Authentication authentication) {
 
       String adminName = authentication != null ? authentication.getName() : "system";
-      sellerService.rejectSeller(id, request.getReason(), adminName);
+      sellerAdminService.rejectSeller(id, request.getReason(), adminName);
       return ResponseEntity.ok(ApiResponse.success("Seller rejected successfully", null));
     }
 
@@ -337,7 +343,7 @@ public class SellerController {
     @Operation(summary = "Debug: Sync Seller Role", description = "Manually trigger Keycloak role assignment for debugging.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<Void>> syncSellerRole(@PathVariable Long id) {
       log.info("DEBUG: Endpoint /sync-role called for id: {}", id);
-      sellerService.syncSellerRole(id);
+      sellerAdminService.syncSellerRole(id);
       return ResponseEntity.ok(ApiResponse.success("Role sync attempted. Check logs.", null));
     }
 
