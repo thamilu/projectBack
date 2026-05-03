@@ -1,0 +1,227 @@
+version: "3.9"
+
+# ══════════════════════════════════════════════════════════════
+# DOCKER TESTING ENVIRONMENT
+# - Complete stack with observability (Prometheus, Grafana, Zipkin)
+# - Spring Boot app runs in Docker (Java 21 LTS)
+# - All services containerized for testing
+# ══════════════════════════════════════════════════════════════
+
+services:
+  # ══════════════════════════════════════════════════════════════
+  # PostgreSQL Database
+  # ══════════════════════════════════════════════════════════════
+  postgres:
+    image: postgres:16-alpine
+    container_name: eshop-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-eshop_db}
+      POSTGRES_USER: ${DATABASE_USERNAME:-eshop}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-eshop}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - eshop-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-eshop}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ══════════════════════════════════════════════════════════════
+  # Redis Cache
+  # ══════════════════════════════════════════════════════════════
+  redis:
+    image: redis:7.4-alpine
+    container_name: eshop-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - eshop-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # ══════════════════════════════════════════════════════════════
+  # Keycloak - Authentication Server
+  # ══════════════════════════════════════════════════════════════
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.5.2
+    container_name: eshop-keycloak
+    restart: unless-stopped
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-eshop_db}
+      KC_DB_USERNAME: ${DATABASE_USERNAME:-eshop}
+      KC_DB_PASSWORD: ${DATABASE_PASSWORD:-eshop}
+      KC_HOSTNAME: localhost
+      KC_HTTP_ENABLED: true
+      KC_PROXY: edge
+    ports:
+      - "8080:8080"
+    command:
+      - start-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - eshop-net
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ══════════════════════════════════════════════════════════════
+  # Spring Boot Backend - EShop API (Java 21 LTS)
+  # ══════════════════════════════════════════════════════════════
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: eshop-backend:latest
+    container_name: eshop-backend
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: docker
+      
+      # Database Configuration
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-eshop_db}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-eshop}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-eshop}
+      
+      # Redis Configuration
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      
+      # Keycloak Configuration
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/eshop
+      KEYCLOAK_JWK_URI: http://keycloak:8080/realms/eshop/protocol/openid-connect/certs
+      
+      # Zipkin Tracing
+      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
+      
+      # JVM Options
+      JAVA_OPTS: >
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:+UseG1GC
+        -XX:+UseStringDeduplication
+        -Djava.security.egd=file:/dev/./urandom
+    volumes:
+      - ./logs:/var/log/eshop
+      - ./uploads:/var/eshop/uploads
+    networks:
+      - eshop-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8082"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ══════════════════════════════════════════════════════════════
+  # Prometheus - Metrics Collection
+  # ══════════════════════════════════════════════════════════════
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: eshop-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - eshop-net
+    depends_on:
+      - backend
+
+  # ══════════════════════════════════════════════════════════════
+  # Grafana - Metrics Visualization
+  # ══════════════════════════════════════════════════════════════
+  grafana:
+    image: grafana/grafana:latest
+    container_name: eshop-grafana
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3002
+      - GF_INSTALL_PLUGINS=
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - eshop-net
+    depends_on:
+      - prometheus
+
+  # ══════════════════════════════════════════════════════════════
+  # Zipkin - Distributed Tracing
+  # ══════════════════════════════════════════════════════════════
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: eshop-zipkin
+    restart: unless-stopped
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mem
+    networks:
+      - eshop-net
+
+# ══════════════════════════════════════════════════════════════
+# Volumes - Persistent Data Storage
+# ══════════════════════════════════════════════════════════════
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# ══════════════════════════════════════════════════════════════
+# Networks - Container Communication
+# ══════════════════════════════════════════════════════════════
+networks:
+  eshop-net:
+    driver: bridge
+    name: eshop-network

@@ -1,0 +1,27 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'eshop-dev-monitor'
+
+scrape_configs:
+  # ══════════════════════════════════════════════════════════════
+  # Spring Boot Application (Running Locally on Host Machine)
+  # ══════════════════════════════════════════════════════════════
+  - job_name: 'spring-boot-local'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      # Use host.docker.internal to access services running on host machine
+      - targets: ['host.docker.internal:8082']
+        labels:
+          application: 'eshop-backend'
+          environment: 'development'
+
+  # ══════════════════════════════════════════════════════════════
+  # Prometheus Self-Monitoring
+  # ══════════════════════════════════════════════════════════════
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          application: 'prometheus'

@@ -1,0 +1,120 @@
+{
+  "realm": "eshop",
+  "enabled": true,
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": false,
+  "editUsernameAllowed": false,
+  "resetPasswordAllowed": true,
+  "defaultRoles": ["Customer"],
+  "clients": [
+    {
+      "clientId": "eshop-client",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://localhost:4200/*",
+        "http://localhost:5173/*",
+        "http://localhost:8082/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000"
+      ],
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "frontchannelLogout": true,
+      "attributes": {
+        "frontchannel.logout.session.required": "true",
+        "display.on.consent.screen": "false",
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "eshop-backend",
+      "name": "Backend of Keyclock",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "aWHhjsbAeg8LeeTvtkDerrCQGhEuJ5ph",
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "clientAuthenticatorType": "client-secret",
+      "frontchannelLogout": true,
+      "attributes": {
+        "frontchannel.logout.session.required": "true",
+        "display.on.consent.screen": "false"
+      }
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "Seller",
+        "description": "Seller role"
+      },
+      {
+        "name": "Customer",
+        "description": "Customer role"
+      },
+      {
+        "name": "DELIVERY_AGENT",
+        "description": "Delivery Agent role"
+      },
+      {
+        "name": "default-roles-eshop",
+        "description": "Default roles container",
+        "composite": true,
+        "composites": {
+          "realm": ["Customer"]
+        }
+      }
+    ]
+  },
+  "defaultRole": {
+    "name": "default-roles-eshop",
+    "description": "Default roles container",
+    "composite": true,
+    "composites": {
+      "realm": ["Customer"]
+    }
+  },
+  "users": [
+    {
+      "username": "seller",
+      "enabled": true,
+      "email": "seller@eshop.com",
+      "firstName": "Seller",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "seller"
+        }
+      ],
+      "realmRoles": [
+        "Seller",
+        "Customer"
+      ]
+    },
+    {
+      "username": "user",
+      "enabled": true,
+      "email": "user@eshop.com",
+      "firstName": "Regular",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "user"
+        }
+      ],
+      "realmRoles": [
+        "Customer"
+      ]
+    }
+  ]
+}

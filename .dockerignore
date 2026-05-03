@@ -1,0 +1,86 @@
+# ============================================
+# DOCKER IGNORE - E-COMMERCE BACKEND
+# ============================================
+# Exclude build artifacts and unnecessary files from Docker build context
+
+# ─────────────────────────────────────────────
+# BUILD ARTIFACTS
+# ─────────────────────────────────────────────
+.gradle
+build
+target
+bin
+out
+*.jar
+*.war
+*.class
+
+# ─────────────────────────────────────────────
+# VERSION CONTROL
+# ─────────────────────────────────────────────
+.git
+.gitignore
+.gitattributes
+.github
+
+# ─────────────────────────────────────────────
+# IDE FILES
+# ─────────────────────────────────────────────
+.idea
+.vscode
+.settings
+.classpath
+.project
+*.iml
+*.iws
+*.ipr
+.qodo
+
+# ─────────────────────────────────────────────
+# LOGS & TEMPORARY FILES
+# ─────────────────────────────────────────────
+logs
+*.log
+*.log.*
+startup.log
+boot_run_log.txt
+boot_run_log_utf8.txt
+build_log.txt
+compile_log.txt
+
+# ─────────────────────────────────────────────
+# NODE MODULES (if any frontend build)
+# ─────────────────────────────────────────────
+node_modules
+npm-debug.log
+yarn-error.log
+
+# ─────────────────────────────────────────────
+# DOCKER FILES (don't copy docker files into image)
+# ─────────────────────────────────────────────
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# ─────────────────────────────────────────────
+# DOCUMENTATION & SCRIPTS
+# ─────────────────────────────────────────────
+docs
+README.md
+TECH_STACK.md
+*.md
+
+# ─────────────────────────────────────────────
+# ENVIRONMENT & SECRETS
+# ─────────────────────────────────────────────
+.env
+.env.*
+*.pem
+*.key
+certs
+
+# ─────────────────────────────────────────────
+# MISC
+# ─────────────────────────────────────────────
+uploads
+out_api_docs.json

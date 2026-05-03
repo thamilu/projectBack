@@ -1,0 +1,206 @@
+version: "3.9"
+
+# ══════════════════════════════════════════════════════════════
+# LOCAL DEVELOPMENT SETUP
+# - PostgreSQL, Redis, Keycloak in Docker
+# - Spring Boot backend runs locally (not in container)
+# - Includes dev tools: pgAdmin, Redis Commander
+# ══════════════════════════════════════════════════════════════
+
+services:
+  # ══════════════════════════════════════════════════════════════
+  # PostgreSQL Database
+  # ══════════════════════════════════════════════════════════════
+  postgres:
+    image: postgres:16-alpine
+    container_name: eshop-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: eshop_Dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: thamilu*884*
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    networks:
+      - eshop-dev-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ══════════════════════════════════════════════════════════════
+  # Redis Cache
+  # ══════════════════════════════════════════════════════════════
+  redis:
+    image: redis:7.4-alpine
+    container_name: eshop-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - eshop-dev-net
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # ══════════════════════════════════════════════════════════════
+  # Keycloak - Authentication Server
+  # ══════════════════════════════════════════════════════════════
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.5.2
+    container_name: eshop-keycloak-dev
+    restart: unless-stopped
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: [ PASSWORD ]
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/eshop_Dev
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: thamilu*884*
+      KC_HOSTNAME: localhost
+      KC_HTTP_ENABLED: true
+      KC_PROXY: edge
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak-import:/opt/keycloak/data/import
+    command:
+      - start-dev
+      - --import-realm
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - eshop-dev-net
+    healthcheck:
+      test: [ "CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ══════════════════════════════════════════════════════════════
+  # pgAdmin - PostgreSQL Management Tool
+  # ══════════════════════════════════════════════════════════════
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: eshop-pgadmin-dev
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@eshop.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_dev_data:/var/lib/pgadmin
+    networks:
+      - eshop-dev-net
+    depends_on:
+      - postgres
+
+  # ══════════════════════════════════════════════════════════════
+  # Redis Commander - Redis Management Tool
+  # ══════════════════════════════════════════════════════════════
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: eshop-redis-commander-dev
+    restart: unless-stopped
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    networks:
+      - eshop-dev-net
+    depends_on:
+      - redis
+
+  # ══════════════════════════════════════════════════════════════
+  # Prometheus - Metrics Collection
+  # Monitors your locally running Spring Boot app
+  # ══════════════════════════════════════════════════════════════
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: eshop-prometheus-dev
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus-dev.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_dev_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - eshop-dev-net
+
+  # ══════════════════════════════════════════════════════════════
+  # Grafana - Metrics Visualization
+  # Beautiful dashboards for your local app
+  # ══════════════════════════════════════════════════════════════
+  grafana:
+    image: grafana/grafana:latest
+    container_name: eshop-grafana-dev
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3002
+    volumes:
+      - grafana_dev_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - eshop-dev-net
+    depends_on:
+      - prometheus
+
+  # ══════════════════════════════════════════════════════════════
+  # Zipkin - Distributed Tracing
+  # Trace requests through your local app
+  # ══════════════════════════════════════════════════════════════
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: eshop-zipkin-dev
+    restart: unless-stopped
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mem
+    networks:
+      - eshop-dev-net
+
+# ══════════════════════════════════════════════════════════════
+# Volumes - Persistent Data Storage
+# ══════════════════════════════════════════════════════════════
+volumes:
+  redis_dev_data:
+    driver: local
+  postgres_dev_data:
+    driver: local
+  pgadmin_dev_data:
+    driver: local
+  prometheus_dev_data:
+    driver: local
+  grafana_dev_data:
+    driver: local
+
+# ══════════════════════════════════════════════════════════════
+# Networks - Container Communication
+# ══════════════════════════════════════════════════════════════
+networks:
+  eshop-dev-net:
+    driver: bridge
+    name: eshop-dev-network

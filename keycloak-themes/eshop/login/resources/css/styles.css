@@ -1,0 +1,1070 @@
+/* ==========================================================================
+   E-Shop Keycloak Theme — Clean & Minimal
+   Theme: eshop-clean-minimal
+   Version: 1.1.0
+   Keycloak: 22+
+   Maintainer: Team Auth
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* --------------------------------------------------------------------------
+   CSS Custom Properties (Light Mode Default)
+   -------------------------------------------------------------------------- */
+:root {
+    color-scheme: light;
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    /* Background */
+    --bg: #f5f5f5;
+
+    /* Card */
+    --card-bg: #ffffff;
+    --card-radius: 16px;
+    --card-shadow: 0 2px 16px rgba(0, 0, 0, 0.07), 0 1px 4px rgba(0, 0, 0, 0.04);
+    --card-padding-v: 2.5rem;
+    --card-padding-h: 2.25rem;
+    --card-max-width: 460px;
+
+    /* Text */
+    --text-heading: #111827;
+    --text-body: #374151;
+    --text-muted: #6b7280;
+
+    /* Brand / Primary */
+    --primary: #1a5e4a;
+    --primary-hover: #154d3c;
+    --primary-light: #e6f2ee;
+    --primary-ring: rgba(26, 94, 74, 0.25);
+
+    /* Inputs */
+    --input-bg: #ffffff;
+    --input-border: #d1d5db;
+    --input-border-hover: #9ca3af;
+    --input-border-focus: #1a5e4a;
+    --input-radius: 8px;
+    --input-padding: 0.65rem 0.875rem;
+
+    /* Labels */
+    --label-color: #374151;
+
+    /* Links */
+    --link-color: #1a5e4a;
+    --link-hover: #154d3c;
+
+    /* Error */
+    --error: #dc2626;
+    --error-ring: rgba(220, 38, 38, 0.12);
+    --error-bg: rgba(220, 38, 38, 0.05);
+    --error-border: rgba(220, 38, 38, 0.2);
+
+    /* Social hover */
+    --social-hover-bg: #f3f4f6;
+
+    /* Divider */
+    --divider: #e5e7eb;
+
+    /* Social button radius */
+    --radius-full: 99px;
+
+    /* Keycloak PatternFly overrides */
+    --pf-global--FontFamily--sans-serif: var(--font);
+    --pf-global--FontFamily--heading--sans-serif: var(--font);
+    --pf-global--primary-color--100: var(--primary);
+    --pf-global--primary-color--200: var(--primary-hover);
+    --pf-global--link--Color: var(--link-color);
+    --pf-global--link--Color--hover: var(--link-hover);
+}
+
+/* --------------------------------------------------------------------------
+   System Dark Mode Variables
+   -------------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: dark;
+
+        /* Background */
+        --bg: #0f172a;
+
+        /* Card */
+        --card-bg: #1e293b;
+        --card-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+
+        /* Text */
+        --text-heading: #f8fafc;
+        --text-body: #e2e8f0;
+        --text-muted: #94a3b8;
+        --label-color: #e2e8f0;
+
+        /* Brand — optimized for dark backgrounds */
+        --primary: #22c55e;
+        --primary-hover: #16a34a;
+        --primary-light: rgba(34, 197, 94, 0.15);
+        --primary-ring: rgba(34, 197, 94, 0.3);
+
+        /* Inputs */
+        --input-bg: #0f172a;
+        --input-border: #334155;
+        --input-border-hover: #475569;
+        --input-border-focus: #22c55e;
+
+        /* Error */
+        --error: #ef4444;
+        --error-ring: rgba(239, 68, 68, 0.15);
+        --error-bg: rgba(239, 68, 68, 0.08);
+        --error-border: rgba(239, 68, 68, 0.3);
+
+        /* Social hover */
+        --social-hover-bg: #263248;
+
+        /* Divider */
+        --divider: #334155;
+
+        /* Links */
+        --link-color: #22c55e;
+        --link-hover: #16a34a;
+    }
+
+    /* Titles in dark mode */
+    .pf-c-title,
+    #kc-page-title {
+        color: var(--text-heading) !important;
+    }
+
+    /* Select arrow — light color for dark bg */
+    select.pf-c-form-control {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8.825a.5.5 0 0 1-.354-.146l-4-4a.5.5 0 0 1 .708-.708L6 7.617l3.646-3.646a.5.5 0 0 1 .708.708l-4 4A.5.5 0 0 1 6 8.825z'/%3E%3C/svg%3E") !important;
+    }
+
+    /* Terms text dark mode */
+    #kc-terms-text,
+    .kc-terms-text {
+        background: #0f172a !important;
+    }
+
+    /* ── Force card & page backgrounds — PatternFly specificity overrides ── */
+    body,
+    .login-pf-page,
+    .login-pf-body {
+        background-color: #0f172a !important;
+        background: #0f172a !important;
+    }
+
+    .pf-c-login__main,
+    .card-pf,
+    .login-pf-page .card-pf {
+        background-color: #1e293b !important;
+        background: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f8fafc !important;
+    }
+
+    /* Force all form text to be readable */
+    .pf-c-login__main .pf-c-title,
+    .pf-c-login__main #kc-page-title,
+    .pf-c-login__main .pf-c-form__label,
+    .pf-c-login__main .pf-c-form__label-text,
+    .pf-c-login__main label,
+    .pf-c-login__main h1,
+    .pf-c-login__main h2,
+    .pf-c-login__main h3 {
+        color: #f8fafc !important;
+    }
+
+    /* Inputs inside card */
+    .pf-c-login__main .pf-c-form-control,
+    .pf-c-login__main input[type="text"],
+    .pf-c-login__main input[type="email"],
+    .pf-c-login__main input[type="password"] {
+        background-color: #0f172a !important;
+        background: #0f172a !important;
+        color: #f8fafc !important;
+        border-color: #334155 !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Force text visibility — reset webkit fill globally
+   -------------------------------------------------------------------------- */
+.pf-c-title,
+#kc-page-title,
+.login-pf-page-header,
+.pf-c-form__label,
+.pf-c-form__label-text,
+.pf-c-form-control,
+.pf-c-button,
+#kc-form-options a,
+#kc-info-wrapper a {
+    -webkit-text-fill-color: unset !important;
+}
+
+/* --------------------------------------------------------------------------
+   Chrome/Safari autofill dark mode fix
+   -------------------------------------------------------------------------- */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text-heading) !important;
+    caret-color: var(--text-heading);
+    transition: background-color 9999s ease-in-out 0s;
+    box-shadow: 0 0 0px 1000px var(--input-bg) inset !important;
+}
+
+/* --------------------------------------------------------------------------
+   Box Model Reset
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   Base / Body
+   -------------------------------------------------------------------------- */
+body {
+    background: var(--bg) !important;
+    font-family: var(--font) !important;
+    color: var(--text-body);
+    min-height: 100vh;
+    margin: 0;
+    padding: 2rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Remove decorative pseudo-elements from any parent theme */
+body::before,
+body::after {
+    display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Page Layout
+   -------------------------------------------------------------------------- */
+.login-pf-page {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem !important;
+    margin: auto 0 !important;
+}
+
+.login-pf-page .container-fluid {
+    width: 100%;
+    max-width: var(--card-max-width);
+    padding: 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Brand Header (Above Card)
+   -------------------------------------------------------------------------- */
+#kc-header,
+#kc-header.login-pf-page-header,
+.login-pf-page-header {
+    display: block !important;
+    width: 100%;
+    max-width: var(--card-max-width);
+    text-align: center;
+    margin-bottom: 1.25rem;
+}
+
+#kc-header-wrapper,
+#kc-header.login-pf-page-header .kc-logo-text,
+.login-pf-page-header .kc-logo-text,
+.kc-logo-text,
+#kc-header.login-pf-page-header span,
+.login-pf-page-header span,
+.kc-logo-text span,
+#kc-header-wrapper span,
+#kc-header-wrapper div {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    font-family: var(--font) !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: var(--text-heading) !important;
+    -webkit-text-fill-color: unset !important;
+    background: none !important;
+    background-image: none !important;
+    filter: none !important;
+    letter-spacing: -0.3px;
+    white-space: normal;
+    line-height: 1.4 !important;
+    height: auto !important;
+    width: auto !important;
+    text-indent: 0 !important;
+}
+
+#kc-header-wrapper::after {
+    display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Login Container
+   -------------------------------------------------------------------------- */
+.pf-c-login {
+    background: transparent !important;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* --------------------------------------------------------------------------
+   Card
+   -------------------------------------------------------------------------- */
+.pf-c-login__main {
+    color-scheme: inherit;
+    background-color: var(--card-bg) !important;
+    background: var(--card-bg) !important;
+    border-radius: var(--card-radius) !important;
+    box-shadow: var(--card-shadow) !important;
+    padding: var(--card-padding-v) var(--card-padding-h) !important;
+    width: 100% !important;
+    max-width: var(--card-max-width) !important;
+    border: 1px solid var(--divider) !important;
+    position: relative !important;
+    overflow: visible !important;
+
+    /* Separate animation from hover so they don't conflict */
+    animation: fadeSlideUp 0.4s ease-out both;
+    transition: box-shadow 0.25s ease, transform 0.25s ease,
+        background 0.3s ease !important;
+
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.pf-c-login__main:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.11), 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+    transform: translateY(-2px);
+}
+
+/* Remove any pseudo shimmer bars from parent themes */
+.pf-c-login__main::before,
+.pf-c-login__main::after {
+    display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Card Header
+   -------------------------------------------------------------------------- */
+.pf-c-login__main-header {
+    text-align: left !important;
+    padding: 0 0 1.5rem 0 !important;
+    margin: 0 0 1.5rem 0 !important;
+    border-bottom: 1px solid var(--divider) !important;
+}
+
+/* App logo icon via pseudo-element */
+.pf-c-login__main-header::before {
+    content: '';
+    display: block;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background-color: var(--primary);
+    margin-bottom: 1.25rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40' fill='white'%3E%3Ccircle cx='20' cy='20' r='14' stroke='white' stroke-width='3' fill='none'/%3E%3Ccircle cx='20' cy='20' r='6' fill='white'/%3E%3C/svg%3E");
+    background-size: 60%;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* Page title */
+.pf-c-title,
+#kc-page-title,
+h1#kc-page-title {
+    font-family: var(--font) !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: var(--text-heading) !important;
+    text-align: left !important;
+    line-height: 1.3 !important;
+    background: none !important;
+    margin: 0 !important;
+}
+
+/* Subtitle */
+.pf-c-login__main-header p,
+.pf-c-login__main-header .pf-c-text {
+    color: var(--text-muted) !important;
+    font-size: 0.9rem !important;
+    margin-top: 0.375rem !important;
+    margin-bottom: 0 !important;
+}
+
+/* --------------------------------------------------------------------------
+   Content & Form Body
+   -------------------------------------------------------------------------- */
+#kc-content {
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.pf-c-login__main-body {
+    padding: 0 !important;
+}
+
+.pf-c-form__group {
+    margin-bottom: 1.125rem !important;
+}
+
+/* --------------------------------------------------------------------------
+   Form Labels
+   -------------------------------------------------------------------------- */
+.pf-c-form__label,
+.pf-c-form__label .pf-c-form__label-text,
+label.pf-c-form__label,
+label[for] {
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    color: var(--text-heading) !important;
+    margin-bottom: 0.375rem !important;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    display: block !important;
+}
+
+.pf-c-form__group-label {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 0.375rem !important;
+}
+
+/* Required asterisk */
+.pf-c-form__label-required {
+    color: var(--error) !important;
+    margin-left: 2px;
+}
+
+/* Remove legacy emoji icon pseudo-elements */
+label[for="firstName"]::before,
+label[for="lastName"]::before,
+label[for="email"]::before,
+label[for="username"]::before,
+label[for="password"]::before,
+label[for="password-confirm"]::before {
+    display: none !important;
+    content: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Form Inputs
+   -------------------------------------------------------------------------- */
+.pf-c-form-control,
+input.pf-c-form-control,
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    background-color: var(--input-bg) !important;
+    border: 1px solid var(--input-border) !important;
+    border-radius: var(--input-radius) !important;
+    padding: var(--input-padding) !important;
+    font-size: 0.9375rem !important;
+    color: var(--text-heading) !important;
+    width: 100% !important;
+    font-family: var(--font) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+    box-shadow: none !important;
+    outline: none !important;
+    /* Ensure browser respects our color-scheme */
+    color-scheme: inherit;
+}
+
+.pf-c-form-control::placeholder {
+    color: var(--text-muted) !important;
+    -webkit-text-fill-color: var(--text-muted) !important;
+    font-weight: 400 !important;
+    opacity: 1;
+}
+
+.pf-c-form-control:hover {
+    border-color: var(--input-border-hover) !important;
+}
+
+.pf-c-form-control:focus,
+.pf-c-form-control:focus-within {
+    border-color: var(--input-border-focus) !important;
+    box-shadow: 0 0 0 3px var(--primary-ring) !important;
+}
+
+/* Error state */
+.pf-c-form-control[aria-invalid="true"],
+.pf-c-form-control.pf-m-error {
+    border-color: var(--error) !important;
+    border-width: 2px !important;
+    box-shadow: 0 0 0 3px var(--error-ring) !important;
+}
+
+/* Password visibility toggle button */
+.pf-c-button.pf-m-control {
+    border: 1px solid var(--input-border) !important;
+    border-left: none !important;
+    border-radius: 0 var(--input-radius) var(--input-radius) 0 !important;
+    background: var(--input-bg) !important;
+    color: var(--text-muted) !important;
+    transition: color 0.15s ease !important;
+}
+
+.pf-c-button.pf-m-control:hover {
+    color: var(--text-body) !important;
+    background: var(--input-bg) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Name Fields — match full width of other fields
+   -------------------------------------------------------------------------- */
+
+/* Apply same negative margin expansion the other .form-group rows have */
+.form-group:has(#firstName),
+.form-group:has(#lastName) {
+    margin-left: -20px !important;
+    margin-right: -20px !important;
+    width: calc(100% + 40px) !important;
+    box-sizing: border-box !important;
+}
+
+/* Fix the inner Bootstrap col container */
+.form-group:has(#firstName) [class*="col-"],
+.form-group:has(#lastName) [class*="col-"] {
+    width: 100% !important;
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    box-sizing: border-box !important;
+}
+
+/* Direct input sizing */
+#firstName,
+#lastName {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+
+/* --------------------------------------------------------------------------
+   Primary Button (Submit / CTA)
+   -------------------------------------------------------------------------- */
+.pf-c-button.pf-m-primary,
+#kc-login button[type="submit"],
+#kc-register-form button[type="submit"],
+.pf-c-button[type="submit"] {
+    background: var(--primary) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: var(--input-radius) !important;
+    padding: 0.75rem 1.25rem !important;
+    font-size: 0.9375rem !important;
+    font-weight: 600 !important;
+    font-family: var(--font) !important;
+    width: 100% !important;
+    cursor: pointer;
+    transition: background 0.15s ease, opacity 0.15s ease !important;
+    box-shadow: none !important;
+    letter-spacing: 0 !important;
+}
+
+.pf-c-button.pf-m-primary:hover,
+#kc-login button[type="submit"]:hover,
+.pf-c-button[type="submit"]:hover {
+    background: var(--primary-hover) !important;
+}
+
+.pf-c-button.pf-m-primary:focus-visible,
+#kc-login button[type="submit"]:focus-visible,
+.pf-c-button[type="submit"]:focus-visible {
+    outline: 3px solid var(--primary-ring) !important;
+    outline-offset: 2px !important;
+}
+
+.pf-c-button.pf-m-primary:disabled,
+#kc-login button[type="submit"]:disabled,
+.pf-c-button[type="submit"]:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Social / Secondary Buttons
+   -------------------------------------------------------------------------- */
+.pf-c-button.pf-m-secondary.pf-m-block {
+    background: var(--input-bg) !important;
+    color: var(--text-heading) !important;
+    border: 1px solid var(--input-border) !important;
+    border-radius: var(--input-radius) !important;
+    padding: 0.7rem 1.25rem !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    width: 100% !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.6rem !important;
+    box-shadow: none !important;
+    transition: background 0.15s ease, border-color 0.15s ease !important;
+}
+
+.pf-c-button.pf-m-secondary.pf-m-block:hover {
+    background: var(--social-hover-bg) !important;
+    border-color: var(--input-border-hover) !important;
+}
+
+/* --------------------------------------------------------------------------
+   "Or" Divider
+   -------------------------------------------------------------------------- */
+.pf-c-login__main-footer-links {
+    text-align: center;
+    margin: 1.125rem 0 !important;
+    padding: 0 !important;
+    position: relative;
+    list-style: none !important;
+}
+
+.pf-c-login__main-footer-links::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--divider);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.pf-c-login__main-footer-links span,
+.pf-c-login__main-footer-links-item {
+    background: var(--card-bg);
+    padding: 0 0.75rem;
+    position: relative;
+    z-index: 1;
+    color: var(--text-muted) !important;
+    font-size: 0.85rem !important;
+    display: inline-block;
+}
+
+/* --------------------------------------------------------------------------
+   Form Options (Forgot Password)
+   -------------------------------------------------------------------------- */
+#kc-form-options {
+    position: static !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    margin: 0.25rem 0 1rem 0 !important;
+    padding: 0 !important;
+    z-index: auto;
+    width: 100%;
+}
+
+#kc-form-options a {
+    font-size: 0.875rem !important;
+    color: var(--link-color) !important;
+    text-decoration: none !important;
+    font-weight: 500 !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    display: inline !important;
+    position: static !important;
+    white-space: normal !important;
+    min-height: auto !important;
+    min-width: auto !important;
+    border-radius: 0 !important;
+    transition: color 0.15s ease !important;
+}
+
+#kc-form-options a::before,
+#kc-form-options a::after {
+    display: none !important;
+    content: none !important;
+}
+
+#kc-form-options a:hover {
+    text-decoration: underline !important;
+    color: var(--link-hover) !important;
+    background: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+#kc-form-options div.checkbox {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    position: static !important;
+}
+
+#kc-form-options .pf-c-check__label {
+    font-size: 0.875rem !important;
+    color: var(--text-body) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Footer Band — "No account? Register"
+   -------------------------------------------------------------------------- */
+.pf-c-login__main-footer-band {
+    display: block !important;
+    position: static !important;
+    text-align: center !important;
+    padding: 1.25rem var(--card-padding-h) !important;
+    margin: 1.5rem calc(-1 * var(--card-padding-h)) calc(-1 * var(--card-padding-v)) !important;
+    border-top: 1px solid var(--divider) !important;
+    border-bottom-left-radius: var(--card-radius) !important;
+    border-bottom-right-radius: var(--card-radius) !important;
+    font-size: 0.875rem !important;
+    color: var(--text-muted) !important;
+    background: transparent !important;
+}
+
+.pf-c-login__main-footer-band p {
+    margin: 0 !important;
+    color: var(--text-muted) !important;
+}
+
+#kc-info-wrapper {
+    position: static !important;
+    display: inline !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 0.875rem !important;
+    z-index: auto;
+    transform: none !important;
+}
+
+#kc-info-wrapper a {
+    position: static !important;
+    display: inline !important;
+    font-size: 0.875rem !important;
+    color: var(--link-color) !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    background: none !important;
+    border: none !important;
+    padding: 0 !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: auto !important;
+    min-width: auto !important;
+    border-radius: 0 !important;
+    white-space: normal !important;
+    cursor: pointer;
+    transition: color 0.15s ease !important;
+    transform: none !important;
+    letter-spacing: 0 !important;
+}
+
+#kc-info-wrapper a::before,
+#kc-info-wrapper a::after {
+    display: none !important;
+    content: none !important;
+}
+
+#kc-info-wrapper a:hover {
+    text-decoration: underline !important;
+    color: var(--link-hover) !important;
+    background: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   Alerts / Error Messages
+   -------------------------------------------------------------------------- */
+.pf-c-alert,
+.pf-c-form__helper-text,
+#input-error,
+.pf-m-error {
+    font-size: 0.8125rem !important;
+    border-radius: 6px !important;
+}
+
+.pf-c-alert.pf-m-danger,
+.pf-m-error {
+    color: var(--error) !important;
+    background: var(--error-bg) !important;
+    border-color: var(--error-border) !important;
+}
+
+.pf-c-alert.pf-m-success,
+.alert-success {
+    color: var(--primary) !important;
+    background: var(--primary-light) !important;
+    border-color: rgba(26, 94, 74, 0.2) !important;
+}
+
+#input-error {
+    color: var(--error) !important;
+    margin-top: 0.25rem !important;
+    font-size: 0.8125rem !important;
+    display: block !important;
+}
+
+/* --------------------------------------------------------------------------
+   Password Policy Checklist
+   -------------------------------------------------------------------------- */
+.password-policies,
+#kc-password-policies {
+    background: var(--bg) !important;
+    border: 1px solid var(--divider) !important;
+    border-radius: 8px !important;
+    padding: 0.75rem 1rem !important;
+    margin-top: 0.5rem !important;
+    font-size: 0.8125rem !important;
+    color: var(--text-body) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Checkbox (Terms / Remember Me)
+   -------------------------------------------------------------------------- */
+.pf-c-check,
+#termsAccepted-group {
+    background: var(--bg) !important;
+    border: 1px solid var(--divider) !important;
+    border-radius: 8px !important;
+    padding: 0.75rem 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+input[type="checkbox"] {
+    accent-color: var(--primary) !important;
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Locale / Language Selector
+   -------------------------------------------------------------------------- */
+#kc-locale {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+}
+
+#kc-locale-dropdown .pf-c-dropdown__toggle {
+    background: transparent !important;
+    color: var(--text-muted) !important;
+    border: 1px solid var(--divider) !important;
+    border-radius: 6px !important;
+    font-size: 0.8125rem !important;
+    padding: 0.3rem 0.625rem !important;
+    cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   Social Providers
+   -------------------------------------------------------------------------- */
+#social-providers {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+    margin-bottom: 1rem;
+    padding: 0 !important;
+    list-style: none !important;
+}
+
+/* Hide default Keycloak icon elements */
+#social-providers i,
+#social-providers .kc-social-icon,
+#social-providers .zocial::before {
+    display: none !important;
+}
+
+/* Base social button style */
+#social-providers a,
+.kc-social-link {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+    padding: 0.65rem 1.25rem !important;
+    background: var(--card-bg) !important;
+    border: 1px solid var(--divider) !important;
+    border-radius: var(--radius-full) !important;
+    color: var(--text-body) !important;
+    font-size: 0.875rem !important;
+    font-family: var(--font) !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    transition: background 0.2s ease, border-color 0.2s ease,
+        transform 0.2s ease !important;
+    box-shadow: none !important;
+    cursor: pointer;
+}
+
+#social-providers a:hover,
+.kc-social-link:hover {
+    background: var(--social-hover-bg) !important;
+    border-color: var(--input-border-hover) !important;
+    transform: translateY(-1px) !important;
+}
+
+/* Reset all children of social buttons */
+#social-providers a *,
+.kc-social-link * {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    font-size: inherit !important;
+    color: inherit !important;
+    line-height: inherit !important;
+}
+
+/* Google icon */
+#social-providers a[href*="google"]::before,
+#social-providers a[id*="google"]::before,
+.kc-social-link[href*="google"]::before {
+    content: '';
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cpath fill='%23EA4335' d='M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z'/%3E%3Cpath fill='%234285F4' d='M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z'/%3E%3Cpath fill='%23FBBC05' d='M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z'/%3E%3Cpath fill='%2334A853' d='M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z'/%3E%3Cpath fill='none' d='M0 0h48v48H0z'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+/* Facebook icon */
+#social-providers a[href*="facebook"]::before,
+#social-providers a[id*="facebook"]::before,
+.kc-social-link[href*="facebook"]::before {
+    content: '';
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 512'%3E%3Cpath fill='%231877F2' d='M279.14 288l14.22-92.66h-88.91v-60.13c0-25.35 12.42-50.06 52.24-50.06h40.42V6.26S260.43 0 225.36 0c-73.22 0-121.08 44.38-121.08 124.72v70.62H22.89V288h81.39v224h100.17V288z'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Select Dropdown
+   -------------------------------------------------------------------------- */
+select.pf-c-form-control {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8.825a.5.5 0 0 1-.354-.146l-4-4a.5.5 0 0 1 .708-.708L6 7.617l3.646-3.646a.5.5 0 0 1 .708.708l-4 4A.5.5 0 0 1 6 8.825z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.875rem center !important;
+    padding-right: 2.25rem !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    cursor: pointer;
+}
+
+/* --------------------------------------------------------------------------
+   Terms / Info Text Block
+   -------------------------------------------------------------------------- */
+#kc-terms-text,
+.kc-terms-text {
+    background: var(--bg) !important;
+    border: 1px solid var(--divider) !important;
+    border-radius: 8px !important;
+    padding: 0.875rem 1rem !important;
+    font-size: 0.8125rem !important;
+    color: var(--text-body) !important;
+    max-height: 180px;
+    overflow-y: auto;
+    margin-bottom: 1rem !important;
+    line-height: 1.6;
+}
+
+/* --------------------------------------------------------------------------
+   Scrollbar
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* --------------------------------------------------------------------------
+   Keyframes
+   -------------------------------------------------------------------------- */
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Responsive — Tablet / Mobile
+   -------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+    body {
+        padding: 1rem 0.75rem;
+        justify-content: flex-start;
+    }
+
+    .pf-c-login__main {
+        --card-padding-v: 1.75rem;
+        --card-padding-h: 1.25rem;
+        border-radius: 12px !important;
+        padding: var(--card-padding-v) var(--card-padding-h) !important;
+    }
+}
+
+@media (max-width: 380px) {
+    .pf-c-login__main {
+        --card-padding-v: 1.25rem;
+        --card-padding-h: 1rem;
+        padding: var(--card-padding-v) var(--card-padding-h) !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Accessibility — Reduced Motion
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

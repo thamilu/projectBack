@@ -1,0 +1,287 @@
+{
+  "groups": [
+    {
+      "name": "jwt",
+      "type": "com.eshop.app.config.JwtProperties",
+      "description": "JWT configuration properties"
+    },
+    {
+      "name": "app.seed",
+      "type": "com.eshop.app.config.SeedDataProperties",
+      "description": "Seed data configuration"
+    },
+    {
+      "name": "app.cache",
+      "type": "com.eshop.app.config.CacheProperties",
+      "description": "Application cache configuration"
+    },
+    {
+      "name": "app",
+      "type": "com.eshop.app.config.AppProperties",
+      "description": "Application-specific properties"
+    },
+    {
+      "name": "security.keycloak",
+      "type": "com.eshop.app.config.KeycloakProperties",
+      "description": "Keycloak security configuration"
+    },
+    {
+      "name": "api",
+      "type": "com.eshop.app.config.ApiProperties",
+      "description": "API metadata properties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "app.datasource.read-replicas.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable read-replica support (custom application property).",
+      "defaultValue": false
+    },
+    {
+      "name": "app.datasource.read-replicas.url",
+      "type": "java.lang.String",
+      "description": "JDBC URL for the read-replica datasource."
+    },
+    {
+      "name": "app.datasource.read-replicas.username",
+      "type": "java.lang.String",
+      "description": "Username for the read-replica datasource."
+    },
+    {
+      "name": "app.datasource.read-replicas.password",
+      "type": "java.lang.String",
+      "description": "Password for the read-replica datasource."
+    },
+    {
+      "name": "app.datasource.read-replicas.driver-class-name",
+      "type": "java.lang.String",
+      "description": "Driver class name for the read-replica datasource."
+    },
+    {
+      "name": "app.redis.health.timeout",
+      "type": "java.time.Duration",
+      "description": "Timeout for Redis health check (duration).",
+      "defaultValue": "500ms"
+    },
+    {
+      "name": "app.redis.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Toggle use of Redis caching (application-level).",
+      "defaultValue": true
+    },
+    {
+      "name": "app.redis.resilient.mode",
+      "type": "java.lang.Boolean",
+      "description": "Enable resilient mode to fallback to local cache when Redis unavailable.",
+      "defaultValue": true
+    },
+    {
+      "name": "app.redis.cache.default-ttl",
+      "type": "java.lang.Integer",
+      "description": "Default cache TTL in seconds (application-level).",
+      "defaultValue": 3600
+    },
+    {
+      "name": "pagination.default-page-size",
+      "type": "java.lang.Integer",
+      "description": "Default page size for pagination (application-level).",
+      "defaultValue": 20
+    },
+    {
+      "name": "pagination.max-page-size",
+      "type": "java.lang.Integer",
+      "description": "Maximum allowed page size for pagination (application-level).",
+      "defaultValue": 100
+    },
+    {
+      "name": "cors.allowed-origins",
+      "type": "java.lang.String",
+      "description": "Comma-separated list of allowed CORS origins for the application."
+    },
+    {
+      "name": "cors.allowed-methods",
+      "type": "java.lang.String",
+      "description": "Comma-separated list of allowed HTTP methods for CORS."
+    },
+    {
+      "name": "cors.allowed-headers",
+      "type": "java.lang.String",
+      "description": "Comma-separated list of allowed headers for CORS."
+    },
+    {
+      "name": "cors.exposed-headers",
+      "type": "java.lang.String",
+      "description": "Comma-separated list of exposed headers for CORS."
+    },
+    {
+      "name": "cors.allow-credentials",
+      "type": "java.lang.Boolean",
+      "description": "Whether CORS should allow credentials (cookies, authorization headers).",
+      "defaultValue": true
+    },
+    {
+      "name": "cors.max-age",
+      "type": "java.lang.Integer",
+      "description": "CORS max-age in seconds for preflight requests.",
+      "defaultValue": 3600
+    },
+    {
+      "name": "app.frontend.url",
+      "type": "java.lang.String",
+      "description": "Frontend application base URL (used in redirects)."
+    },
+    {
+      "name": "app.backend.url",
+      "type": "java.lang.String",
+      "description": "Backend application base URL (used by frontends or docs)."
+    },
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "JWT secret key for signing tokens"
+    },
+    {
+      "name": "jwt.expiration",
+      "type": "java.lang.Long",
+      "description": "JWT token expiration time in milliseconds",
+      "defaultValue": 3600000
+    },
+    {
+      "name": "jwt.refresh-expiration",
+      "type": "java.lang.Long",
+      "description": "JWT refresh token expiration time in milliseconds",
+      "defaultValue": 604800000
+    },
+    {
+      "name": "jwt.issuer",
+      "type": "java.lang.String",
+      "description": "JWT token issuer"
+    },
+    {
+      "name": "jwt.algorithm",
+      "type": "java.lang.String",
+      "description": "JWT signing algorithm",
+      "defaultValue": "HS512"
+    },
+    {
+      "name": "app.seed.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable seed data initialization",
+      "defaultValue": false
+    },
+    {
+      "name": "app.seed.password.admin",
+      "type": "java.lang.String",
+      "description": "Admin user seed password (dev only)"
+    },
+    {
+      "name": "app.seed.password.retail1",
+      "type": "java.lang.String",
+      "description": "Retail user seed password (dev only)"
+    },
+    {
+      "name": "app.seed.password.wholesale1",
+      "type": "java.lang.String",
+      "description": "Wholesale user seed password (dev only)"
+    },
+    {
+      "name": "app.seed.password.shop1",
+      "type": "java.lang.String",
+      "description": "Shop user seed password (dev only)"
+    },
+    {
+      "name": "app.seed.password.farmer1",
+      "type": "java.lang.String",
+      "description": "Farmer user seed password (dev only)"
+    },
+    {
+      "name": "app.seed.password.customer1",
+      "type": "java.lang.String",
+      "description": "Customer user seed password (dev only)"
+    },
+    {
+      "name": "app.seed.password.delivery1",
+      "type": "java.lang.String",
+      "description": "Delivery agent seed password (dev only)"
+    },
+    {
+      "name": "app.debug",
+      "type": "java.lang.Boolean",
+      "description": "Enable application debug mode",
+      "defaultValue": false
+    },
+    {
+      "name": "app.security.swagger.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Swagger UI",
+      "defaultValue": true
+    },
+    {
+      "name": "app.ratelimit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable rate limiting",
+      "defaultValue": true
+    },
+    {
+      "name": "app.cache.dashboard.ttl",
+      "type": "java.lang.Integer",
+      "description": "Dashboard cache TTL in seconds",
+      "defaultValue": 300
+    },
+    {
+      "name": "app.cache.statistics.ttl",
+      "type": "java.lang.Integer",
+      "description": "Statistics cache TTL in seconds",
+      "defaultValue": 300
+    },
+    {
+      "name": "app.cache.analytics.ttl",
+      "type": "java.lang.Integer",
+      "description": "Analytics cache TTL in seconds",
+      "defaultValue": 600
+    },
+    {
+      "name": "app.cache.products.ttl",
+      "type": "java.lang.Integer",
+      "description": "Products cache TTL in seconds",
+      "defaultValue": 3600
+    },
+    {
+      "name": "app.cache.categories.ttl",
+      "type": "java.lang.Integer",
+      "description": "Categories cache TTL in seconds",
+      "defaultValue": 7200
+    },
+    {
+      "name": "keycloak.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Keycloak integration",
+      "defaultValue": false
+    },
+    {
+      "name": "security.keycloak.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Keycloak security",
+      "defaultValue": false
+    },
+    {
+      "name": "api.version",
+      "type": "java.lang.String",
+      "description": "API version"
+    },
+    {
+      "name": "api.expose-tech-stack",
+      "type": "java.lang.Boolean",
+      "description": "Expose technology stack in API responses",
+      "defaultValue": false
+    },
+    {
+      "name": "app.json.pretty-print",
+      "type": "java.lang.Boolean",
+      "description": "Enable JSON pretty printing",
+      "defaultValue": false
+    }
+  ],
+  "hints": []
+}
