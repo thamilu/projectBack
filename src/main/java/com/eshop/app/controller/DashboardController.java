@@ -107,7 +107,7 @@ public class DashboardController {
     private final AdminAnalyticsService adminAnalyticsService;
     private final SellerAnalyticsService sellerAnalyticsService;
     private final CacheManager cacheManager;
-    private final com.eshop.app.service.SellerService sellerService;
+
     
     // ============================================================================
     // ADMIN ENDPOINTS

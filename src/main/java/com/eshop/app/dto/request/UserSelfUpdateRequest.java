@@ -51,4 +51,10 @@ public class UserSelfUpdateRequest {
     @Size(max = 20)
     private String gender;
 
+    @Size(max = 20)
+    private String alternatePhone;
+
+    @Size(max = 20)
+    private String preferredLanguage;
+
 }

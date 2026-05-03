@@ -12,7 +12,7 @@ import com.eshop.app.mapper.UserMapper;
 import com.eshop.app.repository.UserRepository;
 import com.eshop.app.service.UserService;
 import com.eshop.app.service.KeycloakService;
-import com.eshop.app.enums.DocumentType;
+
 import com.eshop.app.entity.UserProfile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +45,15 @@ public class UserServiceImpl implements UserService {
                     log.warn("User not found with id: {}", id);
                     return new ResourceNotFoundException("User not found with id: " + id);
                 });
+        
+        log.debug("User fetch debug - id: {}, email: {}, hasProfile: {}", 
+            user.getId(), user.getEmail(), user.getUserProfile() != null);
+        
+        if (user.getUserProfile() != null) {
+            log.debug("Profile fetch debug - firstName: {}, lastName: {}", 
+                user.getUserProfile().getFirstName(), user.getUserProfile().getLastName());
+        }
+
         return userMapper.toUserResponse(user);
     }
 
@@ -122,6 +131,10 @@ public class UserServiceImpl implements UserService {
             user.getUserProfile().setDateOfBirth(request.getDateOfBirth());
         if (request.getGender() != null)
             user.getUserProfile().setGender(request.getGender());
+        if (request.getAlternatePhone() != null)
+            user.getUserProfile().setAlternatePhone(request.getAlternatePhone());
+        if (request.getPreferredLanguage() != null)
+            user.getUserProfile().setPreferredLanguage(request.getPreferredLanguage());
 
         user = userRepository.save(user);
         return userMapper.toUserResponse(user);

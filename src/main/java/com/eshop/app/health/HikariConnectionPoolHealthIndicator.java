@@ -12,8 +12,7 @@ import javax.sql.DataSource;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.HashMap;
-import java.util.Map;
+
 
 /**
  * MEDIUM-004 FIX: HikariCP Connection Pool Health Indicator (Reflective)

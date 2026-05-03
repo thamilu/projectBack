@@ -149,7 +149,7 @@ public class StoreServiceImpl implements StoreService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public StoreResponse getMyStore() {
         log.info("Starting store resolution (getMyStore)");
 

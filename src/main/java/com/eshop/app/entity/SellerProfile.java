@@ -4,7 +4,7 @@ import com.eshop.app.enums.SellerIdentityType;
 import com.eshop.app.enums.SellerBusinessType;
 import com.eshop.app.enums.SellerStatus;
 import java.util.HashSet;
-import java.util.List;
+
 import java.util.Set;
 import jakarta.persistence.*;
 import lombok.*;

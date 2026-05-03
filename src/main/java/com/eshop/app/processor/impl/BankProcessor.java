@@ -6,7 +6,7 @@ import com.eshop.app.entity.SellerProfile;
 import com.eshop.app.processor.SellerModuleProcessor;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
+
 
 /**
  * Processor for Seller Bank Account module.

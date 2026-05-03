@@ -14,7 +14,7 @@ import com.eshop.app.repository.UserRepository;
 import com.eshop.app.repository.StoreRepository;
 import com.eshop.app.config.properties.AppProperties;
 import com.eshop.app.enums.DocumentType;
-import lombok.RequiredArgsConstructor;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -232,15 +232,37 @@ public class SellerService {
                     seededDisplayName = combined.trim().isEmpty() ? null : combined.trim();
                 }
 
+                // Seed address from UserAddress if available
+                String addr1 = null, addr2 = null, city = null, dist = null, state = null, pin = null, country = "India";
+                if (user.getUserProfile() != null && user.getUserProfile().getAddresses() != null && !user.getUserProfile().getAddresses().isEmpty()) {
+                    UserAddress defAddr = user.getUserProfile().getAddresses().stream()
+                        .filter(a -> a.getIsDefault() != null && a.getIsDefault())
+                        .findFirst()
+                        .orElse(user.getUserProfile().getAddresses().get(0));
+                    addr1 = defAddr.getAddressLine1();
+                    addr2 = defAddr.getAddressLine2();
+                    city = defAddr.getCity();
+                    dist = defAddr.getDistrict();
+                    state = defAddr.getState();
+                    pin = defAddr.getPincode();
+                    country = defAddr.getCountry();
+                }
+
                 SellerProfile jitProfile = SellerProfile.builder()
                         .user(user)
                         .identityType(SellerIdentityType.INDIVIDUAL)
                         .status(SellerStatus.PENDING)
                         .shopName(seededDisplayName != null ? seededDisplayName : (user.getUsername() != null ? user.getUsername() : "Seller " + user.getId()))
                         .description("Welcome to my shop! I am a new seller on the platform.")
+                        .businessMobileNumber(user.getUserProfile() != null ? user.getUserProfile().getPhone() : null)
+                        .addressLine1(addr1).addressLine2(addr2).city(city).district(dist).state(state).pincode(pin).country(country)
+                        .storeAddressLine1(addr1).storeAddressLine2(addr2).storeCity(city).storeDistrict(dist).storeState(state).storePincode(pin).storeCountry(country)
                         .build();
                 SellerProfile saved = sellerProfileRepository.save(jitProfile);
-                // userProfile will be populated on next fetch via the shared user_id FK
+                
+                // Also ensure a corresponding Store entity exists immediately for SELLER panel access
+                ensureStoreExists(user, saved);
+
                 return sellerMapper.toResponse(saved);
             }
         }

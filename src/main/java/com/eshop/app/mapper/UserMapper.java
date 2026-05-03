@@ -14,6 +14,8 @@ public interface UserMapper {
 
         @Mapping(target = "role", source = "role")
     @Mapping(target = "shop", source = "store")
+        @Mapping(target = "email", source = "email")
+        @Mapping(target = "username", source = "username")
         @Mapping(target = "firstName", source = "userProfile.firstName")
         @Mapping(target = "lastName", source = "userProfile.lastName")
         @Mapping(target = "phone", source = "userProfile.phone")
@@ -27,6 +29,8 @@ public interface UserMapper {
         @Mapping(target = "pincode", expression = "java(getDefaultPincode(user))")
         @Mapping(target = "gender", source = "userProfile.gender")
         @Mapping(target = "dateOfBirth", source = "userProfile.dateOfBirth")
+        @Mapping(target = "alternatePhone", source = "userProfile.alternatePhone")
+        @Mapping(target = "preferredLanguage", source = "userProfile.preferredLanguage")
     UserResponse toUserResponse(User user);
 
     default String getDefaultAddressLine1(User user) {

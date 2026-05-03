@@ -33,6 +33,8 @@ public class UserResponse {
     // Demographics and KYC
     private String gender;
     private java.time.LocalDate dateOfBirth;
+    private String alternatePhone;
+    private String preferredLanguage;
 
     private String role;
     private LocalDateTime createdAt;

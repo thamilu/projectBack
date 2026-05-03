@@ -34,7 +34,7 @@ public class ValidRegisterRequestValidator implements ConstraintValidator<ValidR
                         .addPropertyNode("sellerType").addConstraintViolation();
                 valid = false;
             } else {
-                String st = sellerType.trim().toUpperCase();
+
                 // All sellers require storeName and businessName
                 if (isBlank(request.getStoreName())) {
                     context.buildConstraintViolationWithTemplate("storeName is required for this seller type")
