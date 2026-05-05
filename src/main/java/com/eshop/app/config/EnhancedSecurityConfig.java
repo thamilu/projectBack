@@ -1,7 +1,7 @@
 package com.eshop.app.config;
 
 import com.eshop.app.config.properties.AppProperties;
-import com.eshop.app.dto.response.ErrorResponse;
+import com.eshop.app.dto.response.ApiError;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +26,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
@@ -91,7 +90,8 @@ public class EnhancedSecurityConfig {
                         .requestMatchers("/csp/report").permitAll()
                 .requestMatchers("/auth/session").permitAll()
                 .requestMatchers("/auth/config").permitAll()
-                        .requestMatchers("/api/v1/public/**", "/api/auth/**", "/auth/_log", "/api/debug/**").permitAll()
+                        .requestMatchers("/api/v1/public/**", "/api/auth/**", "/auth/_log").permitAll()
+                        .requestMatchers("/api/debug/**").hasRole(roles.getAdmin())
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/error").permitAll()
                 
                         .requestMatchers("/actuator/**").hasRole(roles.getAdmin())
@@ -108,10 +108,11 @@ public class EnhancedSecurityConfig {
                 
                         .requestMatchers("/api/v1/admin/**").hasRole(roles.getAdmin())
                 
-                        .requestMatchers("/api/v1/sellers/{id}/sync-role").permitAll()
+                        .requestMatchers("/api/v1/sellers/{id}/sync-role").hasRole(roles.getAdmin())
                         .requestMatchers(HttpMethod.POST, "/api/v1/sellers/register").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/sellers/identity-types", "/api/v1/sellers/business-types").authenticated()
                         .requestMatchers("/api/v1/sellers/profile/exists", "/api/v1/sellers/profile").authenticated()
+                        .requestMatchers("/api/v1/sellers/check-handle/**").authenticated()
                         .requestMatchers("/api/v1/sellers/**").hasAnyRole(roles.getSeller(), roles.getAdmin())
                         
                         .requestMatchers("/api/v1/cart/**").hasAnyRole(roles.getCustomer(), roles.getAdmin())
@@ -141,7 +142,12 @@ public class EnhancedSecurityConfig {
                                         frame.sameOrigin();
                                 })
                                 .httpStrictTransportSecurity(
-                                        hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000));
+                                        hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31536000))
+                                .xssProtection(xss -> xss.headerValue(org.springframework.security.web.header.writers.XXssProtectionHeaderWriter.HeaderValue.ENABLED_MODE_BLOCK))
+                                .contentTypeOptions(org.springframework.security.config.Customizer.withDefaults())
+                                .referrerPolicy(referrer -> referrer.policy(
+                                        org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                                .addHeaderWriter(new org.springframework.security.web.header.writers.StaticHeadersWriter("Permissions-Policy", "geolocation=(), microphone=(), camera=()"));
                     }
                 });
 
@@ -187,7 +193,7 @@ public class EnhancedSecurityConfig {
 
     @Bean
     public org.springframework.core.convert.converter.Converter<org.springframework.security.oauth2.jwt.Jwt, org.springframework.security.authentication.AbstractAuthenticationToken> jwtAuthenticationConverter() {
-        log.info("🔧 EnhancedSecurityConfig JWT converter - extracting roles and mapping principal");
+        log.debug("🔧 EnhancedSecurityConfig JWT converter - extracting roles and mapping principal");
         AppProperties.Security sec = appProperties.getSecurity();
         String rolePrefix = sec.getRolePrefix();
 
@@ -237,7 +243,7 @@ public class EnhancedSecurityConfig {
                         userService.syncUserFromKeycloak(keycloakId, username, email, givenName, familyName, phoneNumber, emailVerified);
                         userService.syncUserRoles(localUserId, allRoles);
                     } else {
-                        log.info("Creating new local user for Keycloak ID: {}", keycloakId);
+                        log.debug("Creating new local user for Keycloak ID: {}", keycloakId);
                         localUserId = userService.syncUserFromKeycloak(keycloakId, username, email, givenName, familyName, phoneNumber, emailVerified);
                         userService.syncUserRoles(localUserId, allRoles);
                     }
@@ -279,13 +285,12 @@ public class EnhancedSecurityConfig {
         return (request, response, authException) -> {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(Instant.now())
-                .status(HttpStatus.UNAUTHORIZED.value())
-                .error("Unauthorized")
-                .message("Full authentication is required to access this resource")
-                .path(request.getRequestURI())
-                    .build();
+            ApiError errorResponse = ApiError.of(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Unauthorized",
+                "Full authentication is required to access this resource",
+                request.getRequestURI()
+            );
             objectMapper.writeValue(response.getOutputStream(), errorResponse);
         };
     }
@@ -295,13 +300,12 @@ public class EnhancedSecurityConfig {
         return (request, response, accessDeniedException) -> {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(Instant.now())
-                .status(HttpStatus.FORBIDDEN.value())
-                .error("Forbidden")
-                .message("You don't have permission to access this resource")
-                .path(request.getRequestURI())
-                    .build();
+            ApiError errorResponse = ApiError.of(
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                "You don't have permission to access this resource",
+                request.getRequestURI()
+            );
             objectMapper.writeValue(response.getOutputStream(), errorResponse);
         };
     }

@@ -284,7 +284,5 @@ public class StoreServiceImpl implements StoreService {
         return storeMapper.syncMissingData(store, store.getSellerProfile());
     }
 
-    private boolean isBlank(String s) {
-        return s == null || s.isBlank();
-    }
+
 }

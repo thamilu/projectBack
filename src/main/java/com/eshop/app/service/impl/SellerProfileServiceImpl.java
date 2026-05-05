@@ -101,6 +101,11 @@ public class SellerProfileServiceImpl implements SellerProfileService {
         return userId != null && hasProfile(userId);
     }
 
+    @Override
+    public boolean existsByShopHandle(String handle) {
+        return sellerProfileRepository.existsByShopHandle(handle);
+    }
+
     private void syncToStore(SellerProfile profile, SellerProfileUpdateRequest request, Long userId) {
         if (profile.getStores() == null) return;
         

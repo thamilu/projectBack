@@ -3,6 +3,7 @@ package com.eshop.app.controller.auth;
 import com.eshop.app.config.properties.AppProperties;
 import com.eshop.app.constants.ApiConstants;
 import com.eshop.app.dto.auth.*;
+import com.eshop.app.dto.response.ApiError;
 import com.eshop.app.service.auth.KeycloakAuthService;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import jakarta.validation.Valid;
@@ -263,14 +264,17 @@ public class KeycloakAuthController {
      * ✅ PUBLIC - Error endpoint
      */
     @GetMapping("/error")
-    public ResponseEntity<ErrorResponse> handleError(
+    public ResponseEntity<ApiError> handleError(
             @RequestParam(required = false) String error,
-            @RequestParam(required = false) String error_description) {
+            @RequestParam(required = false) String error_description,
+            jakarta.servlet.http.HttpServletRequest request) {
         
-        ErrorResponse response = ErrorResponse.builder()
-                .status(401)
+        ApiError response = ApiError.builder()
+                .timestamp(java.time.Instant.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
                 .error(error != null ? error : "authentication_failed")
                 .message(error_description != null ? error_description : "Authentication failed")
+                .path(request.getRequestURI())
                 .build();
         
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);

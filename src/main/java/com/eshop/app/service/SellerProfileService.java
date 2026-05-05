@@ -14,4 +14,5 @@ public interface SellerProfileService {
     SellerProfileResponse updateSellerProfile(Long userId, SellerProfileUpdateRequest request);
     boolean hasProfile(Long userId);
     boolean hasProfile(Authentication authentication);
+    boolean existsByShopHandle(String handle);
 }

@@ -355,6 +355,13 @@ public class SellerController {
       return ResponseEntity.ok(ApiResponse.success("Keycloak ID sync attempted. Check logs.", null));
     }
 
+    @GetMapping("/check-handle/{handle}")
+    @Operation(summary = "Check shop handle availability", description = "Verify if a specific shop handle is available or already taken.")
+    public ResponseEntity<ApiResponse<Boolean>> checkHandle(@PathVariable String handle) {
+        boolean exists = sellerProfileService.existsByShopHandle(handle.toLowerCase());
+        return ResponseEntity.ok(ApiResponse.success(!exists));
+    }
+
     @GetMapping("/identity-types")
     @Operation(summary = "Get available identity types", description = "Retrieve list of valid seller identity types with their display labels and descriptions.")
     public ResponseEntity<ApiResponse<java.util.List<com.eshop.app.dto.response.SellerIdentityTypeResponse>>> getIdentityTypes() {

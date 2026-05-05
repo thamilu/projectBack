@@ -1,10 +1,16 @@
-# E-Shop Backend Documentation
+# [HARDEN] E-Shop Backend Enterprise Documentation
 
-## Table of Contents
+> **[HARDEN] Standardized Knowledge Base**  
+> This directory has been audited and consolidated to meet enterprise documentation standards. 
+> All development MUST follow the **[Hardening Protocol & Master Keywords](./guides/HARDENING_PROTOCOL.md)**.
 
-### Getting Started
-- [Main README](../README.md) - Project overview and quick start
-- [Tech Stack](../TECH_STACK.md) - Technology stack and architecture
+---
+
+## 📚 Table of Contents
+
+### 1. Hardening & Standards
+- **[Hardening Protocol & Keywords](./guides/HARDENING_PROTOCOL.md)** - **MANDATORY READING**
+- **[Frontend Standards](./reference/FRONTEND_STANDARDS.md)** - Staff/Principal level responsive & device rules.
 
 ### Setup Guides
 - [Keycloak Setup](./setup/KEYCLOAK_SETUP.md) - Complete Keycloak installation and configuration
