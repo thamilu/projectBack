@@ -59,7 +59,7 @@ public class HomeService {
         UserRole role = user.getRole();
         String userName = user.getUserProfile() != null
                 ? user.getUserProfile().getFirstName() + " " + user.getUserProfile().getLastName()
-                : user.getKeycloakId();
+                : user.getEmail();
 
         log.info("Generating home page data for user: {} with role: {}", userName, role);
 

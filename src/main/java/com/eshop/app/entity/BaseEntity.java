@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @MappedSuperclass
+@EntityListeners(org.springframework.data.jpa.domain.support.AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor

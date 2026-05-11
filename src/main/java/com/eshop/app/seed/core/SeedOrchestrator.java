@@ -27,6 +27,7 @@ public class SeedOrchestrator {
     private final Environment environment;
     private final SeedPropertiesValidator validator;
     private final SeedProperties seedProperties;
+    private final com.eshop.app.seed.provider.UserDataProvider userDataProvider;
     
     /**
      * Execute all seeders in order within a single transaction.
@@ -41,6 +42,7 @@ public class SeedOrchestrator {
         
         // Validate configuration before proceeding
         validator.validate(seedProperties);
+        validator.validateUniqueEmails(userDataProvider.getUsers());
         
         // Check if seeding globally disabled (only checks validation/profile before
         // this)

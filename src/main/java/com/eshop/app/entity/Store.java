@@ -64,6 +64,9 @@ public class Store extends BaseEntity {
     private String district;
     
     @Column(length = 100)
+    private String taluk;
+    
+    @Column(length = 100)
     private String state;
     
     @Column(length = 100)

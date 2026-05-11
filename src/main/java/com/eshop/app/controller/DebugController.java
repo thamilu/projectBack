@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/debug")
+@RequestMapping("/api/v1/debug")
 public class DebugController {
 
     @Value("${server.max-http-header-size:unknown}")

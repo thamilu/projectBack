@@ -9,7 +9,11 @@ import org.springframework.web.servlet.mvc.WebContentInterceptor;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
+@lombok.RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
+
+    private final com.eshop.app.core.outbox.IdempotencyInterceptor idempotencyInterceptor;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         WebContentInterceptor interceptor = new WebContentInterceptor();
@@ -19,5 +23,9 @@ public class WebConfig implements WebMvcConfigurer {
             "/api/users/*/profile"
         );
         registry.addInterceptor(interceptor);
+        
+        // Register Idempotency Interceptor
+        registry.addInterceptor(idempotencyInterceptor)
+                .addPathPatterns("/api/**");
     }
 }

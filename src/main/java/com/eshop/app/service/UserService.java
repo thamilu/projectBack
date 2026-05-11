@@ -47,7 +47,7 @@ public interface UserService {
      */
     Long createUserFromKeycloak(String keycloakId, String firstName, String lastName, String phoneNumber);
 
-    Long syncUserFromKeycloak(String keycloakId, String username, String email, String firstName, String lastName, String phoneNumber, Boolean emailVerified);
+    Long syncUserFromKeycloak(String keycloakId, String email, String firstName, String lastName, String phoneNumber, Boolean emailVerified);
 
     void syncKeycloakId(Long userId, String keycloakId);
 

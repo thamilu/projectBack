@@ -58,7 +58,7 @@ import java.util.List;
  * @since 2025-12-22
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Slf4j
 public class SessionController {

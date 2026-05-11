@@ -28,8 +28,8 @@ public class AuditLog {
     @Column(name = "user_identifier", length = 100)
     private String userIdentifier;
 
-    @Column(name = "username", length = 100)
-    private String username;
+    @Column(name = "email", length = 100)
+    private String email;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "action", nullable = false, length = 50)

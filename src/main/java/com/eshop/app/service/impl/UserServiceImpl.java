@@ -11,6 +11,7 @@ import com.eshop.app.mapper.UserMapper;
 import com.eshop.app.repository.UserRepository;
 import com.eshop.app.service.UserService;
 import com.eshop.app.service.KeycloakService;
+import lombok.extern.slf4j.Slf4j;
 
 import com.eshop.app.entity.SellerProfile;
 import org.springframework.data.domain.Page;
@@ -18,7 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.eshop.app.enums.UserRole;
-import lombok.extern.slf4j.Slf4j;
+
 
 @Service
 @Transactional
@@ -73,6 +74,21 @@ public class UserServiceImpl implements UserService {
         user.getUserProfile().setFirstName(request.getFirstName());
         user.getUserProfile().setLastName(request.getLastName());
         user.getUserProfile().setPhone(request.getPhone());
+        
+        if (request.getPincode() != null) {
+            com.eshop.app.entity.UserProfile up = user.getUserProfile();
+            com.eshop.app.entity.UserAddress address = up.getAddresses().stream()
+                .filter(ua -> ua.getIsDefault() != null && ua.getIsDefault())
+                .findFirst().orElseGet(() -> {
+                    com.eshop.app.entity.UserAddress ua = new com.eshop.app.entity.UserAddress();
+                    ua.setUserProfile(up); ua.setIsDefault(true);
+                    up.getAddresses().add(ua); return ua;
+                });
+            address.setTaluk(request.getTaluk());
+            address.setDistrict(request.getDistrict());
+            address.setState(request.getState());
+            address.setPincode(request.getPincode());
+        }
 
         user = userRepository.save(user);
         return userMapper.toUserResponse(user);
@@ -96,6 +112,7 @@ public class UserServiceImpl implements UserService {
             tempProfile.setAddressLine2(request.getAddressLine2());
             tempProfile.setCity(request.getCity());
             tempProfile.setDistrict(request.getDistrict());
+            tempProfile.setTaluk(request.getTaluk());
             tempProfile.setState(request.getState());
             tempProfile.setPincode(request.getPincode());
             tempProfile.setCountry(request.getCountry());
@@ -109,6 +126,7 @@ public class UserServiceImpl implements UserService {
 
     private boolean hasAddressInfo(com.eshop.app.dto.request.UserSelfUpdateRequest request) {
         return request.getAddress() != null || request.getAddressLine1() != null || request.getCity() != null || 
+               request.getDistrict() != null || request.getTaluk() != null ||
                request.getPincode() != null || request.getState() != null;
     }
 
@@ -351,39 +369,124 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Long createUserFromKeycloak(String keycloakId, String firstName, String lastName, String phoneNumber) {
-        return syncUserFromKeycloak(keycloakId, null, null, firstName, lastName, phoneNumber, false);
+        log.info("Creating first-time local user from Keycloak ID: {}", keycloakId);
+        // Pass minimal info, allowing sync to fill in the rest if needed later
+        return syncUserFromKeycloak(keycloakId, null, firstName, lastName, phoneNumber, false);
     }
 
     @Override
     @Transactional
-    public Long syncUserFromKeycloak(String keycloakId, String username, String email, String firstName,
+    public Long syncUserFromKeycloak(String keycloakId, String email, String firstName,
             String lastName, String phoneNumber, Boolean emailVerified) {
-        java.util.Optional<User> existingUserOpt = userRepository.findByKeycloakId(keycloakId);
+        
+        String tempId = keycloakId;
+        if (tempId == null || tempId.isBlank()) {
+            // [HARDEN] Resilience: Fallback to email as surrogate Keycloak ID if 'sub' is missing
+            if (email != null && !email.isBlank()) {
+                tempId = "fallback:email:" + email;
+            } else {
+                log.error("Cannot sync user: Keycloak Subject (sub) is null and no email provided");
+                throw new IllegalArgumentException("User identifier (sub or email) is mandatory for synchronization");
+            }
+            log.warn("[HARDEN] Keycloak subject is missing. Using surrogate identity: {}", tempId);
+        }
+        final String resolvedKeycloakId = tempId;
 
-        User user;
-        if (existingUserOpt.isPresent()) {
-            user = existingUserOpt.get();
-            // Update core auth fields from Keycloak
-            user.setUsername(username);
-            user.setEmail(email);
+
+        // 1. Primary Lookup by Keycloak ID
+        java.util.Optional<User> userBySub = userRepository.findByKeycloakId(resolvedKeycloakId);
+        User user = null;
+
+        if (userBySub.isPresent()) {
+            user = userBySub.get();
+            log.debug("Found existing user by Keycloak ID: {} (id: {})", resolvedKeycloakId, user.getId());
+        } else {
+            // 2. Secondary Lookup by Email
+            if (email != null && !email.isBlank()) {
+                java.util.List<User> usersByEmail = userRepository.findByEmail(email);
+                if (!usersByEmail.isEmpty()) {
+                    // Prioritize user with no Keycloak ID or matching Keycloak ID
+                    user = usersByEmail.stream()
+                            .filter(u -> u.getKeycloakId() == null || u.getKeycloakId().equals(resolvedKeycloakId))
+                            .findFirst()
+                            .orElse(usersByEmail.getFirst());
+                    log.info("Found {} users by email: {}. Selected user id: {}", usersByEmail.size(), email, user.getId());
+                }
+            }
+
+            // Adoption Logic
+            if (user != null) {
+                if (user.getKeycloakId() == null) {
+                    log.info("Adopting existing user (id: {}) -> Keycloak ID: {}", user.getId(), resolvedKeycloakId);
+                    user.setKeycloakId(resolvedKeycloakId);
+                } else if (!user.getKeycloakId().equals(resolvedKeycloakId)) {
+                    log.warn("IDENTITY DRIFT: Found user (id: {}) with email {} but different Keycloak ID (old: {}, new: {}). Updating identity link.", 
+                        user.getId(), email, user.getKeycloakId(), resolvedKeycloakId);
+                    user.setKeycloakId(resolvedKeycloakId);
+                }
+            }
+        }
+
+        if (user != null) {
+            // Update core fields with truncation
+            if (email != null && !email.isBlank()) user.setEmail(truncate(email, 150));
             if (emailVerified != null) user.setEmailVerified(emailVerified);
             
-            // Sync profile info using reusable service
-            profileSyncService.ensureProfileExists(user, firstName, lastName, phoneNumber, null, null, null, null);
+            log.debug("Updating user profile for user ID: {}", user.getId());
+            profileSyncService.ensureProfileExists(user, 
+                truncate(firstName, 100), 
+                truncate(lastName, 100), 
+                truncate(phoneNumber, 20), 
+                null, null, null, null);
         } else {
+            // Create new user
+            log.info("Creating new local user record for Keycloak ID: {} (email: {})", resolvedKeycloakId, email);
+            
             user = User.builder()
-                    .keycloakId(keycloakId)
-                    .username(username)
-                    .email(email)
+                    .keycloakId(resolvedKeycloakId)
+                    .email(truncate(email, 150))
                     .emailVerified(emailVerified != null ? emailVerified : false)
                     .role(UserRole.CUSTOMER)
                     .build();
             
-            profileSyncService.ensureProfileExists(user, firstName, lastName, phoneNumber, null, null, null, null);
+            log.debug("Creating associated profile for new user...");
+            profileSyncService.ensureProfileExists(user, 
+                truncate(firstName, 100), 
+                truncate(lastName, 100), 
+                truncate(phoneNumber, 20), 
+                null, null, null, null);
         }
 
-        user = userRepository.save(user);
-        return user.getId();
+        try {
+            log.debug("Saving user entity to database...");
+            user = userRepository.saveAndFlush(user);
+            log.info("Successfully synced user identity for: {} (localId: {})", user.getEmail(), user.getId());
+            return user.getId();
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            // [HARDEN] Race-condition recovery: another thread may have already persisted this user.
+            // Attempt a read-after-write-failure before throwing, to avoid a false 500.
+            log.warn("[HARDEN] DataIntegrityViolation for sub={}, email={}. Attempting recovery read...", keycloakId, email);
+            java.util.Optional<User> recovered = userRepository.findByKeycloakId(keycloakId);
+            if (recovered.isEmpty() && email != null && !email.isBlank()) {
+                recovered = userRepository.findByEmail(email).stream().findFirst();
+            }
+            if (recovered.isPresent()) {
+                log.info("[HARDEN] Recovery successful: resolved user id={} after constraint collision.", recovered.get().getId());
+                return recovered.get().getId();
+            }
+            log.error("DATA INTEGRITY ERROR: Could not recover. Constraint violation: {}. [sub={}, email={}]",
+                e.getMostSpecificCause().getMessage(), keycloakId, email);
+            throw new com.eshop.app.exception.BusinessException("Identity conflict: email already taken", "IDENTITY_CONFLICT", org.springframework.http.HttpStatus.CONFLICT);
+        } catch (Exception e) {
+            log.error("FATAL: Failed to persist user identity during sync: {}. Detailed data: [sub={}, email={}]",
+                e.getMessage(), keycloakId, email);
+            throw e;
+        }
+    }
+
+    private String truncate(String val, int length) {
+        if (val == null) return null;
+        return val.length() > length ? val.substring(0, length) : val;
     }
 
     private UserRole determineBestRole(java.util.Collection<String> roles) {

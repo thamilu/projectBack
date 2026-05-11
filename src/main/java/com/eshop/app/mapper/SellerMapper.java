@@ -32,6 +32,8 @@ public interface SellerMapper {
     // Address Fallbacks logic handled via custom after-mapping if needed, but simple ones here:
     @Mapping(target = "addressLine1", expression = "java(profile.getUser() != null && profile.getUser().getUserProfile() != null && !profile.getUser().getUserProfile().getAddresses().isEmpty() ? profile.getUser().getUserProfile().getAddresses().get(0).getAddressLine1() : null)")
     @Mapping(target = "city", expression = "java(profile.getUser() != null && profile.getUser().getUserProfile() != null && !profile.getUser().getUserProfile().getAddresses().isEmpty() ? profile.getUser().getUserProfile().getAddresses().get(0).getCity() : null)")
+    @Mapping(target = "district", expression = "java(profile.getUser() != null && profile.getUser().getUserProfile() != null && !profile.getUser().getUserProfile().getAddresses().isEmpty() ? profile.getUser().getUserProfile().getAddresses().get(0).getDistrict() : null)")
+    @Mapping(target = "taluk", expression = "java(profile.getUser() != null && profile.getUser().getUserProfile() != null && !profile.getUser().getUserProfile().getAddresses().isEmpty() ? profile.getUser().getUserProfile().getAddresses().get(0).getTaluk() : null)")
     @Mapping(target = "state", expression = "java(profile.getUser() != null && profile.getUser().getUserProfile() != null && !profile.getUser().getUserProfile().getAddresses().isEmpty() ? profile.getUser().getUserProfile().getAddresses().get(0).getState() : null)")
     @Mapping(target = "pincode", expression = "java(profile.getUser() != null && profile.getUser().getUserProfile() != null && !profile.getUser().getUserProfile().getAddresses().isEmpty() ? profile.getUser().getUserProfile().getAddresses().get(0).getPincode() : null)")
     // Store logic
@@ -47,6 +49,7 @@ public interface SellerMapper {
     @Mapping(target = "storeAddressLine2", source = "storeAddressLine2")
     @Mapping(target = "storeCity", source = "storeCity")
     @Mapping(target = "storeDistrict", source = "storeDistrict")
+    @Mapping(target = "storeTaluk", source = "storeTaluk")
     @Mapping(target = "storeState", source = "storeState")
     @Mapping(target = "storePincode", source = "storePincode")
     @Mapping(target = "storeCountry", source = "storeCountry")
@@ -88,6 +91,7 @@ public interface SellerMapper {
         response.storeAddressLine1(profile.getStoreAddressLine1() != null ? profile.getStoreAddressLine1() : (firstStore != null ? firstStore.getAddressLine1() : profile.getAddressLine1()));
         response.storeCity(profile.getStoreCity() != null ? profile.getStoreCity() : (firstStore != null ? firstStore.getCity() : profile.getCity()));
         response.storeDistrict(profile.getStoreDistrict() != null ? profile.getStoreDistrict() : (firstStore != null ? firstStore.getDistrict() : profile.getDistrict()));
+        response.storeTaluk(profile.getStoreTaluk() != null ? profile.getStoreTaluk() : (firstStore != null ? firstStore.getTaluk() : profile.getTaluk()));
         response.storeState(profile.getStoreState() != null ? profile.getStoreState() : (firstStore != null ? firstStore.getState() : profile.getState()));
         response.storePincode(profile.getStorePincode() != null ? profile.getStorePincode() : (firstStore != null ? firstStore.getPostalCode() : profile.getPincode()));
         response.googleMapsUrl(profile.getGoogleMapsUrl() != null ? profile.getGoogleMapsUrl() : (firstStore != null ? firstStore.getGoogleMapsUrl() : null));

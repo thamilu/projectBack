@@ -26,10 +26,12 @@ public class UserProfile extends BaseEntity {
     @Column(name = "last_name", length = 100)
     private String lastName;
 
-    @Column(length = 20)
+    @Column(length = 255)
+    @jakarta.persistence.Convert(converter = com.eshop.app.security.AttributeEncryptor.class)
     private String phone;
 
-    @Column(name = "alternate_phone", length = 20)
+    @Column(name = "alternate_phone", length = 255)
+    @jakarta.persistence.Convert(converter = com.eshop.app.security.AttributeEncryptor.class)
     private String alternatePhone;
 
     @Column(name = "profile_image_url", length = 500)

@@ -4,19 +4,16 @@ package com.eshop.app.seed.seeders;
 import com.eshop.app.entity.Store;
 import com.eshop.app.entity.User;
 import com.eshop.app.repository.StoreRepository;
-import com.eshop.app.seed.core.Seeder;
+import com.eshop.app.seed.core.BaseSeeder;
 import com.eshop.app.seed.core.SeederContext;
-import com.eshop.app.seed.exception.StoreSeedingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -28,55 +25,36 @@ import java.util.stream.Collectors;
 @Component
 @Order(5)
 @RequiredArgsConstructor
-public class StoreSeeder implements Seeder<Store, SeederContext> {
+public class StoreSeeder extends BaseSeeder<Store, SeederContext> {
 
     private final StoreRepository storeRepository;
     private final com.eshop.app.seed.provider.StoreDataProvider storeDataProvider;
-
     private final com.eshop.app.repository.SellerProfileRepository sellerProfileRepository;
+    private final com.eshop.app.config.properties.SeedProperties seedProperties;
 
     @Override
-    public List<Store> seed(SeederContext context) {
-        try {
-            Map<String, User> users = context.getUsers();
-            
-            // Pre-fetch all existing seller profiles to avoid N+1 queries during the loop
-            Map<Long, com.eshop.app.entity.SellerProfile> existingProfiles = sellerProfileRepository.findAll().stream()
-                    .collect(Collectors.toMap(p -> p.getUser().getId(), p -> p));
+    protected List<Store> doSeed(SeederContext context) {
+        // Pre-fetch all existing seller profiles to avoid N+1 queries during the loop
+        Map<Long, com.eshop.app.entity.SellerProfile> existingProfiles = sellerProfileRepository.findAll().stream()
+                .collect(Collectors.toMap(p -> p.getUser().getId(), p -> p));
 
-            List<Store> storesList = storeDataProvider.getStores().stream()
-                    .map(cfg -> buildStoreWithCache(cfg, users, existingProfiles))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .toList();
+        List<Store> storesList = storeDataProvider.getStores().stream()
+                .map(cfg -> buildStoreWithCache(cfg, context, existingProfiles))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .toList();
 
-            List<Store> savedStores = storeRepository.saveAll(storesList);
+        List<Store> savedStores = storeRepository.saveAll(storesList);
 
-            // Populate context
-            context.setStores(savedStores.stream()
-                    .collect(Collectors.toMap(Store::getStoreName, Function.identity(),
-                            (existing, replacement) -> {
-                                log.warn("Duplicate store name: {}, keeping first", existing.getStoreName());
-                                return existing;
-                            })));
+        // Populate context
+        savedStores.forEach(s -> context.getStores().put(s.getStoreName(), s));
 
-            log.info("Seeded {} stores successfully", savedStores.size());
-            return savedStores;
-
-        } catch (DataAccessException e) {
-            throw new StoreSeedingException(
-                    "Failed to seed stores: " + e.getMessage(), e);
-        }
+        return savedStores;
     }
 
     @Override
-    public void cleanup() {
-        try {
-            storeRepository.deleteAllInBatch();
-            log.debug("Cleaned up existing stores");
-        } catch (Exception e) {
-            log.warn("Failed to cleanup stores: {}", e.getMessage());
-        }
+    protected void doCleanup() {
+        storeRepository.deleteAllInBatch();
     }
 
     @Override
@@ -84,25 +62,14 @@ public class StoreSeeder implements Seeder<Store, SeederContext> {
         return 5;
     }
 
-    @Override
-    public String name() {
-        return "StoreSeeder";
-    }
-
     /**
      * Build store with null-safe seller lookup.
      * Skips store if seller not found.
      */
     private Optional<Store> buildStoreWithCache(com.eshop.app.seed.model.StoreData cfg, 
-                                                Map<String, User> users,
+                                                SeederContext context,
                                                 Map<Long, com.eshop.app.entity.SellerProfile> existingProfiles) {
-        User seller = users.get(cfg.sellerUsername());
-
-        if (seller == null) {
-            log.warn("Skipping store '{}': seller '{}' not found",
-                    cfg.storeName(), cfg.sellerUsername());
-            return Optional.empty();
-        }
+        User seller = context.getRequiredUser(cfg.sellerEmail());
 
         com.eshop.app.entity.SellerProfile profile = existingProfiles.get(seller.getId());
         if (profile == null) {
@@ -116,6 +83,13 @@ public class StoreSeeder implements Seeder<Store, SeederContext> {
             profile = com.eshop.app.entity.SellerProfile.builder()
                     .user(seller)
                     .businessName(cfg.storeName())
+                    .shopName(cfg.storeName())
+                    .shopHandle(generateShopHandle(cfg, seller))
+                    .addressLine1(Optional.ofNullable(cfg.address()).orElse(seedProperties.getDefaultAddress()))
+                    .city(Optional.ofNullable(cfg.city()).orElse(seedProperties.getDefaultCity()))
+                    .state(Optional.ofNullable(cfg.state()).orElse(seedProperties.getDefaultState()))
+                    .pincode(Optional.ofNullable(cfg.pincode()).orElse(seedProperties.getDefaultPincode()))
+                    .country(Optional.ofNullable(cfg.country()).orElse(seedProperties.getDefaultCountry()))
                     .status(com.eshop.app.enums.SellerStatus.ACTIVE)
                     .identityType(identityType)
                     .build();
@@ -127,11 +101,19 @@ public class StoreSeeder implements Seeder<Store, SeederContext> {
         return Optional.of(Store.builder()
                 .storeName(cfg.storeName())
                 .description(cfg.description())
-                .addressLine1(cfg.address())
+                .addressLine1(Optional.ofNullable(cfg.address()).orElse(seedProperties.getDefaultAddress()))
                 .phone(cfg.phone())
                 .logoUrl(cfg.logoUrl())
                 .sellerProfile(profile)
                 .active(true)
                 .build());
+    }
+
+    private String generateShopHandle(com.eshop.app.seed.model.StoreData cfg, User seller) {
+        return cfg.storeName().toLowerCase()
+                .replaceAll("[^a-z0-9]", "-")
+                .replaceAll("-+", "-")
+                .replaceAll("^-|-$", "")
+                + "-" + seller.getId();
     }
 }

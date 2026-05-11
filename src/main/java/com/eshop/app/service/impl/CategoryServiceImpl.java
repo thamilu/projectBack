@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import java.util.Objects;
-
+import java.util.ArrayList;
 import java.util.List;
 // ...existing code...
 
@@ -265,23 +265,34 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public List<CategoryResponse> getSubcategories(Long id) {
-        // Model currently has no parent-child relationship; return empty list for compatibility
-        return List.of();
+        log.debug("Fetching subcategories for category id: {}", id);
+        Category category = findCategoryByIdOrThrow(id);
+        return category.getSubCategories().stream()
+                .filter(Category::getActive)
+                .map(categoryMapper::toCategoryResponse)
+                .toList();
     }
 
     @Override
     public List<CategoryResponse> getCategoryPath(Long id) {
-        // No hierarchical parent tracking - return single-element path
+        log.debug("Fetching path for category id: {}", id);
         Category category = findCategoryByIdOrThrow(id);
-        return List.of(categoryMapper.toCategoryResponse(category));
+        List<CategoryResponse> path = new ArrayList<>();
+        
+        Category current = category;
+        while (current != null) {
+            path.add(0, categoryMapper.toCategoryResponse(current));
+            current = current.getParent();
+        }
+        
+        return path;
     }
 
     @Override
     public List<CategoryResponse> getRootCategories() {
-        // Without parent relationship, treat all active categories as roots
-        List<Category> all = categoryRepository.findAll();
-        return all.stream()
-                .filter(Category::getActive)
+        log.debug("Fetching root categories");
+        return categoryRepository.findAll().stream()
+                .filter(c -> c.getParent() == null && Boolean.TRUE.equals(c.getActive()))
                 .map(categoryMapper::toCategoryResponse)
                 .toList();
     }

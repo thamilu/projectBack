@@ -1,0 +1,10 @@
+[
+  { "name": "new" },
+  { "name": "sale" },
+  { "name": "popular" },
+  { "name": "trending" },
+  { "name": "limited-edition" },
+  { "name": "exclusive" },
+  { "name": "best-seller" },
+  { "name": "featured" }
+]

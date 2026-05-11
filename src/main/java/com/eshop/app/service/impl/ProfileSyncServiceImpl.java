@@ -46,6 +46,7 @@ public class ProfileSyncServiceImpl implements ProfileSyncService {
         address.setAddressLine2(profile.getAddressLine2());
         address.setCity(profile.getCity());
         address.setDistrict(profile.getDistrict());
+        address.setTaluk(profile.getTaluk());
         address.setState(profile.getState());
         address.setPincode(profile.getPincode());
         address.setCountry(profile.getCountry());

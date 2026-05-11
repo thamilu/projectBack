@@ -50,8 +50,10 @@ public class SellerController {
     /**
      * Register a new seller profile.
      */
+    // [HARDEN] Authorization is handled by SecurityConfig filter chain:
+    //   POST /api/v1/sellers/register → .authenticated()
+    // Removing @PreAuthorize SpEL bean reference to prevent 403 on unresolved @appProperties
     @PostMapping("/register")
-    @PreAuthorize("hasAnyRole(@appProperties.security.roles.customer, @appProperties.security.roles.seller, @appProperties.security.roles.admin)")
     @Operation(summary = "Register seller profile", description = """
             Create a new seller profile for the authenticated user.
 

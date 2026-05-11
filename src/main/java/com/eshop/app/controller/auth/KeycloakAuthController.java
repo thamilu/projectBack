@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping({ "/api/auth", ApiConstants.Endpoints.AUTH })
+@RequestMapping(ApiConstants.Endpoints.AUTH)
 @RequiredArgsConstructor
 @Slf4j
 @CrossOrigin(originPatterns = "*")
@@ -45,7 +45,7 @@ public class KeycloakAuthController {
     @PostMapping("/login")
     @RateLimiter(name = "login")
     public Mono<ResponseEntity<TokenResponse>> login(@Valid @RequestBody LoginRequest request) {
-        log.info("Login request received for user: {}", request.getUsername());
+        log.info("Login request received for email: {}", request.getEmail());
         
         return authService.login(request)
                 .map(ResponseEntity::ok)
@@ -178,7 +178,6 @@ public class KeycloakAuthController {
         
         Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("sub", jwt.getSubject());
-        userInfo.put("username", jwt.getClaimAsString("preferred_username"));
         userInfo.put("email", jwt.getClaimAsString("email"));
         userInfo.put("name", jwt.getClaimAsString("name"));
         userInfo.put("givenName", jwt.getClaimAsString("given_name"));

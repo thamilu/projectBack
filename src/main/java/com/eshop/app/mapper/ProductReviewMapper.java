@@ -17,7 +17,7 @@ public class ProductReviewMapper {
                         review.getUser().getUserProfile() != null
                                 ? review.getUser().getUserProfile().getFirstName() + " "
                                         + review.getUser().getUserProfile().getLastName()
-                                : review.getUser().getUsername())
+                                : review.getUser().getEmail())
                 .rating(review.getRating())
                 .comment(review.getComment())
                 .verifiedPurchase(review.getVerifiedPurchase())

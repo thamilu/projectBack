@@ -20,10 +20,8 @@ public class User extends BaseEntity {
     @Column(name = "keycloak_id", unique = true, nullable = false)
     private String keycloakId;
 
-    @Column(name = "username", length = 100)
-    private String username;
-
-    @Column(name = "email", length = 150)
+    @Column(name = "email", length = 255, unique = true, nullable = false)
+    @jakarta.persistence.Convert(converter = com.eshop.app.security.AttributeEncryptor.class)
     private String email;
 
     @Column(name = "email_verified")
@@ -67,7 +65,6 @@ public class User extends BaseEntity {
     private String twoFactorSecret;
 
     // Simplified getters/setters via Lombok @Getter/@Setter
-
 
     /**
      * Backward compatibility helper to get the user's store.

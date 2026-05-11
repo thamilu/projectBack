@@ -41,7 +41,9 @@ public class SellerAdminServiceImpl implements SellerAdminService {
     @Override
     @Transactional(readOnly = true)
     public List<SellerProfileResponse> getPendingSellers() {
-        return sellerProfileRepository.findAllPendingWithDetails().stream()
+        List<SellerProfile> pending = sellerProfileRepository.findAllPendingWithDetails();
+        log.info("DIAGNOSTIC: Found {} pending seller registration requests in database.", pending.size());
+        return pending.stream()
                 .map(sellerMapper::toResponse)
                 .toList();
     }
@@ -101,10 +103,21 @@ public class SellerAdminServiceImpl implements SellerAdminService {
 
     private void assignKeycloakRole(SellerProfile profile) {
         String roleName = appProperties.getSecurity().getRoles().getSeller();
-        if (profile.getUser().getKeycloakId() != null) {
-            keycloakService.assignRole(profile.getUser().getKeycloakId(), roleName);
+        String keycloakId = profile.getUser().getKeycloakId();
+        
+        // [HARDEN] Resilience: If the Keycloak ID is missing OR is a fallback/seeded ID 
+        // (starting with 'fallback:' or 'unknown-'), we cannot use it directly for UUID lookup.
+        // In these cases, we must resolve the user via their email address instead.
+        boolean isFallbackId = keycloakId != null && (keycloakId.startsWith("fallback:") || keycloakId.startsWith("unknown-"));
+        
+        if (keycloakId != null && !isFallbackId) {
+            log.info("Assigning role '{}' using Keycloak UUID: {}", roleName, keycloakId);
+            keycloakService.assignRole(keycloakId, roleName);
         } else {
-            keycloakService.assignRoleByUsername(profile.getUser().getUsername(), roleName);
+            String email = profile.getUser().getEmail();
+            log.info("Keycloak ID is {} ({}). Attempting role assignment by email: {}", 
+                keycloakId == null ? "null" : "fallback", keycloakId, email);
+            keycloakService.assignRoleByEmail(email, roleName);
         }
     }
 

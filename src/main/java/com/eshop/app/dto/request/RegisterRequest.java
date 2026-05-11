@@ -20,10 +20,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 @Schema(description = "User registration request with role selection")
 public class RegisterRequest {
     
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 100, message = "Username must be between 3 and 100 characters")
-    @Schema(description = "Unique username for login", example = "john_doe", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String username;
+
     
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")

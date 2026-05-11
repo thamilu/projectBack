@@ -192,9 +192,28 @@ public class AppProperties {
         private int maxImageHeight = 1080;
         private float compressQuality = 0.85f;
         private boolean virusScanEnabled = false;
-        private String uploadDir = "./uploads";
-        @NotBlank(message = "Storage base URL must be configured via APP_STORAGE_BASE_URL")
-        private String baseUrl;
+        
+        private R2 r2 = new R2();
+
+        @Data
+        public static class R2 {
+            @NotBlank(message = "R2 Access Key ID is required")
+            private String accessKeyId;
+            
+            @NotBlank(message = "R2 Secret Access Key is required")
+            private String secretAccessKey;
+            
+            @NotBlank(message = "R2 Account ID is required")
+            private String accountId;
+            
+            @NotBlank(message = "R2 Bucket Name is required")
+            private String bucketName;
+            
+            @NotBlank(message = "R2 Public URL is required")
+            private String publicUrl;
+
+            private String region = "auto";
+        }
     }
 
     /**

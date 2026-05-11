@@ -49,7 +49,7 @@ import org.springframework.web.bind.annotation.*;
  * @since 2025-12-22
  */
 @RestController
-@RequestMapping("/csp")
+@RequestMapping("/api/v1/csp")
 @RequiredArgsConstructor
 @Slf4j
 public class CspReportController {

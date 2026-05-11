@@ -28,6 +28,20 @@ import java.util.Map;
 public class DashboardExceptionHandler {
 
     /**
+     * Handle Business specific exceptions
+     */
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBusinessException(
+            BusinessException ex, WebRequest request) {
+        
+        log.warn("Business logic error: {} (code: {})", ex.getMessage(), ex.getErrorCode());
+        
+        return ResponseEntity
+            .status(ex.getHttpStatus() != null ? ex.getHttpStatus() : HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    /**
      * Handle Dashboard-specific exceptions
      */
     @ExceptionHandler(DashboardException.class)

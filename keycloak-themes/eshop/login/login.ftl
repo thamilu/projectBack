@@ -9,17 +9,22 @@
             <#if realm.password>
                 <form id="kc-form-login" onsubmit="login.disabled = true; return true;" action="${url.loginAction}" method="post">
                     <div class="pf-c-form__group">
-                        <label for="username" class="pf-c-form__label"><#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if></label>
+                        <label for="username" class="pf-c-form__label"><#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if><span class="required">*</span></label>
                         <input tabindex="1" id="username" class="pf-c-form-control" name="username" value="${(login.username!'')}" type="text" autofocus autocomplete="username" spellcheck="false"
                                aria-required="true"
                                aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>" />
                     </div>
 
                     <div class="pf-c-form__group">
-                        <label for="password" class="pf-c-form__label">${msg("password")}</label>
-                        <input tabindex="2" id="password" class="pf-c-form-control" name="password" type="password" autocomplete="current-password" spellcheck="false"
-                               aria-required="true"
-                               aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>" />
+                        <label for="password" class="pf-c-form__label">${msg("password")}<span class="required">*</span></label>
+                        <div class="password-input-wrapper">
+                            <input tabindex="2" id="password" class="pf-c-form-control" name="password" type="password" autocomplete="current-password" spellcheck="false"
+                                   aria-required="true"
+                                   aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>" />
+                            <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="pf-c-form__group login-pf-settings">

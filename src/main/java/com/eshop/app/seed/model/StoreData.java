@@ -7,17 +7,21 @@ public record StoreData(
     String storeName,
     String description,
     String address,
+    String city,
+    String state,
+    String pincode,
+    String country,
     String phone,
     String email,
     String logoUrl,
-    String sellerUsername,
+    String sellerEmail,
     String sellerType
 ) {
-    public static StoreData of(String storeName, String sellerUsername, String description) {
-        return new StoreData(storeName, description, null, null, null, null, sellerUsername, "BUSINESS");
+    public static StoreData of(String storeName, String sellerEmail, String description) {
+        return new StoreData(storeName, description, null, null, null, null, null, null, null, null, sellerEmail, "BUSINESS");
     }
     
-    public static StoreData full(String storeName, String sellerUsername, String description, String sellerType) {
-        return new StoreData(storeName, description, null, null, null, null, sellerUsername, sellerType);
+    public static StoreData full(String storeName, String sellerEmail, String description, String sellerType) {
+        return new StoreData(storeName, description, null, null, null, null, null, null, null, null, sellerEmail, sellerType);
     }
 }

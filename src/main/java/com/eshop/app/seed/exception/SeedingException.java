@@ -31,6 +31,7 @@ public sealed class SeedingException extends RuntimeException
         STORE_SEEDING,
         PRODUCT_SEEDING,
         CART_SEEDING,
+        LOCATION_SEEDING,
         CONFIGURATION,
         ORCHESTRATION
     }

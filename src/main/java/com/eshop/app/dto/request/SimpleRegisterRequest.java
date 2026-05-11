@@ -18,9 +18,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 @Schema(description = "Simple user registration request")
 public class SimpleRegisterRequest {
     
-    @NotBlank(message = "Username is required")
-    @Schema(description = "Username", example = "john_doe")
-    private String username;
+
     
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")

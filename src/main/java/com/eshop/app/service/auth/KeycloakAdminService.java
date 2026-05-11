@@ -60,11 +60,11 @@ public class KeycloakAdminService {
      * Create a new user
      */
     public Mono<Map<String, String>> createUser(RegisterRequest request) {
-        log.info("Creating user: {}", request.getUsername());
+        log.info("Creating user with email: {}", request.getEmail());
         
         return getAdminToken().flatMap(adminToken -> {
             Map<String, Object> userData = new HashMap<>();
-            userData.put("username", request.getUsername());
+            userData.put("username", request.getEmail());
             userData.put("email", request.getEmail());
             userData.put("enabled", request.getEnabled());
             userData.put("emailVerified", false);
@@ -99,13 +99,13 @@ public class KeycloakAdminService {
                             })
                     )
                     .bodyToMono(Void.class)
-                    .then(getUserByUsername(request.getUsername()))
+                    .then(getUserByEmail(request.getEmail()))
                     .map(userMap -> {
                         String userId = (String) userMap.get("id");
-                        log.info("User created and ID resolved: {} -> {}", request.getUsername(), userId);
+                        log.info("User created and ID resolved: {} -> {}", request.getEmail(), userId);
                         return Map.of(
                                 "message", "User created successfully",
-                                "username", request.getUsername(),
+                                "email", request.getEmail(),
                                 "id", userId);
                     });
         });
@@ -128,19 +128,19 @@ public class KeycloakAdminService {
     }
     
     /**
-     * Get user by username
+     * Get user by email
      */
-    public Mono<Map<String, Object>> getUserByUsername(String username) {
-        log.info("Fetching user: {}", username);
+    public Mono<Map<String, Object>> getUserByEmail(String email) {
+        log.info("Fetching user by email: {}", email);
         
         return getAdminToken().flatMap(adminToken ->
             webClient.get()
-                .uri(keycloakConfig.getAdminUsersEndpoint() + "?username=" + username)
+                .uri(keycloakConfig.getAdminUsersEndpoint() + "?email=" + email)
                 .header("Authorization", "Bearer " + adminToken)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
                 .map(list -> list == null || list.isEmpty() ? null : list.get(0))
-                .doOnSuccess(user -> log.info("User found: {}", username))
+                .doOnSuccess(user -> log.info("User found by email: {}", email))
         );
     }
     

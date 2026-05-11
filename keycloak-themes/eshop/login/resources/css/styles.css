@@ -175,6 +175,43 @@ body::after {
 }
 
 /* --------------------------------------------------------------------------
+   Validation Errors
+   -------------------------------------------------------------------------- */
+.pf-c-form__helper-text.pf-m-error {
+    color: #ef4444 !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    margin-top: 0.5rem !important;
+    display: block !important;
+    animation: cardEnter 0.3s ease-out;
+}
+
+/* Global Alert Messaging */
+.pf-c-alert {
+    background: rgba(239, 68, 68, 0.1) !important;
+    border: 1px solid rgba(239, 68, 68, 0.2) !important;
+    border-radius: 12px !important;
+    padding: 1rem !important;
+    margin-bottom: 2rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    color: #ef4444 !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+}
+
+.pf-c-alert.pf-m-success {
+    background: rgba(16, 185, 129, 0.1) !important;
+    border-color: rgba(16, 185, 129, 0.2) !important;
+    color: var(--brand-primary) !important;
+}
+
+.pf-c-alert__icon {
+    font-size: 1.1rem !important;
+}
+
+/* --------------------------------------------------------------------------
    Ultra-Premium Button
    -------------------------------------------------------------------------- */
 .pf-c-button.pf-m-primary {
@@ -479,5 +516,67 @@ body::after {
     background: rgba(255, 255, 255, 0.08) !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
     transform: translateY(-2px);
+}
+
+
+/* Password Visibility Toggle */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    padding: 8px;
+    z-index: 10;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle:hover {
+    color: #00d1b2;
+    transform: scale(1.1);
+}
+
+.password-toggle i {
+    font-size: 1.1rem;
+}
+
+/* Ensure input padding doesn't overlap with icon */
+.password-input-wrapper .pf-c-form-control {
+    padding-right: 45px !important;
+}
+
+/* Required Field Indicator */
+.required {
+    color: #ef4444 !important;
+    margin-left: 4px;
+    font-weight: 800;
+}
+
+/* Hardened Password Toggle Visibility */
+.password-toggle {
+    color: rgba(255, 255, 255, 0.6) !important; /* Increased base opacity */
+    opacity: 0.7;
+}
+
+.password-toggle:hover {
+    color: var(--brand-primary) !important;
+    opacity: 1;
+}
+
+/* Ensure icon is prominent when input is focused */
+.pf-c-form-control:focus + .password-toggle {
+    color: var(--brand-primary) !important;
+    opacity: 1;
 }
 

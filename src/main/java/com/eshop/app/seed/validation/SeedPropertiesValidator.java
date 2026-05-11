@@ -42,33 +42,15 @@ public class SeedPropertiesValidator {
             throw new InvalidSeedConfigException("Invalid seed configuration: " + errors);
         }
         
-        // Business validation
-        validateUniqueUsernames(properties.getUsers());
-        validateUniqueEmails(properties.getUsers());
-        
         log.debug("Seed configuration validated successfully");
-    }
-    
-    /**
-     * Ensure usernames are unique.
-     */
-    private void validateUniqueUsernames(List<SeedProperties.UserSeed> users) {
-        Set<String> usernames = new HashSet<>();
-        List<String> duplicates = users.stream()
-            .map(SeedProperties.UserSeed::getUsername)
-            .filter(u -> !usernames.add(u))
-            .toList();
-        
-        if (!duplicates.isEmpty()) {
-            throw new InvalidSeedConfigException(
-                "Duplicate usernames found: " + duplicates);
-        }
     }
     
     /**
      * Ensure emails are unique.
      */
-    private void validateUniqueEmails(List<SeedProperties.UserSeed> users) {
+    public void validateUniqueEmails(List<SeedProperties.UserSeed> users) {
+        if (users == null) return;
+        
         Set<String> emails = new HashSet<>();
         List<String> duplicates = users.stream()
             .map(SeedProperties.UserSeed::getEmail)
@@ -78,7 +60,7 @@ public class SeedPropertiesValidator {
         
         if (!duplicates.isEmpty()) {
             throw new InvalidSeedConfigException(
-                "Duplicate emails found: " + duplicates);
+                "Duplicate emails found in seed data: " + duplicates);
         }
     }
 }

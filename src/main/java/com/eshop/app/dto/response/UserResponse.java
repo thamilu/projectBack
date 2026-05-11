@@ -15,7 +15,7 @@ public class UserResponse {
 
     private Long id;
     private String keycloakId;
-    private String username;
+
     private String email;
     private Boolean emailVerified;
     private String firstName;
@@ -26,6 +26,7 @@ public class UserResponse {
     private String addressLine2;
     private String city;
     private String district;
+    private String taluk;
     private String state;
     private String country;
     private String pincode;

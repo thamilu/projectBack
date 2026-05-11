@@ -22,8 +22,7 @@ public class UserInfoResponse {
     
     private String name;
     
-    @JsonProperty("preferred_username")
-    private String preferredUsername;
+
     
     @JsonProperty("given_name")
     private String givenName;

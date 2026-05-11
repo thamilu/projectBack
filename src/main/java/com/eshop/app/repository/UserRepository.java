@@ -15,6 +15,7 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     
     Optional<User> findByKeycloakId(String keycloakId);
+    java.util.List<User> findByEmail(String email);
 
     Page<User> findByRole(UserRole role, Pageable pageable);
     java.util.List<User> findAllByRole(UserRole role);

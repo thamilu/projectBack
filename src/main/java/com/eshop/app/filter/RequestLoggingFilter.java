@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
 
 /**
  * Request logging filter that uses ContentCaching wrappers to capture
@@ -39,12 +38,19 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
     private boolean enabled;
 
     @Override
-        protected void doFilterInternal(
+    protected void doFilterInternal(
             @Nonnull HttpServletRequest request,
             @Nonnull HttpServletResponse response,
             @Nonnull FilterChain filterChain) throws ServletException, IOException {
 
-            if (!enabled || shouldSkip(request)) {
+        if (shouldSkip(request)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // BEST SPEED: Skip wrapping if general logging is disabled.
+        // Note: You lose the request body for 500 errors, but you get maximum performance.
+        if (!enabled) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -53,13 +59,12 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         ContentCachingResponseWrapper wrappedResponse = new ContentCachingResponseWrapper(response);
 
         Instant start = Instant.now();
-        if (log.isInfoEnabled()) {
-            log.info("Request received: {} {}", request.getMethod(), request.getRequestURI());
-        }
         try {
             filterChain.doFilter(wrappedRequest, wrappedResponse);
         } finally {
             Duration duration = Duration.between(start, Instant.now());
+            
+            // Log since enabled is true
             try {
                 logRequestAndResponse(wrappedRequest, wrappedResponse, duration);
             } catch (Exception ex) {
@@ -75,42 +80,40 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
                 || path.contains("/api-docs") || path.contains("/favicon.ico") || path.startsWith("/static/");
     }
 
-    private void logRequestAndResponse(ContentCachingRequestWrapper request,
-                                       ContentCachingResponseWrapper response,
+    private void logRequestAndResponse(HttpServletRequest request,
+                                       HttpServletResponse response,
                                        Duration duration) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("\n===== HTTP REQUEST =====\n");
+        String header = response.getStatus() >= 400 ? "HTTP ERROR LOG" : "HTTP REQUEST LOG";
+        sb.append(String.format("\n===== %s =====\n", header));
         sb.append(String.format("Method: %s\n", request.getMethod()));
         sb.append(String.format("URI: %s\n", request.getRequestURI()));
         sb.append(String.format("Query: %s\n", request.getQueryString()));
         sb.append(String.format("Client IP: %s\n", getClientIp(request)));
-
-        if (includeHeaders) {
-            sb.append("Headers:\n");
-            Collections.list(request.getHeaderNames()).forEach(name -> {
-                String value = "authorization".equalsIgnoreCase(name) ? "[REDACTED]" : request.getHeader(name);
-                sb.append(String.format("  %s: %s\n", name, value));
-            });
-        }
-
-        if (includePayload) {
-            String reqBody = getPayload(request.getContentAsByteArray());
-            if (!reqBody.isEmpty()) sb.append(String.format("Request Body: %s\n", sanitize(reqBody)));
-        }
-
-        sb.append("\n===== HTTP RESPONSE =====\n");
         sb.append(String.format("Status: %d\n", response.getStatus()));
         sb.append(String.format("Duration: %d ms\n", duration.toMillis()));
 
-        if (includePayload) {
-            String respBody = getPayload(response.getContentAsByteArray());
+        // Payload capture is only possible if wrappers were used
+        if (request instanceof ContentCachingRequestWrapper wrappedRequest && includePayload) {
+            String reqBody = getPayload(wrappedRequest.getContentAsByteArray());
+            if (!reqBody.isEmpty()) sb.append(String.format("Request Body: %s\n", sanitize(reqBody)));
+        }
+
+        if (response instanceof ContentCachingResponseWrapper wrappedResponse && includePayload) {
+            String respBody = getPayload(wrappedResponse.getContentAsByteArray());
             if (!respBody.isEmpty()) sb.append(String.format("Response Body: %s\n", sanitize(respBody)));
         }
 
         sb.append("========================\n");
 
-        if (response.getStatus() >= 400) log.warn(sb.toString()); else log.info(sb.toString());
+        if (response.getStatus() >= 500) {
+            log.error(sb.toString());
+        } else if (response.getStatus() >= 400) {
+            log.warn(sb.toString());
+        } else {
+            log.info(sb.toString());
+        }
     }
 
     private String getClientIp(HttpServletRequest request) {

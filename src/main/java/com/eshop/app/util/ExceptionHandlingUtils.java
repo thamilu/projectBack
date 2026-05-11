@@ -65,7 +65,7 @@ public final class ExceptionHandlingUtils {
      * Throw ResourceAlreadyExistsException with logging
      * 
      * @param resourceType Type of resource
-     * @param field Field name (e.g., "email", "username")
+     * @param field Field name (e.g., "email")
      * @param value Field value
      * @throws ResourceAlreadyExistsException Always thrown
      */

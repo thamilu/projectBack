@@ -32,6 +32,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -65,11 +66,42 @@ public class UserController {
     @Timed(value = "user.me.get", description = "Time to get current user")
     @Operation(summary = "Get current user profile", description = "Retrieve the authenticated user's profile")
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(
-            @AuthenticationPrincipal PrincipalDetails principalDetails) {
+            @AuthenticationPrincipal PrincipalDetails principalDetails,
+            org.springframework.security.core.Authentication authentication) {
         
-        log.debug("User {} fetching own profile", principalDetails.getId());
+        Long userId = principalDetails.getId();
         
-        UserResponse response = userService.getUserById(principalDetails.getId());
+        // Resilience: If local ID is missing, try a last-resort sync
+        if (userId == null || userId == -1L) {
+            log.warn("Principal {} has missing local ID. Attempting last-resort resolution.", principalDetails.getEmail());
+            
+            if (authentication.getCredentials() instanceof Jwt jwt) {
+                try {
+                    userId = userService.syncUserFromKeycloak(
+                        jwt.getSubject(),
+                        jwt.getClaimAsString("email"),
+                        jwt.getClaimAsString("given_name"),
+                        jwt.getClaimAsString("family_name"),
+                        jwt.getClaimAsString("phone_number"),
+                        jwt.getClaim("email_verified")
+                    );
+                    log.info("[HARDEN] Resolved local identity for user {} as ID: {}", principalDetails.getEmail(), userId);
+                } catch (Exception e) {
+                    // [HARDEN] Log full context for backend diagnosis without exposing internal details to client
+                    log.error("[HARDEN] Last-resort identity resolution failed for email={} sub={} | error={}",
+                        principalDetails.getEmail(), jwt.getSubject(), e.getMessage());
+                }
+            }
+        }
+
+        if (userId == null || userId == -1L) {
+            // [HARDEN] Graceful degradation: Return 503 (transient) not 500 (fatal).
+            // This signals the client to retry rather than report a permanent failure.
+            log.error("[HARDEN] Identity unresolvable for email={}. Returning 503 for client retry.", principalDetails.getEmail());
+            return ResponseEntity.status(503).body(ApiResponse.<UserResponse>error("Profile temporarily unavailable. Please try again in a moment."));
+        }
+        
+        UserResponse response = userService.getUserById(userId);
         
         return ResponseEntity.ok()
             .cacheControl(CacheControl.maxAge(30, TimeUnit.SECONDS).cachePrivate())
@@ -82,12 +114,33 @@ public class UserController {
     @Operation(summary = "Update current user profile")
     public ResponseEntity<ApiResponse<UserResponse>> updateCurrentUser(
             @AuthenticationPrincipal PrincipalDetails principalDetails,
-            @Valid @RequestBody UserSelfUpdateRequest request) {
+            @Valid @RequestBody UserSelfUpdateRequest request,
+            org.springframework.security.core.Authentication authentication) {
         
-        log.info("User {} updating own profile", principalDetails.getId());
+        Long userId = principalDetails.getId();
         
-        UserResponse response = userService.updateSelf(principalDetails.getId(), request);
-        auditService.logUserAction(principalDetails.getId(), principalDetails.getId(), UserAction.SELF_UPDATE);
+        if (userId == null || userId == -1L) {
+             // Try resolution if credentials available
+             if (authentication.getCredentials() instanceof Jwt jwt) {
+                 userId = userService.syncUserFromKeycloak(
+                        jwt.getSubject(),
+                        jwt.getClaimAsString("email"),
+                        jwt.getClaimAsString("given_name"),
+                        jwt.getClaimAsString("family_name"),
+                        jwt.getClaimAsString("phone_number"),
+                        jwt.getClaim("email_verified")
+                 );
+             }
+        }
+        
+        if (userId == null || userId == -1L) {
+            return ResponseEntity.status(500).body(ApiResponse.<UserResponse>error("Identity resolution failure"));
+        }
+
+        log.info("User {} updating own profile", userId);
+        
+        UserResponse response = userService.updateSelf(userId, request);
+        auditService.logUserAction(userId, userId, UserAction.SELF_UPDATE);
         
         return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", response));
     }

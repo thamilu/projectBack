@@ -1,11 +1,8 @@
-version: "3.9"
-
 # ══════════════════════════════════════════════════════════════
-# PRODUCTION DEPLOYMENT CONFIGURATION
+# PRODUCTION DEPLOYMENT CONFIGURATION [HARDENED]
 # - Nginx reverse proxy with SSL
-# - Monitoring with Prometheus + Grafana
 # - External managed services (Redis, Keycloak)
-# - Production security hardening
+# - Minimal footprint for low-cost VPS (2GB RAM target)
 # ══════════════════════════════════════════════════════════════
 
 services:
@@ -18,8 +15,8 @@ services:
     restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-eshop_prod}
-      POSTGRES_USER: ${DATABASE_USERNAME}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -27,57 +24,68 @@ services:
     networks:
       - eshop-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres}"]
       interval: 10s
       timeout: 5s
       retries: 5
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: 1G
-        reservations:
           cpus: '0.5'
           memory: 512M
+        reservations:
+          cpus: '0.2'
+          memory: 256M
 
   # ══════════════════════════════════════════════════════════════
   # Spring Boot Backend (Production)
   # ══════════════════════════════════════════════════════════════
   app:
-    image: ${DOCKER_REGISTRY:-eshop-backend}:${VERSION:-latest}
+    build: .
+    image: eshop-backend:latest
     container_name: eshop-backend-prod
     restart: always
     environment:
       # Profile
       SPRING_PROFILES_ACTIVE: prod
+      PORT: 8082
+      SERVER_PORT: 8082
       
-      # Database (can be external managed database)
-      DATABASE_URL: ${DATABASE_URL}
-      DATABASE_USERNAME: ${DATABASE_USERNAME}
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      # Database
+      DATABASE_URL: ${DB_URL}
+      DATABASE_USERNAME: ${DB_USERNAME}
+      DATABASE_PASSWORD: ${DB_PASSWORD}
       
-      # Redis (external managed service recommended)
-      REDIS_HOST: ${REDIS_HOST}
+      # Redis
+      REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       
-      # Keycloak (external managed service)
-      KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI}
-      KEYCLOAK_JWK_URI: ${KEYCLOAK_JWK_URI}
+      # Keycloak
+      KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI:-http://keycloak:8080/realms/eshop}
+      KEYCLOAK_JWK_URI: ${KEYCLOAK_JWK_URI:-http://keycloak:8080/realms/eshop/protocol/openid-connect/certs}
+      ADMIN_ISSUER_URI: ${KEYCLOAK_AUTH_SERVER:-http://keycloak:8080}/realms/${ADMIN_REALM_NAME:-master}
       
       # Security
       JWT_SECRET: ${JWT_SECRET}
       
       # CORS
-      CORS_ORIGINS: ${CORS_ORIGINS}
+      CORS_ORIGINS: ${ALLOWED_ORIGINS}
+      
+      # Logging
+      LOG_FILE: ${LOG_FILE:-/var/log/eshop/application.log}
+      ACCESS_LOG_DIR: ${ACCESS_LOG_DIR:-/var/log/eshop}
+      
+      # Business & Logic
+      DEFAULT_CURRENCY: ${DEFAULT_CURRENCY:-INR}
+      ALLOWED_GATEWAYS: ${ALLOWED_GATEWAYS:-STRIPE,RAZORPAY}
+      MANAGEMENT_PORT: ${MANAGEMENT_PORT:-8083}
+      UPLOAD_TEMP_DIR: ${UPLOAD_TEMP_DIR:-/tmp/eshop-uploads}
       
       # Payment Gateways
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
       RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
-      
-      # Monitoring
-      MANAGEMENT_ZIPKIN_TRACING_ENDPOINT: http://zipkin:9411/api/v2/spans
       
       # JVM Options
       JAVA_OPTS: >
@@ -103,11 +111,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'
-          memory: 2G
-        reservations:
           cpus: '1.0'
           memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   # ══════════════════════════════════════════════════════════════
   # Nginx - Reverse Proxy with SSL
@@ -132,78 +140,50 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
 
   # ══════════════════════════════════════════════════════════════
-  # Prometheus - Metrics Collection (Production)
+  # Keycloak - Authentication Server (Production Hardened)
   # ══════════════════════════════════════════════════════════════
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: eshop-prometheus-prod
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.5.2
+    container_name: eshop-keycloak-prod
     restart: always
-    ports:
-      - "127.0.0.1:9090:9090"  # Only accessible from localhost
+    command: start --import-realm
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/eshop_keycloak
+      KC_DB_USERNAME: ${DB_USERNAME:-postgres}
+      KC_DB_PASSWORD: ${DB_PASSWORD:-password}
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:-localhost}
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      KC_LOG_LEVEL: warn
+      KC_METRICS_ENABLED: "false"
+      KC_HEALTH_ENABLED: "true"
+      # JVM Tuning for 2GB VPS
+      JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport"
     volumes:
-      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=30d'
+      - ./keycloak/themes:/opt/keycloak/themes
+      - ./keycloak/import:/opt/keycloak/data/import
     networks:
       - eshop-network
     depends_on:
-      - app
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     deploy:
       resources:
         limits:
-          cpus: '0.5'
-          memory: 512M
-
-  # ══════════════════════════════════════════════════════════════
-  # Grafana - Metrics Visualization (Production)
-  # ══════════════════════════════════════════════════════════════
-  grafana:
-    image: grafana/grafana:latest
-    container_name: eshop-grafana-prod
-    restart: always
-    ports:
-      - "127.0.0.1:3000:3000"  # Only accessible from localhost
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL:-http://localhost:3000}
-      - GF_INSTALL_PLUGINS=
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-    networks:
-      - eshop-network
-    depends_on:
-      - prometheus
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-
-  # ══════════════════════════════════════════════════════════════
-  # Zipkin - Distributed Tracing (Production)
-  # ══════════════════════════════════════════════════════════════
-  zipkin:
-    image: openzipkin/zipkin:latest
-    container_name: eshop-zipkin-prod
-    restart: always
-    ports:
-      - "127.0.0.1:9411:9411"  # Only accessible from localhost
-    environment:
-      - STORAGE_TYPE=mem
-    networks:
-      - eshop-network
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
+          memory: 768M
+        reservations:
           memory: 512M
 
 # ══════════════════════════════════════════════════════════════
@@ -211,10 +191,6 @@ services:
 # ══════════════════════════════════════════════════════════════
 volumes:
   postgres_data:
-    driver: local
-  prometheus_data:
-    driver: local
-  grafana_data:
     driver: local
 
 # ══════════════════════════════════════════════════════════════

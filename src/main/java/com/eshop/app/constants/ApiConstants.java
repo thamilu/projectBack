@@ -73,6 +73,7 @@ public final class ApiConstants {
         public static final String SELLER_CATEGORY = BASE_PATH + "/seller/categories";
         public static final String SHIPPING = BASE_PATH + "/shipping";
         public static final String SHOPPING_CART = BASE_PATH + "/shoppingCart";
+        public static final String LOCATIONS = BASE_PATH + "/locations";
         // public static final String WISHLIST = BASE_PATH + "/wishlist";
         // public static final String TestAdminProbe = BASE_PATH + "/admin/probe";
         

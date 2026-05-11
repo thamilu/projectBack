@@ -15,6 +15,7 @@ import com.eshop.app.repository.CartRepository;
 import com.eshop.app.repository.ProductRepository;
 import com.eshop.app.repository.UserRepository;
 import com.eshop.app.service.CartService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -65,6 +66,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @version 2.0
  * @since 1.0
  */
+@Slf4j
 @Service
 @Transactional
 public class CartServiceImpl implements CartService {
@@ -113,7 +115,10 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartResponse addItemToCart(CartItemRequest request) {
         Cart cart = getOrCreateCart();
+        return addProductToCartInternal(cart, request);
+    }
 
+    private CartResponse addProductToCartInternal(Cart cart, CartItemRequest request) {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
@@ -227,8 +232,11 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional(readOnly = true)
     public CartResponse getCartByCode(String cartCode) {
-        // Mock implementation
-        return new CartResponse();
+        log.debug("Fetching cart by code: {}", cartCode);
+        Cart cart = cartRepository.findByCartCode(cartCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found with code: " + cartCode));
+        cart.calculateTotalAmount();
+        return entityMapper.toCartResponse(cart);
     }
 
     /**
@@ -237,26 +245,64 @@ public class CartServiceImpl implements CartService {
      */
     @Override
     public CartResponse updateCart(String cartCode, MultipleCartItemsRequest request) {
-        // Mock implementation
-        return new CartResponse();
+        log.info("Updating cart {} with {} items", cartCode, request.getItems().size());
+        Cart cart = cartRepository.findByCartCode(cartCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found with code: " + cartCode));
+        
+        // Clear existing items and add new ones
+        cartItemRepository.deleteByCartId(cart.getId());
+        cart.getItems().clear();
+        
+        for (CartItemRequest itemReq : request.getItems()) {
+            addProductToCartInternal(cart, itemReq);
+        }
+        
+        cart.calculateTotalAmount();
+        cart = cartRepository.save(cart);
+        return entityMapper.toCartResponse(cart);
     }
 
     @Override
     public CartResponse addProductToCart(String cartCode, CartItemRequest request) {
-        // Mock implementation
-        return new CartResponse();
+        log.info("Adding product {} to cart {}", request.getProductId(), cartCode);
+        Cart cart = cartRepository.findByCartCode(cartCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found with code: " + cartCode));
+        
+        return addProductToCartInternal(cart, request);
     }
 
     @Override
     public CartResponse addMultipleProductsToCart(String cartCode, MultipleCartItemsRequest request) {
-        // Mock implementation
-        return new CartResponse();
+        log.info("Adding multiple products to cart {}", cartCode);
+        Cart cart = cartRepository.findByCartCode(cartCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found with code: " + cartCode));
+        
+        for (CartItemRequest itemReq : request.getItems()) {
+            addProductToCartInternal(cart, itemReq);
+        }
+        
+        cart.calculateTotalAmount();
+        cart = cartRepository.save(cart);
+        return entityMapper.toCartResponse(cart);
     }
 
     @Override
     public CartResponse removeProductFromCart(String cartCode, String sku) {
-        // Mock implementation
-        return new CartResponse();
+        log.info("Removing product with SKU {} from cart {}", sku, cartCode);
+        Cart cart = cartRepository.findByCartCode(cartCode)
+                .orElseThrow(() -> new ResourceNotFoundException("Cart not found with code: " + cartCode));
+        
+        CartItem itemToRemove = cart.getItems().stream()
+                .filter(item -> item.getProduct().getSku().equals(sku))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Product with SKU " + sku + " not found in cart"));
+        
+        cart.getItems().remove(itemToRemove);
+        cartItemRepository.delete(itemToRemove);
+        
+        cart.calculateTotalAmount();
+        cart = cartRepository.save(cart);
+        return entityMapper.toCartResponse(cart);
     }
 
     // Customer Cart Methods
@@ -285,7 +331,7 @@ public class CartServiceImpl implements CartService {
         Optional<CartItem> existingItem = cart.getItems().stream()
                 .filter(item -> item.getProduct().getId().equals(product.getId()))
                 .findFirst();
-
+        
         if (existingItem.isPresent()) {
             CartItem cartItem = existingItem.get();
             cartItem.setQuantity(cartItem.getQuantity() + quantity);

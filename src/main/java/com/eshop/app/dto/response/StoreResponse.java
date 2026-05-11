@@ -21,6 +21,7 @@ public class StoreResponse {
     private String addressLine2;
     private String city;
     private String district;
+    private String taluk;
     private String state;
     private String country;
     private String pincode;
@@ -35,7 +36,7 @@ public class StoreResponse {
     private Double rating;
     private Long totalRatings;
     private Long sellerId;
-    private String sellerUsername;
+    private String sellerEmail;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

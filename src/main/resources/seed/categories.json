@@ -1,0 +1,225 @@
+[
+  {
+    "name": "Fashion",
+    "children": [
+      {
+        "name": "Men",
+        "children": [
+          {
+            "name": "Clothing",
+            "children": [
+              { "name": "T-Shirts" }, { "name": "Shirts" }, { "name": "Jeans" },
+              { "name": "Trousers" }, { "name": "Ethnic Wear" }, { "name": "Innerwear" },
+              { "name": "Sportswear" }, { "name": "chinos" }, { "name": "cargo pants" },
+              { "name": "joggers" }
+            ]
+          },
+          {
+            "name": "Footwear",
+            "children": [
+              { "name": "Men's Casual Shoes" }, { "name": "Men's Sports Shoes" },
+              { "name": "Men's Formal Shoes" }, { "name": "Men's Sandals" }
+            ]
+          },
+          {
+            "name": "Accessories",
+            "children": [
+              { "name": "Wallets" }, { "name": "Belts" }, { "name": "Men's Watches" },
+              { "name": "Sunglasses" }, { "name": "Caps & Hats" }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Women",
+        "children": [
+          {
+            "name": "Clothing",
+            "children": [
+              { "name": "Tops" }, { "name": "Dresses" }, { "name": "Sarees" },
+              { "name": "Kurtis" }, { "name": "Jeans" }, { "name": "Leggings" },
+              { "name": "Lingerie & Sleepwear" }, { "name": "trousers" },
+              { "name": "chinos" }, { "name": "cargo pants" }, { "name": "joggers" }
+            ]
+          },
+          {
+            "name": "Footwear",
+            "children": [
+              { "name": "Women's Casual Shoes" }, { "name": "Heels" },
+              { "name": "Women's Sports Shoes" }, { "name": "Boots" }
+            ]
+          },
+          {
+            "name": "Accessories",
+            "children": [
+              { "name": "Handbags" }, { "name": "Jewelry" }, { "name": "Women's Watches" },
+              { "name": "Scarves" }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Kids",
+        "children": [
+          {
+            "name": "Clothing",
+            "children": [
+              { "name": "Boys Clothing" }, { "name": "Girls Clothing" }, { "name": "Infant Wear" }
+            ]
+          },
+          {
+            "name": "Footwear",
+            "children": [
+              { "name": "Kids' Casual Shoes" }, { "name": "Kids' Sports Shoes" }, { "name": "School Shoes" }
+            ]
+          },
+          {
+            "name": "Accessories",
+            "children": [
+              { "name": "School Bags" }, { "name": "Kids' Watches" }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Electronics",
+    "children": [
+      {
+        "name": "Mobiles & Accessories",
+        "children": [
+          { "name": "Smartphones" }, { "name": "Feature Phones" }, { "name": "Cases & Covers" },
+          { "name": "Chargers & Cables" }, { "name": "Power Banks" }
+        ]
+      },
+      {
+        "name": "Computers",
+        "children": [
+          { "name": "Laptops" }, { "name": "Desktops" }, { "name": "Monitors" },
+          { "name": "Keyboards & Mouse" }, { "name": "Storage Devices" }
+        ]
+      },
+      {
+        "name": "TV & Appliances",
+        "children": [
+          { "name": "Smart TVs" }, { "name": "Set-top Boxes" }, { "name": "Speakers" },
+          { "name": "Soundbars" }
+        ]
+      },
+      {
+        "name": "Cameras",
+        "children": [
+          { "name": "DSLR" }, { "name": "Mirrorless" }, { "name": "Action Cameras" }
+        ]
+      },
+      {
+        "name": "Smart Devices",
+        "children": [
+          { "name": "Smart Watches" }, { "name": "Fitness Bands" }, { "name": "Smart Home Devices" }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Home & Living",
+    "children": [
+      {
+        "name": "Furniture",
+        "children": [
+          { "name": "Sofa" }, { "name": "Beds" }, { "name": "Tables & Chairs" }, { "name": "Wardrobes" }
+        ]
+      },
+      {
+        "name": "Home Decor",
+        "children": [
+          { "name": "Wall Art" }, { "name": "Lamps & Lighting" }, { "name": "Clocks" }, { "name": "Showpieces" }
+        ]
+      },
+      {
+        "name": "Kitchen & Dining",
+        "children": [
+          { "name": "Cookware" }, { "name": "Dinner Sets" }, { "name": "Kitchen Tools" }
+        ]
+      },
+      {
+        "name": "Home Improvement",
+        "children": [
+          { "name": "Electricals" }, { "name": "Plumbing" }, { "name": "Hardware Tools" }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Beauty, Health & Personal Care",
+    "children": [
+      {
+        "name": "Beauty",
+        "children": [
+          { "name": "Makeup" }, { "name": "Skincare" }, { "name": "Haircare" }, { "name": "Personal Care" }
+        ]
+      },
+      {
+        "name": "Grooming",
+        "children": [
+          { "name": "Hygiene Products" }
+        ]
+      },
+      {
+        "name": "Health",
+        "children": [
+          { "name": "Supplements" }, { "name": "Medical Equipment" }, { "name": "Fitness Monitoring Devices" }
+        ]
+      },
+      {
+        "name": "Fragrances",
+        "children": [
+          { "name": "Perfumes" }, { "name": "Deodorants" }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Grocery & Essentials",
+    "children": [
+      {
+        "name": "Food",
+        "children": [
+          { "name": "Rice, Wheat & Pulses" }, { "name": "Snacks & Packaged Foods" }, { "name": "Spices" }
+        ]
+      },
+      {
+        "name": "Beverages",
+        "children": [
+          { "name": "Tea & Coffee" }, { "name": "Soft Drinks" }, { "name": "Health Drinks" }
+        ]
+      },
+      {
+        "name": "Household Essentials",
+        "children": [
+          { "name": "Cleaning Supplies" }, { "name": "Detergents" }, { "name": "Paper Products" }
+        ]
+      },
+      {
+        "name": "Fruits & Vegetables",
+        "children": [
+          {
+            "name": "Fresh Fruits",
+            "children": [
+              { "name": "Common Fruits" }, { "name": "Seasonal Fruits" }, { "name": "Exotic Fruits" }
+            ]
+          },
+          {
+            "name": "Vegetables",
+            "children": [
+              { "name": "Leafy Vegetables" }, { "name": "Root Vegetables" }, { "name": "Gourds & Pods" },
+              { "name": "Cruciferous Vegetables" }, { "name": "Exotic Vegetables" }, { "name": "Frozen & Processed Vegetables" }
+            ]
+          },
+          { "name": "Dry Fruits" }, { "name": "Organic & Special" }
+        ]
+      },
+      { "name": "Dairy" }
+    ]
+  }
+]

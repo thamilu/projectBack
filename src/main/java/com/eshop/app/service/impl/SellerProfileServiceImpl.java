@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -120,6 +121,7 @@ public class SellerProfileServiceImpl implements SellerProfileService {
             if (request.getStoreAddressLine2() != null) store.setAddressLine2(request.getStoreAddressLine2());
             if (request.getStoreCity() != null)         store.setCity(request.getStoreCity());
             if (request.getStoreDistrict() != null)     store.setDistrict(request.getStoreDistrict());
+            if (request.getStoreTaluk() != null)        store.setTaluk(request.getStoreTaluk());
             if (request.getStoreState() != null)        store.setState(request.getStoreState());
             if (request.getStorePincode() != null)      store.setPostalCode(request.getStorePincode());
             if (request.getStoreCountry() != null)      store.setCountry(request.getStoreCountry());
@@ -135,11 +137,39 @@ public class SellerProfileServiceImpl implements SellerProfileService {
     }
 
     private Long resolveUserId(Authentication authentication) {
-        if (authentication == null) return null;
+        if (authentication == null) {
+            log.warn("resolveUserId: Authentication object is null");
+            return null;
+        }
+        
         Object principal = authentication.getPrincipal();
         if (principal instanceof com.eshop.app.security.PrincipalDetails pd) {
-            return pd.getId();
+            Long id = pd.getId();
+            if (id != null && id > 0) {
+                return id;
+            }
+            log.warn("resolveUserId: PrincipalDetails found but ID is invalid: {}. KeycloakId: {}", id, pd.getKeycloakId());
+        } else {
+            log.debug("resolveUserId: Principal is not PrincipalDetails, type: {}", principal.getClass().getName());
         }
+        
+        // Final fallback: try to find user by Keycloak ID directly from repository
+        Optional<String> keycloakIdOpt = com.eshop.app.util.SecurityUtils.getCurrentKeycloakId();
+        if (keycloakIdOpt.isPresent()) {
+            String keycloakId = keycloakIdOpt.get();
+            log.debug("resolveUserId: Attempting fallback lookup for KeycloakId: {}", keycloakId);
+            return sellerProfileRepository.findByUser_KeycloakId(keycloakId)
+                    .map(sp -> {
+                        log.debug("resolveUserId: Fallback success. Found UserId: {}", sp.getUser().getId());
+                        return sp.getUser().getId();
+                    })
+                    .orElseGet(() -> {
+                        log.warn("resolveUserId: Fallback failed. No SellerProfile record for KeycloakId: {}", keycloakId);
+                        return null;
+                    });
+        }
+        
+        log.error("resolveUserId: Unable to resolve identity from Authentication context");
         return null;
     }
 }

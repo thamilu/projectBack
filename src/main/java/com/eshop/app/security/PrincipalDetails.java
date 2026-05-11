@@ -12,11 +12,10 @@ import lombok.Getter;
 @AllArgsConstructor
 public class PrincipalDetails {
     private final Long id;
-    private final String username;
     private final String email;
     private final String keycloakId;
 
     public String getName() {
-        return username != null ? username : email;
+        return email;
     }
 }

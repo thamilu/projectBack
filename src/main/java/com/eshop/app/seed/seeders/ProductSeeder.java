@@ -4,13 +4,11 @@ package com.eshop.app.seed.seeders;
 import com.eshop.app.entity.*;
 import com.eshop.app.entity.enums.ProductStatus;
 import com.eshop.app.repository.ProductRepository;
-import com.eshop.app.seed.core.Seeder;
+import com.eshop.app.seed.core.BaseSeeder;
 import com.eshop.app.seed.core.SeederContext;
-import com.eshop.app.seed.exception.CatalogSeedingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -26,39 +24,25 @@ import java.util.stream.Collectors;
 @Component
 @Order(6)
 @RequiredArgsConstructor
-public class ProductSeeder implements Seeder<Product, SeederContext> {
+public class ProductSeeder extends BaseSeeder<Product, SeederContext> {
 
     private final ProductRepository productRepository;
     private final com.eshop.app.seed.provider.ProductDataProvider productDataProvider;
 
     @Override
-    public List<Product> seed(SeederContext context) {
-        try {
-            List<Product> products = productDataProvider.getProducts().stream()
-                    .map(cfg -> buildProduct(cfg, context))
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .toList();
+    protected List<Product> doSeed(SeederContext context) {
+        List<Product> products = productDataProvider.getProducts().stream()
+                .map(cfg -> buildProduct(cfg, context))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .toList();
 
-            List<Product> savedProducts = productRepository.saveAll(products);
-
-            log.info("Seeded {} products successfully", savedProducts.size());
-            return savedProducts;
-
-        } catch (DataAccessException e) {
-            throw new CatalogSeedingException(
-                    "Failed to seed products: " + e.getMessage(), e);
-        }
+        return productRepository.saveAll(products);
     }
 
     @Override
-    public void cleanup() {
-        try {
-            productRepository.deleteAllInBatch();
-            log.debug("Cleaned up existing products");
-        } catch (Exception e) {
-            log.warn("Failed to cleanup products: {}", e.getMessage());
-        }
+    protected void doCleanup() {
+        productRepository.deleteAllInBatch();
     }
 
     @Override
@@ -66,30 +50,14 @@ public class ProductSeeder implements Seeder<Product, SeederContext> {
         return 6;
     }
 
-    @Override
-    public String name() {
-        return "ProductSeeder";
-    }
-
     /**
      * Build product with null-safe relationship lookups.
      * Skips product if required relationships missing.
      */
     private Optional<Product> buildProduct(com.eshop.app.seed.model.ProductData cfg, SeederContext context) {
-        // Validate required references exist
-        Category category = context.getCategories().get(cfg.categoryName());
-        if (category == null) {
-            log.warn("Skipping product '{}': category '{}' not found",
-                    cfg.name(), cfg.categoryName());
-            return Optional.empty();
-        }
-
-        Store store = context.getStores().get(cfg.storeName());
-        if (store == null) {
-            log.warn("Skipping product '{}': store '{}' not found",
-                    cfg.name(), cfg.storeName());
-            return Optional.empty();
-        }
+        // Resolve required dependencies using context helpers (fail-fast)
+        Category category = context.getRequiredCategory(cfg.categoryName());
+        Store store = context.getRequiredStore(cfg.storeName());
 
         // Optional references
         Brand brand = context.getBrands().get(cfg.brandName());

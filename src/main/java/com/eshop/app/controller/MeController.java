@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * @since 2026-01-01
  */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 @Tag(name = "User Identity", description = "JWT-based user authentication and identity endpoints")
 public class MeController {
 

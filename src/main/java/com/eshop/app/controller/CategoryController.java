@@ -24,7 +24,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.eshop.app.security.PrincipalDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
@@ -63,9 +63,9 @@ public class CategoryController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Category name already exists")
     public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(
             @Valid @RequestBody CategoryRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
         
-        log.info("Admin '{}' creating category: {}", userDetails.getUsername(), request.getName());
+        log.info("Admin '{}' creating category: {}", principalDetails.getEmail(), request.getName());
         
         CategoryResponse response = categoryService.createCategory(request);
         
@@ -86,9 +86,9 @@ public class CategoryController {
             @Parameter(description = "Category ID", example = "1") 
             @PathVariable @Positive(message = "Category ID must be positive") Long id,
             @Valid @RequestBody CategoryRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
         
-        log.info("Admin '{}' updating category: id={}", userDetails.getUsername(), id);
+        log.info("Admin '{}' updating category: id={}", principalDetails.getEmail(), id);
         
         CategoryResponse response = categoryService.updateCategory(id, request);
         
@@ -110,10 +110,10 @@ public class CategoryController {
             @PathVariable @Positive Long id,
             @Parameter(description = "Permanently delete category")
             @RequestParam(defaultValue = "false") boolean hardDelete,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
         
         log.info("Admin '{}' deleting category: id={}, hardDelete={}", 
-            userDetails.getUsername(), id, hardDelete);
+            principalDetails.getEmail(), id, hardDelete);
         
         if (hardDelete) {
             categoryService.hardDeleteCategory(id);
@@ -134,9 +134,9 @@ public class CategoryController {
     )
     public ResponseEntity<ApiResponse<CategoryResponse>> restoreCategory(
             @PathVariable @Positive Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
         
-        log.info("Admin '{}' restoring category: id={}", userDetails.getUsername(), id);
+        log.info("Admin '{}' restoring category: id={}", principalDetails.getEmail(), id);
         
         CategoryResponse response = categoryService.restoreCategory(id);
         return ControllerResponseUtils.ok("Category restored successfully", response);
@@ -151,9 +151,9 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> createCategories(
             @Valid @RequestBody @Size(min = 1, max = 50, message = "Must provide 1-50 categories") 
             List<CategoryRequest> requests,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal PrincipalDetails principalDetails) {
         
-        log.info("Admin '{}' creating {} categories", userDetails.getUsername(), requests.size());
+        log.info("Admin '{}' creating {} categories", principalDetails.getEmail(), requests.size());
         
         List<CategoryResponse> responses = categoryService.createCategories(requests);
         return ControllerResponseUtils.created("Categories created successfully", responses);

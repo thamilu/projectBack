@@ -7,15 +7,12 @@ import com.eshop.app.seed.provider.CategoryDataProvider;
 import com.eshop.app.seed.service.CategoryPersistenceService;
 import com.eshop.app.seed.service.CategoryTreeBuilder;
 import com.eshop.app.seed.validation.CategoryValidator;
+import com.eshop.app.seed.core.BaseSeeder;
+import com.eshop.app.seed.core.SeederContext;
 import com.eshop.app.entity.Category;
-import io.micrometer.core.annotation.Timed;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
-import org.slf4j.MDC;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
@@ -23,7 +20,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Enterprise-grade Category Seeder with batch processing and distributed locking.
@@ -87,7 +83,7 @@ import java.util.UUID;
     matchIfMissing = true
 )
 @RequiredArgsConstructor
-public class CategorySeeder implements ApplicationRunner {
+public class CategorySeeder extends BaseSeeder<Category, SeederContext> {
 
     private final CategoryRepository categoryRepository;
     private final CategoryDataProvider dataProvider;
@@ -114,88 +110,44 @@ public class CategorySeeder implements ApplicationRunner {
      */
     @Override
     @Transactional
-    @Timed(
-        value = "app.seeding.categories.duration",
-        description = "Time taken to seed categories",
-        histogram = true
-    )
-    @SchedulerLock(
-        name = "CategorySeeder",
-        lockAtLeastFor = "PT30S",  // Hold lock for at least 30 seconds
-        lockAtMostFor = "PT5M"      // Release lock after 5 minutes max
-    )
-    public void run(ApplicationArguments args) {
-        // Setup MDC logging context
-        String correlationId = UUID.randomUUID().toString();
-        MDC.put("correlationId", correlationId);
-        MDC.put("operation", "category-seeding");
-        MDC.put("provider", dataProvider.getProviderName());
-
+    protected List<Category> doSeed(SeederContext context) {
         try {
             if (shouldSkip()) {
-                log.info("Categories already exist (count: {}). Skipping seeding.", 
-                         categoryRepository.count());
-                meterRegistry.counter("app.seeding.categories.skipped").increment();
-                return;
+                log.info("Categories already exist. Skipping seeding.");
+                return categoryRepository.findAll();
             }
 
-            log.info("╔════════════════════════════════════════════════════════════╗");
-            log.info("║  Starting optimized category seeding                       ║");
-            log.info("║  Provider: {}                              ║", 
-                     String.format("%-42s", dataProvider.getProviderName()));
-            log.info("║  Correlation ID: {}        ║", correlationId);
-            log.info("╚════════════════════════════════════════════════════════════╝");
-
-            long startTime = System.currentTimeMillis();
-
             // Step 1: Get category definitions
-            log.debug("Step 1/4: Loading category definitions...");
             List<CategoryNode> nodes = dataProvider.getCategoryHierarchy();
-            log.info("Loaded {} root categories", nodes.size());
 
             // Step 2: Validate hierarchy
-            log.debug("Step 2/4: Validating category hierarchy...");
-            int totalNodes = validateHierarchy(nodes);
-            log.info("Validated {} total category nodes", totalNodes);
+            validateHierarchy(nodes);
 
             // Step 3: Build entity tree
-            log.debug("Step 3/4: Building category entities...");
             List<Category> categories = treeBuilder.buildTree(nodes);
-            log.info("Built {} category entities with slugs and paths", categories.size());
 
             // Step 4: Persist with batching
-            log.debug("Step 4/4: Persisting categories to database...");
-            int count = persistenceService.persistCategories(categories);
+            persistenceService.persistCategories(categories);
 
-            long duration = System.currentTimeMillis() - startTime;
+            // Populate context
+            categories.forEach(c -> context.getCategories().put(c.getName(), c));
 
-            // Record metrics
-            meterRegistry.counter("app.seeding.categories.total").increment(count);
-            meterRegistry.gauge("app.seeding.categories.last_duration_ms", duration);
-
-            log.info("╔════════════════════════════════════════════════════════════╗");
-            log.info("║  Category seeding completed successfully!                  ║");
-            log.info("║  Categories persisted: {}                           ║", 
-                     String.format("%-36s",count));
-            log.info("║  Duration: {} ms                             ║", 
-                     String.format("%-43s", duration));
-            log.info("║  Average: {} ms/category                       ║", 
-                     String.format("%-38s", duration / Math.max(count, 1)));
-            log.info("╚════════════════════════════════════════════════════════════╝");
+            return categories;
 
         } catch (Exception e) {
             meterRegistry.counter("app.seeding.categories.errors").increment();
-            log.error("╔════════════════════════════════════════════════════════════╗");
-            log.error("║  ❌ Category seeding FAILED                                 ║");
-            log.error("║  Error: {}                  ║", 
-                     String.format("%-43s", e.getMessage()));
-            log.error("║  Correlation ID: {}        ║", correlationId);
-            log.error("╚════════════════════════════════════════════════════════════╝");
-            log.error("Full stack trace:", e);
             throw new CategorySeedingException("Category seeding failed", e);
-        } finally {
-            MDC.clear();
         }
+    }
+
+    @Override
+    protected void doCleanup() {
+        categoryRepository.deleteAllInBatch();
+    }
+
+    @Override
+    public int order() {
+        return 2;
     }
 
     /**

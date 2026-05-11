@@ -26,7 +26,7 @@ public class CategoryRequestResponse {
         this.reason = request.getReason();
         this.status = request.getStatus().name();
         this.adminRemarks = request.getAdminRemarks();
-        this.sellerName = request.getSeller().getUsername();
+        this.sellerName = request.getSeller().getEmail();
         this.createdAt = request.getCreatedAt();
         this.reviewedAt = request.getReviewedAt();
     }

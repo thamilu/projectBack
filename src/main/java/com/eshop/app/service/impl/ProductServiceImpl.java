@@ -31,8 +31,8 @@ import com.eshop.app.entity.Store;
 import com.eshop.app.entity.Tag;
 import com.eshop.app.entity.OrderItem;
 import com.eshop.app.entity.enums.ProductStatus;
-import com.eshop.app.event.ProductCreatedEvent;
-import com.eshop.app.event.LowStockEvent;
+import com.eshop.app.core.events.domain.ProductCreatedEvent;
+import com.eshop.app.core.events.domain.LowStockEvent;
 import com.eshop.app.exception.DuplicateResourceException;
 import com.eshop.app.exception.ResourceNotFoundException;
 import com.eshop.app.exception.ProductNotFoundException;
@@ -1033,12 +1033,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasRole('CUSTOMER') and #customerId == principal.id")
+    @PreAuthorize("isAuthenticated()")
     public Optional<String> getFavoriteCategoryByCustomerId(Long customerId) {
         List<Object[]> result = productRepository.findFavoriteCategoryByCustomerId(customerId);
         if (result.isEmpty())
             return Optional.empty();
-        return Optional.ofNullable((String) result.get(0)[0]);
+        return Optional.ofNullable((String) result.getFirst()[0]);
     }
 
     @Override

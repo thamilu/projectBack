@@ -10,6 +10,7 @@
 
 ### 1. Hardening & Standards
 - **[Hardening Protocol & Keywords](./guides/HARDENING_PROTOCOL.md)** - **MANDATORY READING**
+- **[Java and Spring Boot 4 Backend Standards](./guides/JAVA_SPRING_BOOT_4_STANDARDS.md)** - Project-local Java 21 and Spring Boot 4.0.2 rules.
 - **[Frontend Standards](./reference/FRONTEND_STANDARDS.md)** - Staff/Principal level responsive & device rules.
 
 ### Setup Guides

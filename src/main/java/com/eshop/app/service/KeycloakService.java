@@ -29,13 +29,19 @@ public class KeycloakService {
 
     @PostConstruct
     public void init() {
-        // Initialize Keycloak Admin Client
+        // [HARDEN] Build a custom ResteasyClient to handle Keycloak schema changes gracefully
+        // We register CustomKeycloakJacksonProvider to ignore unknown properties (like "multivalued")
+        jakarta.ws.rs.client.Client resteasyClient = jakarta.ws.rs.client.ClientBuilder.newClient()
+                .register(new com.eshop.app.config.CustomKeycloakJacksonProvider());
+
+        // Initialize Keycloak Admin Client with custom resteasyClient
         this.keycloak = KeycloakBuilder.builder()
                 .serverUrl(keycloakConfig.getAuthServerUrl())
                 .realm(keycloakConfig.getRealm())
                 .grantType("client_credentials")
                 .clientId(keycloakConfig.getClientId())
                 .clientSecret(keycloakConfig.getClientSecret())
+                .resteasyClient(resteasyClient)
                 .build();
     }
 
@@ -66,53 +72,49 @@ public class KeycloakService {
 
             log.info("Successfully assigned role '{}' to user '{}'", roleName, userId);
 
-        } catch (jakarta.ws.rs.NotFoundException e) {
-            log.warn("User or role '{}' not found in Keycloak for ID '{}'. This is common during local dev DB resets.",
-                    roleName, userId);
-            // We intentionally do not throw an exception here so JIT creation can proceed
         } catch (Exception e) {
-            log.error("Failed to assign role '{}' to user '{}'. Stack trace:", roleName, userId, e);
+            log.error("Failed to assign role '{}' to user '{}'. Reason: {}", roleName, userId, e.getMessage());
             throw new RuntimeException("Failed to assign role in Keycloak: " + e.getMessage(), e);
         }
     }
 
     /**
-     * Assign a realm role to a user by username.
+     * Assign a realm role to a user by email.
      * Helpful when we don't have the Keycloak ID yet.
      *
-     * @param username The username to search for
+     * @param email The email (which is the username in Keycloak) to search for
      * @param roleName The role to assign
      */
     @Retry(name = "keycloak")
     @CircuitBreaker(name = "keycloak")
-    public void assignRoleByUsername(String username, String roleName) {
+    public void assignRoleByEmail(String email, String roleName) {
         try {
-            log.info("Assigning role '{}' to user '{}' (by username)", roleName, username);
+            log.info("Assigning role '{}' to user with email '{}' (by search)", roleName, email);
             String realm = keycloakConfig.getRealm();
 
-            // Search for user by username (exact match preferred)
+            // Search for user by email (as username)
             java.util.List<org.keycloak.representations.idm.UserRepresentation> users = keycloak.realm(realm).users()
-                    .search(username, true);
+                    .search(email, true);
 
             if (users == null || users.isEmpty()) {
-                // Fallback to non-exact search if exact not supported by this version/config
-                users = keycloak.realm(realm).users().search(username);
+                // Fallback to non-exact search
+                users = keycloak.realm(realm).users().search(email);
                 if (users == null || users.isEmpty()) {
-                    throw new RuntimeException("User not found in Keycloak with username: " + username);
+                    throw new RuntimeException("User not found in Keycloak with email: " + email);
                 }
             }
 
-            // Find the user with the matching username case-insensitively
+            // Find the user with matching email or username
             org.keycloak.representations.idm.UserRepresentation user = users.stream()
-                    .filter(u -> u.getUsername().equalsIgnoreCase(username))
+                    .filter(u -> email.equalsIgnoreCase(u.getEmail()) || email.equalsIgnoreCase(u.getUsername()))
                     .findFirst()
-                    .orElseThrow(() -> new RuntimeException("User found but username mismatch for: " + username));
+                    .orElseThrow(() -> new RuntimeException("User found but identity mismatch for: " + email));
 
             assignRole(user.getId(), roleName);
 
         } catch (Exception e) {
-            log.error("Failed to assign role '{}' to username '{}'. Stack trace:", roleName, username, e);
-            throw new RuntimeException("Failed to assign role by username: " + e.getMessage(), e);
+            log.error("Failed to assign role '{}' to email '{}'. Stack trace:", roleName, email, e);
+            throw new RuntimeException("Failed to assign role by email: " + e.getMessage(), e);
         }
     }
 

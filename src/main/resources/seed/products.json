@@ -1,0 +1,24 @@
+[
+  {
+    "name": "Samsung Galaxy S24",
+    "sku": "SAMSUNG-S24-001",
+    "price": 999.99,
+    "discountPrice": 899.99,
+    "description": "Latest flagship from Samsung",
+    "categoryName": "Smartphones",
+    "brandName": "Samsung",
+    "storeName": "Tech Retail Store",
+    "tags": ["new", "popular"]
+  },
+  {
+    "name": "Nike Air Max",
+    "sku": "NIKE-AIRMAX-001",
+    "price": 150.00,
+    "discountPrice": 120.00,
+    "description": "Iconic Nike Air Max sneakers",
+    "categoryName": "Men's Sports Shoes",
+    "brandName": "Nike",
+    "storeName": "Tech Retail Store",
+    "tags": ["sale"]
+  }
+]

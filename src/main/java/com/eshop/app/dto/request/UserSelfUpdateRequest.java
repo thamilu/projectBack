@@ -16,7 +16,7 @@ public class UserSelfUpdateRequest {
     @Size(max = 100)
     private String lastName;
 
-    @Size(max = 20)
+    @Size(max = 100)
     @JsonAlias("mobileNumber")
     private String phone;
 
@@ -38,6 +38,9 @@ public class UserSelfUpdateRequest {
     private String district;
 
     @Size(max = 100)
+    private String taluk;
+
+    @Size(max = 100)
     private String state;
 
     @Size(max = 20)
@@ -51,7 +54,7 @@ public class UserSelfUpdateRequest {
     @Size(max = 20)
     private String gender;
 
-    @Size(max = 20)
+    @Size(max = 100)
     private String alternatePhone;
 
     @Size(max = 20)

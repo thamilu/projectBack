@@ -1,0 +1,48 @@
+[
+  {
+    "email": "admin@eshop.com",
+    "firstName": "Admin",
+    "lastName": "User",
+    "role": "ADMIN",
+    "password": "${SEED_ADMIN_PASSWORD:Admin@12345}"
+  },
+  {
+    "email": "retail1@eshop.com",
+    "firstName": "Retail",
+    "lastName": "Seller",
+    "role": "SELLER",
+    "sellerType": "INDIVIDUAL",
+    "password": "${SEED_SELLER_PASSWORD:Seller@12345}"
+  },
+  {
+    "email": "wholesale1@eshop.com",
+    "firstName": "Wholesale",
+    "lastName": "Seller",
+    "role": "SELLER",
+    "sellerType": "WHOLESALER",
+    "password": "${SEED_SELLER_PASSWORD:Seller@12345}"
+  },
+  {
+    "email": "shop1@eshop.com",
+    "firstName": "Shop",
+    "lastName": "Owner",
+    "role": "SELLER",
+    "sellerType": "RETAILER",
+    "password": "${SEED_SELLER_PASSWORD:Seller@12345}"
+  },
+  {
+    "email": "farmer1@eshop.com",
+    "firstName": "Farm",
+    "lastName": "Seller",
+    "role": "SELLER",
+    "sellerType": "FARMER",
+    "password": "${SEED_SELLER_PASSWORD:Seller@12345}"
+  },
+  {
+    "email": "customer1@eshop.com",
+    "firstName": "Test",
+    "lastName": "Customer",
+    "role": "CUSTOMER",
+    "password": "${SEED_CUSTOMER_PASSWORD:Customer@12345}"
+  }
+]

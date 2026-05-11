@@ -1,8 +1,8 @@
 # ══════════════════════════════════════════════════════════════
-# LOCAL DEVELOPMENT SETUP
-# - PostgreSQL, Redis, Keycloak, MailHog in Docker
+# LOCAL DEVELOPMENT SETUP [HARDENED]
+# - Core Stack: PostgreSQL, Redis, Keycloak
+# - Dev Tools: pgAdmin (for data verification)
 # - Spring Boot backend runs locally (not in container)
-# - Includes dev tools: pgAdmin, Redis Commander, MailHog
 # ══════════════════════════════════════════════════════════════
 
 services:
@@ -31,6 +31,14 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 256M
 
   # ══════════════════════════════════════════════════════════════
   # Redis Cache
@@ -54,29 +62,11 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
-
-  # ══════════════════════════════════════════════════════════════
-  # MailHog - Email Testing Tool (Development Only)
-  # Captures all emails sent by Keycloak
-  # Access Web UI: http://localhost:8025
-  # ══════════════════════════════════════════════════════════════
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: eshop-mailhog-dev
-    restart: unless-stopped
-    environment:
-      TZ: Asia/Kolkata
-    ports:
-      - "1025:1025" # SMTP server port
-      - "8025:8025" # Web UI port
-    networks:
-      - eshop-dev-net
-    healthcheck:
-      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8025" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
 
   # ══════════════════════════════════════════════════════════════
   # Keycloak - Authentication Server
@@ -87,6 +77,8 @@ services:
     restart: unless-stopped
     environment:
       TZ: Asia/Kolkata
+      # JVM Tuning for Stability
+      JAVA_OPTS: "-Xms256m -Xmx512m"
       JAVA_OPTS_APPEND: "-Duser.timezone=Asia/Kolkata"
 
       # ── Master Realm Admin ──
@@ -111,17 +103,6 @@ services:
       ESHOP_BACKEND_CLIENT_SECRET: "eshop-backend-dev-secret"
       ESHOP_ADMIN_BACKEND_SECRET: "eshop-admin-backend-dev-secret"
 
-      # ── SMTP Configuration (MailHog for dev) ──
-      SMTP_HOST: "mailhog"
-      SMTP_PORT: "1025"
-      SMTP_FROM_EMAIL: "noreply@eshop.com"
-      SMTP_REPLY_TO: "support@eshop.com"
-      SMTP_USER: ""
-      SMTP_PASSWORD: ""
-      SMTP_AUTH: "false"
-      SMTP_STARTTLS: "false"
-      SMTP_SSL: "false"
-
       # ── Social Login (dev placeholders) ──
       GOOGLE_CLIENT_ID: "placeholder"
       GOOGLE_CLIENT_SECRET: "placeholder"
@@ -133,14 +114,13 @@ services:
     volumes:
       - ./keycloak-themes:/opt/keycloak/themes
       - ./keycloak-import:/opt/keycloak/data/import
+      - keycloak_dev_data:/opt/keycloak/data
     command:
       - start-dev
       - --import-realm
     depends_on:
       postgres:
         condition: service_healthy
-      mailhog:
-        condition: service_started
     networks:
       - eshop-dev-net
     healthcheck:
@@ -149,6 +129,14 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 768M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   # ══════════════════════════════════════════════════════════════
   # pgAdmin - PostgreSQL Management Tool
@@ -161,7 +149,7 @@ services:
       TZ: Asia/Kolkata
       PGADMIN_DEFAULT_EMAIL: admin@eshop.com
       PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_SERVER_MODE: "True"
     ports: 
       - "5050:80"
     volumes:
@@ -169,87 +157,17 @@ services:
     networks:
       - eshop-dev-net
     depends_on:
-      - postgres
-
-  # ══════════════════════════════════════════════════════════════
-  # Redis Commander - Redis Management Tool
-  # ══════════════════════════════════════════════════════════════
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    container_name: eshop-redis-commander-dev
-    restart: unless-stopped
-    environment:
-      - TZ=Asia/Kolkata
-      - REDIS_HOSTS=local:redis:6379
-    ports:
-      - "8081:8081"
-    networks:
-      - eshop-dev-net
-    depends_on:
-      - redis
-
-  # ══════════════════════════════════════════════════════════════
-  # Prometheus - Metrics Collection
-  # Monitors your locally running Spring Boot app
-  # ══════════════════════════════════════════════════════════════
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: eshop-prometheus-dev
-    restart: unless-stopped
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus/prometheus-dev.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_dev_data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-    networks:
-      - eshop-dev-net
-
-  # ══════════════════════════════════════════════════════════════
-  # Grafana - Metrics Visualization
-  # Beautiful dashboards for your local app
-  # ══════════════════════════════════════════════════════════════
-  grafana:
-    image: grafana/grafana:latest
-    container_name: eshop-grafana-dev
-    restart: unless-stopped
-    ports:
-      - "3002:3000"
-    environment:
-      - TZ=Asia/Kolkata
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-      - GF_SERVER_ROOT_URL=http://localhost:3002
-    volumes:
-      - grafana_dev_data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-    networks:
-      - eshop-dev-net
-    depends_on:
-      - prometheus
-
-  # ══════════════════════════════════════════════════════════════
-  # Zipkin - Distributed Tracing
-  # Trace requests through your local app
-  # ══════════════════════════════════════════════════════════════
-  zipkin:
-    image: openzipkin/zipkin:latest
-    container_name: eshop-zipkin-dev
-    restart: unless-stopped
-    ports:
-      - "9411:9411"
-    environment:
-      - TZ=Asia/Kolkata
-      - STORAGE_TYPE=mem
-    networks:
-      - eshop-dev-net
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
 # ══════════════════════════════════════════════════════════════
 # Volumes - Persistent Data Storage
-# ══════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════
 volumes:
   redis_dev_data:
     driver: local
@@ -257,9 +175,7 @@ volumes:
     driver: local
   pgadmin_dev_data:
     driver: local
-  prometheus_dev_data:
-    driver: local
-  grafana_dev_data:
+  keycloak_dev_data:
     driver: local
 
 # ══════════════════════════════════════════════════════════════

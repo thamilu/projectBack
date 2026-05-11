@@ -41,21 +41,21 @@ public class SellerProfileUpdateRequest {
     @Size(max = 20, message = "Preferred language cannot exceed 20 characters")
     private String preferredLanguage;
 
-    @Pattern(regexp = "^(\\+?[0-9]{7,15})?$", message = "Invalid phone number format")
+    @Size(max = 100)
     private String phone;
 
-    @Size(max = 20, message = "Alternate phone cannot exceed 20 characters")
+    @Size(max = 100, message = "Alternate phone cannot exceed 100 characters")
     private String alternatePhone;
 
     // ─── Basic Seller Profile ────────────────────────────────────
 
-    @Size(min = 2, max = 200, message = "Shop name must be between 2 and 200 characters")
+    @Size(max = 200, message = "Shop name cannot exceed 200 characters")
     private String shopName;
 
-    @Size(min = 2, max = 200, message = "Business name must be between 2 and 200 characters")
+    @Size(max = 200, message = "Business name cannot exceed 200 characters")
     private String businessName;
 
-    @Size(min = 2, max = 250, message = "Shop handle must be between 2 and 250 characters")
+    @Size(max = 250, message = "Shop handle cannot exceed 250 characters")
     @Pattern(regexp = "^[a-z0-9-]+$", message = "Shop handle must be lowercase alphanumeric with hyphens")
     private String shopHandle;
 
@@ -64,7 +64,7 @@ public class SellerProfileUpdateRequest {
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
 
-    @Size(max = 20, message = "Business Phone must not exceed 20 characters")
+    @Size(max = 100, message = "Business Phone must not exceed 100 characters")
     private String businessPhone;
 
     private String storeName;
@@ -120,6 +120,7 @@ public class SellerProfileUpdateRequest {
     private String addressLine2;
     private String city;
     private String district;
+    private String taluk;
     private String state;
     private String pincode;
     private String country;
@@ -128,6 +129,7 @@ public class SellerProfileUpdateRequest {
     private String storeAddressLine2;
     private String storeCity;
     private String storeDistrict;
+    private String storeTaluk;
     private String storeState;
     private String storePincode;
     private String storeCountry;

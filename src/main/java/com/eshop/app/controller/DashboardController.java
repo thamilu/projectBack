@@ -149,12 +149,12 @@ public class DashboardController {
     public ResponseEntity<com.eshop.app.dto.response.ApiResponse<AdminDashboardResponse>> getAdminDashboard(
             @AuthenticationPrincipal com.eshop.app.security.PrincipalDetails principal) {
 
-        String username = principal != null ? principal.getUsername() : "anonymous";
+        String email = principal != null ? principal.getEmail() : "anonymous";
 
         // CRITICAL: Log authentication success
-        log.info("✅ ADMIN authenticated | user={}", username);
+        log.info("✅ ADMIN authenticated | email={}", email);
 
-        log.debug("Admin dashboard requested by user: {}", username);
+        log.debug("Admin dashboard requested by user: {}", email);
         long startTime = System.currentTimeMillis();
         java.util.concurrent.CompletableFuture<AdminDashboardResponse> dashboardFuture = adminDashboardService.getDashboardAsync();
         AdminDashboardResponse response;
@@ -185,7 +185,7 @@ public class DashboardController {
      * @return aggregated admin statistics
      */
     @GetMapping("/admin/statistics")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(@appProperties.security.roles.admin)")
     @Operation(
         summary = "Get Admin Statistics",
         description = "Aggregated system statistics optimized with parallel query execution"
@@ -193,8 +193,8 @@ public class DashboardController {
     public ResponseEntity<ApiResponse<AdminStatistics>> getAdminStatistics(
             @AuthenticationPrincipal Jwt jwt) {
         
-        String username = jwt.getClaimAsString("preferred_username");
-        log.info("Admin statistics requested by user: {}", username);
+        String email = jwt.getClaimAsString("email");
+        log.info("Admin statistics requested by user: {}", email);
         
         AdminStatistics statistics = adminAnalyticsService.getAdminStatistics();
         
@@ -219,7 +219,7 @@ public class DashboardController {
      * @return comprehensive analytics data
      */
     @GetMapping("/admin/analytics/daily-sales")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(@appProperties.security.roles.admin)")
     @RateLimiter(name = "analytics")
     @Bulkhead(name = "analytics")
     @Operation(
@@ -235,8 +235,8 @@ public class DashboardController {
             @Parameter(hidden = true) org.springframework.data.domain.Pageable pageable,
             @AuthenticationPrincipal com.eshop.app.security.PrincipalDetails principal) {
 
-        String username = principal != null ? principal.getUsername() : "anonymous";
-        log.info("Daily sales analytics requested for {} days by user: {} (page: {}, size: {})", days, username, pageable.getPageNumber(), pageable.getPageSize());
+        String email = principal != null ? principal.getEmail() : "anonymous";
+        log.info("Daily sales analytics requested for {} days by user: {} (page: {}, size: {})", days, email, pageable.getPageNumber(), pageable.getPageSize());
         java.util.concurrent.CompletableFuture<java.util.List<Map<String, Object>>> dailySalesFuture = adminAnalyticsService.getDailySalesDataAsync(days);
         java.util.List<Map<String, Object>> dailySales;
         try {
@@ -258,7 +258,7 @@ public class DashboardController {
      * @return revenue breakdown by category
      */
     @GetMapping("/admin/analytics/revenue-by-category")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(@appProperties.security.roles.admin)")
     @Operation(
         summary = "Get Revenue by Category",
         description = "Revenue breakdown across product categories"
@@ -266,8 +266,8 @@ public class DashboardController {
     public ResponseEntity<ApiResponse<java.util.List<Map<String, Object>>>> getRevenueByCategory(
             @AuthenticationPrincipal com.eshop.app.security.PrincipalDetails principal) {
 
-        String username = principal != null ? principal.getUsername() : "anonymous";
-        log.info("Revenue by category requested by user: {}", username);
+        String email = principal != null ? principal.getEmail() : "anonymous";
+        log.info("Revenue by category requested by user: {}", email);
         
         java.util.List<Map<String, Object>> categoryRevenue = adminAnalyticsService.getRevenueByCategory();
         
@@ -318,10 +318,10 @@ public class DashboardController {
             @AuthenticationPrincipal com.eshop.app.security.PrincipalDetails principal) {
 
         Long sellerId = principal.getId();
-        String username = principal.getUsername();
+        String email = principal.getEmail();
 
         // CRITICAL: Log authentication success
-        log.info("✅ SELLER authenticated | user={} | sellerId={}", username, sellerId);
+        log.info("✅ SELLER authenticated | email={} | sellerId={}", email, sellerId);
 
         // Auto-create logic removed to strictly enforce registration -> approval flow
         // if (sellerId != null) {
@@ -362,7 +362,7 @@ public class DashboardController {
      * @return aggregated seller statistics
      */
     @GetMapping("/seller/statistics")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole(@appProperties.security.roles.seller, @appProperties.security.roles.admin)")
     @Operation(
         summary = "Get Seller Statistics",
         description = "Aggregated seller statistics with single-query optimization. Accessible by SELLER and ADMIN roles."
@@ -394,7 +394,7 @@ public class DashboardController {
      * @return list of top selling products
      */
     @GetMapping("/seller/analytics/top-products")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole(@appProperties.security.roles.seller, @appProperties.security.roles.admin)")
     @RateLimiter(name = "analytics")
     @Bulkhead(name = "analytics")
     @Operation(
@@ -409,9 +409,9 @@ public class DashboardController {
             @AuthenticationPrincipal com.eshop.app.security.PrincipalDetails principal) {
 
         Long sellerId = principal.getId();
-        String username = principal.getUsername();
+        String email = principal.getEmail();
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
-        log.info("Top selling products requested for seller: {}, page: {}, size: {}", username, page, size);
+        log.info("Top selling products requested for seller: {}, page: {}, size: {}", email, page, size);
         java.util.List<Map<String, Object>> topProducts = sellerAnalyticsService.getTopSellingProducts(sellerId, size);
         org.springframework.data.domain.Page<Map<String, Object>> pageResult = new org.springframework.data.domain.PageImpl<>(topProducts, pageable, topProducts.size());
         return ResponseEntity.ok()
@@ -430,30 +430,57 @@ public class DashboardController {
      * @return customer dashboard with order history and account info
      */
     @GetMapping("/customer")
-    @PreAuthorize("hasRole(@appProperties.security.roles.customer)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get Customer Dashboard",
         description = "Customer dashboard with order history and personalized data"
     )
     public ResponseEntity<ApiResponse<CustomerDashboardResponse>> getCustomerDashboard(
-            @AuthenticationPrincipal com.eshop.app.security.PrincipalDetails principal,
-            @AuthenticationPrincipal Jwt jwt) {
+            org.springframework.security.core.Authentication authentication) {
 
-        String username = principal.getUsername();
-        String email = principal.getEmail();
-        String keycloakSub = principal.getKeycloakId();
+        if (authentication == null || !(authentication.getPrincipal() instanceof com.eshop.app.security.PrincipalDetails principal)) {
+            log.warn("Unauthorized access attempt to customer dashboard (missing principal)");
+            return ResponseEntity.status(401).body(ApiResponse.<CustomerDashboardResponse>error("Session expired or invalid"));
+        }
+
+        Jwt jwt = null;
+        if (authentication.getCredentials() instanceof Jwt) {
+            jwt = (Jwt) authentication.getCredentials();
+        }
+
+        String email = (principal.getEmail() != null && !principal.getEmail().isBlank()) ? principal.getEmail() : (jwt != null ? jwt.getClaimAsString("email") : null);
+        String keycloakSub = (principal.getKeycloakId() != null && !principal.getKeycloakId().isBlank()) ? principal.getKeycloakId() : (jwt != null ? jwt.getSubject() : null);
+        
+        // DIAGNOSTIC LOGGING: Trace identity resolution
+        log.info("📊 DASHBOARD [CUSTOMER] | email={} | keycloakId={} | localId={}", 
+            email, keycloakSub, principal.getId());
+
+        // Extract names from JWT if available, else fallback to principal/username
         String firstName = jwt != null ? jwt.getClaimAsString("given_name") : null;
         String lastName = jwt != null ? jwt.getClaimAsString("family_name") : null;
         Boolean emailVerified = jwt != null ? jwt.getClaim("email_verified") : null;
         String phoneNumber = jwt != null ? jwt.getClaimAsString("phone_number") : null;
 
-        log.info("Customer dashboard request userId={} email={} username={}", keycloakSub, email, username);
-
         // Resolve local customer id
         Long customerId = principal.getId();
         if (customerId == null || customerId == -1L) {
-            customerId = customerDashboardService.findCustomerIdByUsername(username, email, firstName, lastName,
-                    emailVerified, keycloakSub, phoneNumber);
+            log.warn("Local identity missing for user {}, attempting resolution...", email);
+            try {
+                customerId = customerDashboardService.findCustomerIdByEmail(email, firstName, lastName,
+                        emailVerified, keycloakSub, phoneNumber);
+            } catch (Exception e) {
+                log.error("[HARDEN] Identity resolution error for {}: {} - proceeding with fallback dashboard", email, e.getMessage());
+                customerId = null; // Graceful degradation
+            }
+        }
+
+        if (customerId == null || customerId == -1L) {
+            log.warn("[HARDEN] Identity missing for user {}. Providing empty fallback dashboard to prevent UI crash. keycloakSub={}", 
+                email, keycloakSub);
+            if (keycloakSub == null || keycloakSub.isBlank()) {
+                log.warn("REASON: keycloakSub is blank or null. JWT claims might be missing 'sub'.");
+            }
+            // Proceed to fetch empty dashboard
         }
 
         CustomerDashboardResponse response = customerDashboardService.getDashboard(customerId);
@@ -461,7 +488,7 @@ public class DashboardController {
         if (response != null && response.getAccountInfo() != null) {
             var account = response.getAccountInfo();
             String fullName = (firstName != null ? firstName + " " : "") + (lastName != null ? lastName : "");
-            account.setCustomerName(fullName.isBlank() ? username : fullName.trim());
+            account.setCustomerName(fullName.isBlank() ? email : fullName.trim());
             account.setEmail(email);
             account.setEmailVerified(emailVerified != null ? emailVerified : false);
         }
@@ -491,9 +518,9 @@ public class DashboardController {
             @AuthenticationPrincipal com.eshop.app.security.PrincipalDetails principal) {
 
         Long agentId = principal.getId();
-        String username = principal.getUsername();
+        String email = principal.getEmail();
 
-        log.info("Delivery dashboard requested for agent: {}", username);
+        log.info("Delivery dashboard requested for agent: {}", email);
 
         DeliveryDashboardResponse response = deliveryDashboardService.getDashboard(agentId);
         
@@ -515,7 +542,7 @@ public class DashboardController {
      * @return success message
      */
     @DeleteMapping("/admin/cache/{cacheName}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(@appProperties.security.roles.admin)")
     @Operation(
         summary = "Clear Dashboard Cache",
         description = "Admin endpoint to clear specific or all dashboard caches"
@@ -524,8 +551,8 @@ public class DashboardController {
             @PathVariable String cacheName,
             @AuthenticationPrincipal com.eshop.app.security.PrincipalDetails principal) {
 
-        String username = principal.getUsername();
-        log.warn("Cache clear requested by admin: {} for cache: {}", username, cacheName);
+        String email = principal.getEmail();
+        log.warn("Cache clear requested by admin: {} for cache: {}", email, cacheName);
         
         if ("all".equalsIgnoreCase(cacheName)) {
             cacheManager.getCacheNames().forEach(name -> {
@@ -551,7 +578,7 @@ public class DashboardController {
      * @return cache hit/miss statistics
      */
     @GetMapping("/admin/cache/stats")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole(@appProperties.security.roles.admin)")
     @Operation(
         summary = "Get Cache Statistics",
         description = "Retrieves hit/miss statistics for all dashboard caches"
@@ -559,8 +586,8 @@ public class DashboardController {
     public ResponseEntity<ApiResponse<Map<String, Object>>> getCacheStatistics(
             @AuthenticationPrincipal com.eshop.app.security.PrincipalDetails principal) {
 
-        String username = principal.getUsername();
-        log.info("Cache statistics requested by admin: {}", username);
+        String email = principal.getEmail();
+        log.info("Cache statistics requested by admin: {}", email);
         
         Map<String, Object> stats = new java.util.HashMap<>();
         cacheManager.getCacheNames().forEach(name -> {

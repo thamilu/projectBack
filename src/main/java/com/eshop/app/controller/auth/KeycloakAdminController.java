@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
 @Slf4j
 @PreAuthorize("hasRole('ADMIN')")
@@ -28,7 +28,7 @@ public class KeycloakAdminController {
     @PostMapping("/users")
     public Mono<ResponseEntity<Map<String, String>>> createUser(
             @Valid @RequestBody RegisterRequest request) {
-        log.info("Admin creating user: {}", request.getUsername());
+        log.info("Admin creating user with email: {}", request.getEmail());
         
         return adminService.createUser(request)
                 .map(ResponseEntity::ok);
@@ -46,14 +46,14 @@ public class KeycloakAdminController {
     }
     
     /**
-     * Get user by username
+     * Get user by email
      */
-    @GetMapping("/users/{username}")
-    public Mono<ResponseEntity<Map<String, Object>>> getUserByUsername(
-            @PathVariable String username) {
-        log.info("Admin fetching user: {}", username);
+    @GetMapping("/users/{email}")
+    public Mono<ResponseEntity<Map<String, Object>>> getUserByEmail(
+            @PathVariable String email) {
+        log.info("Admin fetching user by email: {}", email);
         
-        return adminService.getUserByUsername(username)
+        return adminService.getUserByEmail(email)
                 .map(ResponseEntity::ok);
     }
     

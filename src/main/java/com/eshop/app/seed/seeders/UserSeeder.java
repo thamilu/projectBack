@@ -4,17 +4,16 @@ import com.eshop.app.config.properties.SeedProperties;
 import com.eshop.app.dto.auth.RegisterRequest;
 import com.eshop.app.entity.User;
 import com.eshop.app.repository.UserRepository;
+import com.eshop.app.repository.UserProfileRepository;
 import com.eshop.app.repository.SellerProfileRepository;
-import com.eshop.app.seed.core.Seeder;
+import com.eshop.app.seed.core.BaseSeeder;
 import com.eshop.app.seed.core.SeederContext;
-import com.eshop.app.seed.exception.UserSeedingException;
 import com.eshop.app.seed.security.SecurePasswordGenerator;
 import com.eshop.app.service.auth.KeycloakAdminService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.eshop.app.enums.UserRole;
 import org.springframework.core.annotation.Order;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -30,85 +29,85 @@ import java.util.Map;
 @Component
 @Order(1)
 @RequiredArgsConstructor
-public class UserSeeder implements Seeder<User, SeederContext> {
+public class UserSeeder extends BaseSeeder<User, SeederContext> {
 
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
+    private final com.eshop.app.repository.UserAddressRepository userAddressRepository;
     private final SellerProfileRepository sellerProfileRepository;
+    private final com.eshop.app.repository.SellerKYCRepository sellerKYCRepository;
+    private final com.eshop.app.repository.SellerFarmerDetailsRepository sellerFarmerDetailsRepository;
+    private final com.eshop.app.repository.SellerBusinessDetailsRepository sellerBusinessDetailsRepository;
+    private final com.eshop.app.repository.SellerWholesaleConfigRepository sellerWholesaleConfigRepository;
+    private final com.eshop.app.repository.SellerBankAccountRepository sellerBankAccountRepository;
+    private final com.eshop.app.repository.SellerDocumentRepository sellerDocumentRepository;
     private final SecurePasswordGenerator passwordGenerator;
     private final SeedProperties seedProperties;
     private final KeycloakAdminService keycloakAdminService;
+    private final com.eshop.app.seed.provider.UserDataProvider userDataProvider;
 
     @Override
-    public List<User> seed(SeederContext context) {
+    protected List<User> doSeed(SeederContext context) {
         // If disabled, just load existing users to context so other seeders can
         // function
         if (!seedProperties.isUsersEnabled()) {
             log.info("User seeding disabled. Loading existing users into context...");
             List<User> existingUsers = userRepository.findAll();
-            // Skipping context population as username is no longer in local DB
+            // Populate context for downstream seeders
+            existingUsers.forEach(u -> context.getUsers().put(u.getEmail(), u));
             return existingUsers;
         }
 
-        try {
-            List<User> savedUsers = new java.util.ArrayList<>();
-            java.util.Map<String, User> contextMap = new java.util.HashMap<>();
+        List<User> savedUsers = new java.util.ArrayList<>();
 
-            for (SeedProperties.UserSeed cfg : seedProperties.getUsers()) {
-                try {
-                    User user = processAndBuildUser(cfg);
-                    savedUsers.add(user);
-                    contextMap.put(cfg.getUsername(), user);
-                } catch (Exception e) {
-                    log.error("Failed to process seed user '{}': {}. Skipping...", cfg.getUsername(), e.getMessage());
-                }
+        for (SeedProperties.UserSeed cfg : userDataProvider.getUsers()) {
+            try {
+                User user = processAndBuildUser(cfg);
+                savedUsers.add(user);
+                context.getUsers().put(cfg.getEmail(), user);
+            } catch (Exception e) {
+                log.error("Failed to process seed user '{}': {}. Skipping...", cfg.getEmail(), e.getMessage());
             }
-
-            if (!savedUsers.isEmpty()) {
-                userRepository.saveAll(savedUsers);
-                log.info("Seeded {} users successfully to Local DB and Keycloak", savedUsers.size());
-            } else {
-                log.warn("No users were seeded!");
-            }
-            return savedUsers;
-
-        } catch (DataAccessException e) {
-            throw new UserSeedingException(
-                    "Failed to seed users - database constraint violation: " + e.getMessage(), e);
-        } catch (Exception e) {
-            throw new UserSeedingException(
-                    "Unexpected error during user seeding: " + e.getMessage(), e);
         }
+
+        if (!savedUsers.isEmpty()) {
+            userRepository.saveAll(savedUsers);
+        }
+        return savedUsers;
     }
 
-    // Context is now populated directly in seed() to maintain mapping to
-    // cfg.username
-
     @Override
-    public void cleanup() {
+    protected void doCleanup() {
         if (!seedProperties.isUsersEnabled()) {
-            log.info("User seeding disabled, skipping cleanup (deletion) of users");
             return;
         }
 
-        try {
-            // Note: We only clean up local DB. Cleaning up Keycloak is risky/complex for
-            // dev
-            sellerProfileRepository.deleteAllInBatch(); // Clean up seller profiles first
-            userRepository.deleteAllInBatch();
-            log.debug("Cleaned up existing users from Local DB");
-        } catch (Exception e) {
-            log.warn("Failed to cleanup users: {}", e.getMessage());
-        }
+        // Note: We only clean up local DB. Cleaning up Keycloak is risky/complex for dev
+        
+        // 1. Clean up Seller Profile Children (children before parent to avoid FK errors)
+        sellerKYCRepository.deleteAllInBatch();
+        sellerFarmerDetailsRepository.deleteAllInBatch();
+        sellerBusinessDetailsRepository.deleteAllInBatch();
+        sellerWholesaleConfigRepository.deleteAllInBatch();
+        sellerBankAccountRepository.deleteAllInBatch();
+        sellerDocumentRepository.deleteAllInBatch();
+        
+        // 2. Clean up Seller Profiles
+        sellerProfileRepository.deleteAllInBatch();
+        
+        // 3. Clean up User Profile Children (addresses before profiles)
+        userAddressRepository.deleteAllInBatch();
+        
+        // 4. Clean up User Profiles (before users, FK dependency)
+        userProfileRepository.deleteAllInBatch();
+        
+        // 5. Clean up Users (last, no more FKs pointing to it)
+        userRepository.deleteAllInBatch();
     }
 
     @Override
     public int order() {
         return 1;
-    }
-
-    @Override
-    public String name() {
-        return "UserSeeder";
     }
 
     /**
@@ -118,15 +117,16 @@ public class UserSeeder implements Seeder<User, SeederContext> {
         // 1. Resolve Password
         String rawPassword = cfg.getPassword();
         if (rawPassword == null || rawPassword.isBlank()) {
-            rawPassword = passwordGenerator.generate(cfg.getUsername());
+            rawPassword = passwordGenerator.generate(cfg.getEmail());
         }
 
         // 2. Create in Keycloak
         Map<String, String> keycloakResult = createKeycloakUser(cfg, rawPassword);
-        String keycloakId = keycloakResult != null ? keycloakResult.get("id") : "unknown-" + cfg.getUsername();
+        String keycloakId = keycloakResult != null ? keycloakResult.get("id") : "unknown-" + cfg.getEmail();
 
         User user = User.builder()
                 .keycloakId(keycloakId)
+                .email(cfg.getEmail())
                 .role(parseRole(cfg.getRole()))
                 .build();
 
@@ -153,7 +153,6 @@ public class UserSeeder implements Seeder<User, SeederContext> {
     private Map<String, String> createKeycloakUser(SeedProperties.UserSeed cfg, String password) {
         try {
             RegisterRequest request = RegisterRequest.builder()
-                    .username(cfg.getUsername())
                     .email(cfg.getEmail())
                     .password(password)
                     .firstName(cfg.getFirstName())
@@ -164,13 +163,13 @@ public class UserSeeder implements Seeder<User, SeederContext> {
             // We use block() here because Seeding is a startup sync process
             return keycloakAdminService.createUser(request)
                     .doOnError(
-                            e -> log.debug("User already exists or error creating in Keycloak: {}", cfg.getUsername()))
+                            e -> log.debug("User already exists or error creating in Keycloak: {}", cfg.getEmail()))
                     .onErrorResume(e -> {
-                        return keycloakAdminService.getUserByUsername(cfg.getUsername())
+                        return keycloakAdminService.getUserByEmail(cfg.getEmail())
                                 .map(userMap -> {
                                     Map<String, String> res = new java.util.HashMap<>();
                                     res.put("id", (String) userMap.get("id"));
-                                    res.put("username", cfg.getUsername());
+                                    res.put("email", cfg.getEmail());
                                     return res;
                                 });
                     })
@@ -178,7 +177,7 @@ public class UserSeeder implements Seeder<User, SeederContext> {
 
         } catch (Exception e) {
             // Log but don't fail the whole seeding - user might already exist
-            log.warn("Failed to create/resolve Keycloak user '{}': {}", cfg.getUsername(), e.getMessage());
+            log.warn("Failed to create/resolve Keycloak user '{}': {}", cfg.getEmail(), e.getMessage());
             return null;
         }
     }

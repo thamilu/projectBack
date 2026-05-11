@@ -10,37 +10,37 @@
   "registrationAllowed": true,
   "resetPasswordAllowed": true,
   "rememberMe": true,
-  "verifyEmail": true,
+  "verifyEmail": "${env.KC_VERIFY_EMAIL:false}",
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "editUsernameAllowed": false,
-  "registrationEmailAsUsername": false,
+  "registrationEmailAsUsername": true,
   "sslRequired": "external",
   "bruteForceProtected": true,
-  "permanentLockout": false,
+  "permanentLockout": true,
   "maxFailureWaitSeconds": 900,
   "minimumQuickLoginWaitSeconds": 60,
-  "waitIncrementSeconds": 60,
+  "waitIncrementSeconds": 300,
   "quickLoginCheckMilliSeconds": 1000,
   "maxDeltaTimeSeconds": 43200,
-  "failureFactor": 5,
-  "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername and passwordHistory(5) and notEmail",
+  "failureFactor": 3,
+  "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(2) and notUsername and passwordHistory(10) and notEmail and forceExpiredPasswordChange(90)",
   "accessTokenLifespan": 300,
-  "accessTokenLifespanForImplicitFlow": 900,
+  "accessTokenLifespanForImplicitFlow": 300,
   "ssoSessionIdleTimeout": 1800,
-  "ssoSessionMaxLifespan": 28800,
+  "ssoSessionMaxLifespan": 36000,
   "ssoSessionIdleTimeoutRememberMe": 604800,
   "ssoSessionMaxLifespanRememberMe": 1209600,
   "offlineSessionIdleTimeout": 2592000,
   "offlineSessionMaxLifespan": 5184000,
   "offlineSessionMaxLifespanEnabled": true,
-  "accessCodeLifespan": 60,
+  "accessCodeLifespan": 300,
   "accessCodeLifespanLogin": 1800,
   "accessCodeLifespanUserAction": 300,
   "actionTokenGeneratedByUserLifespan": 300,
   "actionTokenGeneratedByAdminLifespan": 43200,
-  "revokeRefreshToken": true,
-  "refreshTokenMaxReuse": 0,
+  "revokeRefreshToken": false,
+  "refreshTokenMaxReuse": 1,
   "otpPolicyType": "totp",
   "otpPolicyAlgorithm": "HmacSHA256",
   "otpPolicyDigits": 6,
@@ -394,29 +394,11 @@
       "enabled": true,
       "publicClient": true,
       "redirectUris": [
-        "http://localhost:3000/callback",
         "http://localhost:3000/*",
-        "http://localhost:4200/callback",
-        "http://localhost:4200/silent-renew",
-        "http://localhost:4200/logout/callback",
-        "http://localhost:5173/callback",
-        "http://localhost:5173/silent-renew",
-        "http://localhost:5173/logout/callback",
-        "http://localhost:8082/callback",
-        "http://localhost:8082/*",
-        "http://localhost:8082/silent-renew",
-        "http://localhost:8082/logout/callback",
-        "https://shop.yourdomain.com/callback",
-        "https://shop.yourdomain.com/silent-renew",
-        "https://shop.yourdomain.com/logout/callback",
         "https://oauth.pstmn.io/v1/callback"
       ],
       "webOrigins": [
         "http://localhost:3000",
-        "http://localhost:4200",
-        "http://localhost:5173",
-        "http://localhost:8082",
-        "https://shop.yourdomain.com",
         "https://oauth.pstmn.io"
       ],
       "standardFlowEnabled": true,
@@ -546,86 +528,6 @@
       ]
     },
     {
-      "clientId": "eshop-mobile",
-      "name": "E-Shop Mobile Application",
-      "description": "Public client for mobile apps (Android/iOS)",
-      "enabled": true,
-      "publicClient": true,
-      "redirectUris": [
-        "com.eshop.mobile://callback",
-        "com.eshop.mobile://logout/callback"
-      ],
-      "webOrigins": [],
-      "standardFlowEnabled": true,
-      "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
-      "serviceAccountsEnabled": false,
-      "frontchannelLogout": true,
-      "attributes": {
-        "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "com.eshop.mobile://logout/callback",
-        "backchannel.logout.session.required": "true",
-        "backchannel.logout.revoke.offline.tokens": "false",
-        "oauth2.device.authorization.grant.enabled": "false",
-        "oidc.ciba.grant.enabled": "false"
-      },
-      "defaultClientScopes": [
-        "openid",
-        "email",
-        "profile",
-        "eshop-user-profile"
-      ],
-      "optionalClientScopes": [
-        "offline_access",
-        "eshop-orders",
-        "eshop-products",
-        "eshop-payments"
-      ],
-      "protocolMappers": [
-        {
-          "name": "realm-roles-mapper",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-realm-role-mapper",
-          "consentRequired": false,
-          "config": {
-            "multivalued": "true",
-            "claim.name": "roles",
-            "jsonType.label": "String",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "userinfo.token.claim": "true"
-          }
-        },
-        {
-          "name": "user-id-mapper",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-property-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.attribute": "id",
-            "claim.name": "user_id",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "jsonType.label": "String"
-          }
-        },
-        {
-          "name": "phone-number-mapper",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "consentRequired": false,
-          "config": {
-            "user.attribute": "phoneNumber",
-            "claim.name": "phone_number",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "userinfo.token.claim": "true",
-            "jsonType.label": "String"
-          }
-        }
-      ]
-    },
-    {
       "clientId": "eshop-backend",
       "name": "E-Shop Backend Service Account",
       "description": "Confidential client for backend service-to-Keycloak communication",
@@ -728,13 +630,31 @@
           "view-events"
         ]
       }
+    },
+    {
+      "username": "admin",
+      "enabled": true,
+      "email": "admin@eshop.com",
+      "emailVerified": true,
+      "firstName": "Marketplace",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Admin@@Secret123",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-eshop"
+      ]
     }
   ],
   "identityProviders": [
     {
       "alias": "google",
       "providerId": "google",
-      "enabled": true,
+      "enabled": false,
       "trustEmail": true,
       "storeToken": false,
       "addReadTokenRoleOnCreate": false,
@@ -751,7 +671,7 @@
     {
       "alias": "facebook",
       "providerId": "facebook",
-      "enabled": true,
+      "enabled": false,
       "trustEmail": false,
       "storeToken": false,
       "addReadTokenRoleOnCreate": false,
@@ -825,8 +745,8 @@
       "alias": "VERIFY_EMAIL",
       "name": "Verify Email",
       "providerId": "VERIFY_EMAIL",
-      "enabled": true,
-      "defaultAction": true,
+      "enabled": "${env.KC_VERIFY_EMAIL:false}",
+      "defaultAction": "${env.KC_VERIFY_EMAIL:false}",
       "priority": 10
     },
     {

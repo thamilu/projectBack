@@ -84,7 +84,8 @@ public class SellerProfile extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(length = 20)
+    @Column(length = 255)
+    @jakarta.persistence.Convert(converter = com.eshop.app.security.AttributeEncryptor.class)
     private String businessMobileNumber;
 
     // ─── Address & Location ─────────────────────────────────────
@@ -100,6 +101,9 @@ public class SellerProfile extends BaseEntity {
 
     @Column(length = 100)
     private String district;
+
+    @Column(length = 100)
+    private String taluk;
 
     @Column(nullable = false, length = 100)
     private String state;
@@ -123,6 +127,9 @@ public class SellerProfile extends BaseEntity {
 
     @Column(name = "store_district", length = 100)
     private String storeDistrict;
+
+    @Column(name = "store_taluk", length = 100)
+    private String storeTaluk;
 
     @Column(name = "store_state", length = 100)
     private String storeState;

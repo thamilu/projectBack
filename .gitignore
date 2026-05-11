@@ -48,3 +48,6 @@ build_errors_utf8.txt
 compile_log.txt
 test_log.txt
 # Code Citations.md
+
+# Large Data Seeds
+src/main/resources/seed/postal_codes.json

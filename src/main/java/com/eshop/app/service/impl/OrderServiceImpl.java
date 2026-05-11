@@ -24,7 +24,7 @@ import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
@@ -62,6 +62,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse createOrder(OrderCreateRequest request) {
         Long userId = getCurrentUserId();
 
@@ -187,6 +188,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse updateOrderStatus(Long orderId, String status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
@@ -199,6 +201,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse updatePaymentStatus(Long orderId, String status) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
@@ -211,6 +214,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse assignDeliveryAgent(Long orderId, Long agentId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
@@ -245,6 +249,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse checkoutAnonymousCart(String cartCode, CheckoutRequest request) {
         // Find cart by code (for anonymous users)
         Cart cart = cartRepository.findByCartCode(cartCode)
@@ -258,6 +263,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public OrderResponse checkoutAuthenticatedCart(String cartCode, CheckoutRequest request) {
         // Find cart by code and verify it belongs to current user
         Cart cart = cartRepository.findByCartCode(cartCode)

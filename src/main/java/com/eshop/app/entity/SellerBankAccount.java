@@ -28,7 +28,8 @@ public class SellerBankAccount extends BaseEntity {
     @Column(name = "account_holder_name", length = 150)
     private String accountHolderName;
 
-    @Column(name = "account_number", length = 50)
+    @Column(name = "account_number", length = 255)
+    @jakarta.persistence.Convert(converter = com.eshop.app.security.AttributeEncryptor.class)
     private String accountNumber;
 
     @Column(name = "ifsc_code", length = 20)

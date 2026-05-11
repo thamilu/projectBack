@@ -30,13 +30,13 @@ public class KeycloakAuthService {
      * Login with username and password (Resource Owner Password Credentials)
      */
     public Mono<TokenResponse> login(LoginRequest request) {
-        log.info("Attempting login for user: {}", request.getUsername());
+        log.info("Attempting login for user: {}", request.getEmail());
         
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
         formData.add("grant_type", "password");
         formData.add("client_id", keycloakConfig.getClientId());
         formData.add("client_secret", keycloakConfig.getClientSecret());
-        formData.add("username", request.getUsername());
+        formData.add("username", request.getEmail());
         formData.add("password", request.getPassword());
         formData.add("scope", "openid profile email");
         
@@ -49,17 +49,17 @@ public class KeycloakAuthService {
                     status -> status.is4xxClientError() || status.is5xxServerError(),
                     response -> response.bodyToMono(String.class)
                         .flatMap(body -> {
-                            log.error("Login failed for user {}: {}", request.getUsername(), body);
+                            log.error("Login failed for user {}: {}", request.getEmail(), body);
                             return Mono.error(new KeycloakException(
-                                "Authentication failed: Invalid username or password", 
+                                "Authentication failed: Invalid email or password", 
                                 HttpStatus.UNAUTHORIZED
                             ));
                         })
                 )
                 .bodyToMono(TokenResponse.class)
-                .doOnSuccess(token -> log.info("Login successful for user: {}", request.getUsername()))
+                .doOnSuccess(token -> log.info("Login successful for user: {}", request.getEmail()))
                 .doOnError(error -> log.error("Login error for user {}: {}", 
-                                             request.getUsername(), error.getMessage()));
+                                             request.getEmail(), error.getMessage()));
     }
     
     /**
@@ -140,7 +140,7 @@ public class KeycloakAuthService {
                     ))
                 )
                 .bodyToMono(UserInfoResponse.class)
-                .doOnSuccess(userInfo -> log.info("User info fetched: {}", userInfo.getPreferredUsername()));
+                .doOnSuccess(userInfo -> log.info("User info fetched: {}", userInfo.getEmail()));
     }
     
     /**

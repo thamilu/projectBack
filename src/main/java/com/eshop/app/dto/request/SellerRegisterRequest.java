@@ -128,6 +128,8 @@ public class SellerRegisterRequest {
     
     private String district;
 
+    private String taluk;
+
     @NotBlank(message = "State is required")
     private String state;
 
@@ -143,6 +145,7 @@ public class SellerRegisterRequest {
     private String storeAddressLine2;
     private String storeCity;
     private String storeDistrict;
+    private String storeTaluk;
     private String storeState;
     private String storePincode;
     private String storeCountry;

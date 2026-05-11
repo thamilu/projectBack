@@ -2,6 +2,8 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '4.0.2'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'com.diffplug.spotless' version '6.25.0'
+	id 'checkstyle'
 }
 
 group = 'com.eshop'
@@ -14,6 +16,21 @@ java {
 	}
 }
 
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+    }
+    scripts {
+        java {
+            srcDirs = ['scripts']
+            compileClasspath += sourceSets.main.output + configurations.compileClasspath
+            runtimeClasspath += sourceSets.main.output + configurations.runtimeClasspath
+        }
+    }
+}
+
 repositories {
 	mavenCentral()
 	maven { url = 'https://jitpack.io' }
@@ -24,14 +41,22 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-cache'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
+	implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-client'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.boot:spring-boot-starter-json'
 	implementation 'org.springframework.boot:spring-boot-autoconfigure'
-	implementation 'org.springframework.security:spring-security-oauth2-client:7.0.2'
+
+	// ═══════════════════════════════════════════════════════════
+	// CLOUDFLARE R2 (S3 ASYNC) - Enterprise Core
+	// ═══════════════════════════════════════════════════════════
+	implementation platform('software.amazon.awssdk:bom:2.25.40')
+	implementation 'software.amazon.awssdk:s3'
+	implementation 'software.amazon.awssdk:netty-nio-client:2.25.40'
+	implementation 'software.amazon.awssdk:auth'
+	implementation 'software.amazon.awssdk:regions'
 	
 	// Caching - Redis for distributed caching (primary) + Caffeine for local fallback
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -42,6 +67,7 @@ dependencies {
 	// Testcontainers for integration tests (use stable compatible version)
 	testImplementation 'org.testcontainers:junit-jupiter:1.17.6'
 	testImplementation 'org.testcontainers:testcontainers:1.17.6'
+	testImplementation 'org.testcontainers:postgresql:1.17.6'
 	implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 	
 	// Ehcache for JCache (JSR-107) support
@@ -56,7 +82,7 @@ dependencies {
 	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 
 	// Hibernate Validator for @URL and advanced validation
-	implementation 'org.hibernate.validator:hibernate-validator:8.0.1.Final'
+	implementation 'org.hibernate.validator:hibernate-validator'
 	
 	// JWT
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
@@ -115,8 +141,6 @@ dependencies {
 	// Image processing
 	implementation 'net.coobird:thumbnailator:0.4.19'
 	
-	// Cloudinary SDK for image storage
-	implementation 'com.cloudinary:cloudinary-http44:1.36.0'
 	implementation 'commons-io:commons-io:2.15.1'
 
 	// Currency conversion and money handling
@@ -144,6 +168,7 @@ dependencies {
 	
 	// Mail support
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
 
 	// GDPR data export (Excel/PDF)
 	implementation 'org.apache.poi:poi-ooxml:5.2.5'
@@ -178,6 +203,8 @@ dependencies {
 	implementation 'org.jboss.resteasy:resteasy-client:6.2.5.Final'
 	implementation 'org.jboss.resteasy:resteasy-jackson2-provider:6.2.5.Final'
 
+	// Architecture Testing
+	testImplementation 'com.tngtech.archunit:archunit-junit5:1.2.1'
 }
 // Exclude possible JCache/Ehcache providers from all configurations to prevent multiple providers
 configurations.all {
@@ -190,6 +217,7 @@ configurations.all {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	maxHeapSize = "2048m"
 }
 
 // ≡ƒôƒ Load Environment Variables from .env for bootRun and test
@@ -236,4 +264,38 @@ tasks.withType(org.gradle.api.tasks.bundling.Jar).configureEach {
 
 tasks.withType(org.springframework.boot.gradle.tasks.bundling.BootJar).configureEach {
 	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// ─────────────────────────────────────────────
+// CODE QUALITY & FORMATTING
+// ─────────────────────────────────────────────
+
+spotless {
+    java {
+        target 'src/main/java/**/*.java', 'src/test/java/**/*.java'
+        googleJavaFormat('1.19.2').aosp().reflowLongStrings()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    format 'misc', {
+        target '*.gradle', '.gitignore'
+        trimTrailingWhitespace()
+        indentWithSpaces(4)
+        endWithNewline()
+    }
+}
+
+checkstyle {
+    toolVersion = '10.12.5'
+    configFile = file('config/checkstyle/checkstyle.xml')
+    ignoreFailures = false
+    showViolations = true
+}
+
+tasks.withType(Checkstyle).configureEach {
+    reports {
+        xml.required = true
+        html.required = true
+    }
 }

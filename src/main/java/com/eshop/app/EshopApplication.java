@@ -1,9 +1,5 @@
 package com.eshop.app;
 
-import com.eshop.app.config.ApiInfoProperties;
-import com.eshop.app.config.properties.AppProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
@@ -46,14 +42,6 @@ public class EshopApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(EshopApplication.class, args);
-    }
-
-    @Bean
-    public CommandLineRunner showLoadedProperties(AppProperties appProperties, ApiInfoProperties apiInfoProperties) {
-        return args -> {
-            System.out.println("AppProperties instance: " + appProperties);
-            System.out.println("ApiInfoProperties instance: " + apiInfoProperties);
-        };
     }
 
 }

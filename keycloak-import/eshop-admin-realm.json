@@ -6,7 +6,7 @@
   "registrationAllowed": false,
   "resetPasswordAllowed": true,
   "rememberMe": true,
-  "verifyEmail": true,
+  "verifyEmail": "${env.KC_VERIFY_EMAIL_ADMIN:false}",
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "editUsernameAllowed": false,
@@ -20,23 +20,23 @@
   "quickLoginCheckMilliSeconds": 1000,
   "maxDeltaTimeSeconds": 43200,
   "failureFactor": 3,
-  "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(2) and notUsername and passwordHistory(10) and forceExpiredPasswordChange(30)",
-  "accessTokenLifespan": 180,
-  "accessTokenLifespanForImplicitFlow": 600,
-  "ssoSessionIdleTimeout": 900,
-  "ssoSessionMaxLifespan": 14400,
+  "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(2) and notUsername and passwordHistory(10) and notEmail and forceExpiredPasswordChange(90)",
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
   "ssoSessionIdleTimeoutRememberMe": 86400,
   "ssoSessionMaxLifespanRememberMe": 259200,
   "offlineSessionIdleTimeout": 2592000,
   "offlineSessionMaxLifespan": 5184000,
   "offlineSessionMaxLifespanEnabled": true,
-  "accessCodeLifespan": 60,
-  "accessCodeLifespanLogin": 900,
+  "accessCodeLifespan": 300,
+  "accessCodeLifespanLogin": 1800,
   "accessCodeLifespanUserAction": 300,
   "actionTokenGeneratedByUserLifespan": 300,
   "actionTokenGeneratedByAdminLifespan": 43200,
-  "revokeRefreshToken": true,
-  "refreshTokenMaxReuse": 0,
+  "revokeRefreshToken": false,
+  "refreshTokenMaxReuse": 1,
   "otpPolicyType": "totp",
   "otpPolicyAlgorithm": "HmacSHA256",
   "otpPolicyDigits": 6,
@@ -204,17 +204,10 @@
       "enabled": true,
       "publicClient": true,
       "redirectUris": [
-        "http://localhost:3001/callback",
-        "http://localhost:3001/*",
-        "http://localhost:3001/silent-renew",
-        "http://localhost:3001/logout/callback",
-        "https://admin.yourdomain.com/callback",
-        "https://admin.yourdomain.com/silent-renew",
-        "https://admin.yourdomain.com/logout/callback"
+        "http://localhost:3001/*"
       ],
       "webOrigins": [
-        "http://localhost:3001",
-        "https://admin.yourdomain.com"
+        "http://localhost:3001"
       ],
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
@@ -323,16 +316,14 @@
         {
           "type": "password",
           "value": "${ADMIN_INITIAL_PASSWORD}",
-          "temporary": true
+          "temporary": false
         }
       ],
       "realmRoles": [
         "ADMIN",
         "default-roles-eshop-admin"
       ],
-      "requiredActions": [
-        "UPDATE_PASSWORD"
-      ]
+      "requiredActions": []
     },
     {
       "username": "service-account-eshop-admin-backend",
@@ -366,8 +357,8 @@
       "alias": "VERIFY_EMAIL",
       "name": "Verify Email",
       "providerId": "VERIFY_EMAIL",
-      "enabled": true,
-      "defaultAction": true,
+      "enabled": "${env.KC_VERIFY_EMAIL_ADMIN:false}",
+      "defaultAction": "${env.KC_VERIFY_EMAIL_ADMIN:false}",
       "priority": 10
     },
     {

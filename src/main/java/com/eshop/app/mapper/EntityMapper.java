@@ -85,7 +85,7 @@ public class EntityMapper {
                                         ? customer.getUserProfile().getLastName()
                                         : ""));
             } else {
-                response.setCustomerName(customer.getUsername());
+                response.setCustomerName(customer.getEmail());
             }
             response.setCustomerEmail(order.getCustomer().getEmail());
         }
@@ -120,7 +120,7 @@ public class EntityMapper {
                                 + (agent.getUserProfile().getLastName() != null ? agent.getUserProfile().getLastName()
                                         : ""));
             } else {
-                response.setDeliveryAgentName(agent.getUsername());
+                response.setDeliveryAgentName(agent.getEmail());
             }
         }
 

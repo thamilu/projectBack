@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Samsung",
+    "description": "Global electronics giant",
+    "logoUrl": null
+  },
+  {
+    "name": "Nike",
+    "description": "Leading sports brand",
+    "logoUrl": null
+  },
+  {
+    "name": "Apple",
+    "description": "Premium technology products",
+    "logoUrl": null
+  },
+  {
+    "name": "Adidas",
+    "description": "Sports and lifestyle brand",
+    "logoUrl": null
+  },
+  {
+    "name": "Puma",
+    "description": "Athletic and casual footwear",
+    "logoUrl": null
+  },
+  {
+    "name": "Sony",
+    "description": "Electronics and entertainment",
+    "logoUrl": null
+  },
+  {
+    "name": "LG",
+    "description": "Life's Good - Electronics",
+    "logoUrl": null
+  },
+  {
+    "name": "H&M",
+    "description": "Fashion and clothing",
+    "logoUrl": null
+  },
+  {
+    "name": "Zara",
+    "description": "Trendy fashion apparel",
+    "logoUrl": null
+  },
+  {
+    "name": "Dell",
+    "description": "Computer technology",
+    "logoUrl": null
+  }
+]

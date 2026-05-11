@@ -13,7 +13,7 @@ public interface StoreMapper {
     StoreMapper INSTANCE = Mappers.getMapper(StoreMapper.class);
 
     @Mapping(target = "sellerId", source = "sellerProfile.user.id")
-    @Mapping(target = "sellerUsername", source = "sellerProfile.user.username")
+    @Mapping(target = "sellerEmail", source = "sellerProfile.user.email")
     @Mapping(target = "shopHandle", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(store.getShopHandle()) ? (store.getSellerProfile() != null ? store.getSellerProfile().getShopHandle() : null) : store.getShopHandle())")
     @Mapping(target = "pincode", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(store.getPostalCode()) ? (store.getSellerProfile() != null ? store.getSellerProfile().getStorePincode() : null) : store.getPostalCode())")
     @Mapping(target = "isVerified", expression = "java(store.getSellerProfile() != null && store.getSellerProfile().getStatus() == com.eshop.app.enums.SellerStatus.ACTIVE)")
@@ -22,6 +22,7 @@ public interface StoreMapper {
     @Mapping(target = "state", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(store.getState()) ? (store.getSellerProfile() != null ? store.getSellerProfile().getStoreState() : null) : store.getState())")
     @Mapping(target = "country", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(store.getCountry()) ? (store.getSellerProfile() != null ? store.getSellerProfile().getStoreCountry() : \"India\") : store.getCountry())")
     @Mapping(target = "district", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(store.getDistrict()) ? (store.getSellerProfile() != null ? store.getSellerProfile().getStoreDistrict() : null) : store.getDistrict())")
+    @Mapping(target = "taluk", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(store.getTaluk()) ? (store.getSellerProfile() != null ? store.getSellerProfile().getStoreTaluk() : null) : store.getTaluk())")
     @Mapping(target = "address", expression = "java(combineAddress(store))")
     StoreResponse toStoreResponse(Store store);
 
@@ -35,8 +36,8 @@ public interface StoreMapper {
     @Mapping(target = "deleted", constant = "false")
     @Mapping(target = "active", constant = "true")
     @Mapping(target = "sellerProfile", source = "profile")
-    @Mapping(target = "storeName", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(profile.getShopName()) ? profile.getUser().getUsername() + \"'s Store\" : profile.getShopName())")
-    @Mapping(target = "description", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(profile.getDescription()) ? \"Welcome to \" + (org.apache.commons.lang3.StringUtils.isBlank(profile.getShopName()) ? profile.getUser().getUsername() + \"'s Store\" : profile.getShopName()) : profile.getDescription())")
+    @Mapping(target = "storeName", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(profile.getShopName()) ? profile.getUser().getEmail() + \"'s Store\" : profile.getShopName())")
+    @Mapping(target = "description", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(profile.getDescription()) ? \"Welcome to \" + (org.apache.commons.lang3.StringUtils.isBlank(profile.getShopName()) ? profile.getUser().getEmail() + \"'s Store\" : profile.getShopName()) : profile.getDescription())")
     @Mapping(target = "phone", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(profile.getBusinessMobileNumber()) ? (profile.getUser().getUserProfile() != null ? profile.getUser().getUserProfile().getPhone() : null) : profile.getBusinessMobileNumber())")
     @Mapping(target = "email", source = "profile.user.email")
     @Mapping(target = "logoUrl", source = "profile.shopLogoUrl")
@@ -45,6 +46,7 @@ public interface StoreMapper {
     @Mapping(target = "addressLine2", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(profile.getStoreAddressLine2()) ? profile.getAddressLine2() : profile.getStoreAddressLine2())")
     @Mapping(target = "city", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(profile.getStoreCity()) ? profile.getCity() : profile.getStoreCity())")
     @Mapping(target = "district", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(profile.getStoreDistrict()) ? profile.getDistrict() : profile.getStoreDistrict())")
+    @Mapping(target = "taluk", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(profile.getStoreTaluk()) ? profile.getTaluk() : profile.getStoreTaluk())")
     @Mapping(target = "state", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(profile.getStoreState()) ? profile.getState() : profile.getStoreState())")
     @Mapping(target = "country", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(profile.getStoreCountry()) ? profile.getCountry() : profile.getStoreCountry())")
     @Mapping(target = "postalCode", expression = "java(org.apache.commons.lang3.StringUtils.isBlank(profile.getStorePincode()) ? profile.getPincode() : profile.getStorePincode())")
@@ -66,6 +68,9 @@ public interface StoreMapper {
 
         if (isBlank(store.getDistrict()) && !isBlank(profile.getStoreDistrict())) { store.setDistrict(profile.getStoreDistrict()); changed = true; }
         else if (isBlank(store.getDistrict()) && !isBlank(profile.getDistrict())) { store.setDistrict(profile.getDistrict()); changed = true; }
+
+        if (isBlank(store.getTaluk()) && !isBlank(profile.getStoreTaluk())) { store.setTaluk(profile.getStoreTaluk()); changed = true; }
+        else if (isBlank(store.getTaluk()) && !isBlank(profile.getTaluk())) { store.setTaluk(profile.getTaluk()); changed = true; }
         
         if (isBlank(store.getShopHandle()) && !isBlank(profile.getShopHandle())) { store.setShopHandle(profile.getShopHandle()); changed = true; }
         if (isBlank(store.getLogoUrl()) && !isBlank(profile.getShopLogoUrl())) { store.setLogoUrl(profile.getShopLogoUrl()); changed = true; }
@@ -94,6 +99,7 @@ public interface StoreMapper {
         String addr1 = !isBlank(store.getAddressLine1()) ? store.getAddressLine1() : (profile != null ? profile.getStoreAddressLine1() : null);
         String addr2 = !isBlank(store.getAddressLine2()) ? store.getAddressLine2() : (profile != null ? profile.getStoreAddressLine2() : null);
         String city = !isBlank(store.getCity()) ? store.getCity() : (profile != null ? profile.getStoreCity() : null);
+        String taluk = !isBlank(store.getTaluk()) ? store.getTaluk() : (profile != null ? profile.getStoreTaluk() : null);
         String state = !isBlank(store.getState()) ? store.getState() : (profile != null ? profile.getStoreState() : null);
         String pincode = !isBlank(store.getPostalCode()) ? store.getPostalCode() : (profile != null ? profile.getStorePincode() : null);
         String country = profile != null ? profile.getStoreCountry() : "India"; // Default to India if not specified
@@ -107,6 +113,10 @@ public interface StoreMapper {
         if (!isBlank(city)) {
             if (sb.length() > 0) sb.append(", ");
             sb.append(city);
+        }
+        if (!isBlank(taluk)) {
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(taluk);
         }
         if (!isBlank(state)) {
             if (sb.length() > 0) sb.append(", ");

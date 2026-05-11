@@ -61,6 +61,7 @@ public class SellerProfileResponse {
     private String addressLine2;
     private String city;
     private String district;
+    private String taluk;
     private String state;
     private String pincode;
     private String country;
@@ -70,6 +71,7 @@ public class SellerProfileResponse {
     private String storeAddressLine2;
     private String storeCity;
     private String storeDistrict;
+    private String storeTaluk;
     private String storeState;
     private String storePincode;
     private String storeCountry;

@@ -24,24 +24,30 @@ public final class SecurityUtils {
     public static Optional<String> getCurrentUserId() {
         return getCurrentAuthentication().map(auth -> {
             Object principal = auth.getPrincipal();
-            if (principal instanceof com.eshop.app.security.PrincipalDetails pd) {
-                return pd.getKeycloakId();
-            }
-            if (principal instanceof Jwt jwt) {
-                return jwt.getSubject();
-            }
-            return null;
+            return switch (principal) {
+                case com.eshop.app.security.PrincipalDetails pd -> pd.getKeycloakId();
+                case Jwt jwt -> jwt.getSubject();
+                default -> null;
+            };
         }).filter(id -> id != null && !id.isBlank());
     }
 
-    public static Optional<String> getCurrentUsername() {
+    /**
+     * Get the Keycloak ID (sub) of the current authenticated user.
+     * Source of truth for identity sync.
+     */
+    public static Optional<String> getCurrentKeycloakId() {
+        return getCurrentJwt().map(Jwt::getSubject);
+    }
+
+    public static Optional<String> getCurrentEmail() {
         return getCurrentAuthentication().map(auth -> {
             Object principal = auth.getPrincipal();
-            if (principal instanceof com.eshop.app.security.PrincipalDetails pd) {
-                return pd.getUsername();
-            }
-            return getCurrentJwt().map(jwt -> jwt.getClaimAsString("preferred_username")).orElse(null);
-        }).filter(u -> u != null && !u.isBlank());
+            return switch (principal) {
+                case com.eshop.app.security.PrincipalDetails pd -> pd.getEmail();
+                default -> getCurrentJwt().map(jwt -> jwt.getClaimAsString("email")).orElse(null);
+            };
+        }).filter(e -> e != null && !e.isBlank());
     }
 
     public static boolean hasRole(String role) {
@@ -75,17 +81,17 @@ public final class SecurityUtils {
         return getCurrentAuthentication()
                 .map(auth -> {
                     Object principal = auth.getPrincipal();
-                    if (principal instanceof com.eshop.app.security.PrincipalDetails pd) {
-                        return pd.getId();
-                    } else if (principal instanceof Jwt jwt) {
-                        // Fallback: try to parse subject as Long if no specific principal object
-                        try {
-                            return Long.valueOf(jwt.getSubject());
-                        } catch (NumberFormatException e) {
-                            return null;
+                    return switch (principal) {
+                        case com.eshop.app.security.PrincipalDetails pd -> pd.getId();
+                        case Jwt jwt -> {
+                            try {
+                                yield Long.valueOf(jwt.getSubject());
+                            } catch (NumberFormatException e) {
+                                yield null;
+                            }
                         }
-                    }
-                    return null;
+                        default -> null;
+                    };
                 })
                 .orElseThrow(
                         () -> new org.springframework.security.access.AccessDeniedException("User not authenticated"));
@@ -101,10 +107,11 @@ public final class SecurityUtils {
             if (credentials instanceof Jwt jwt) {
                 return Optional.of(jwt);
             }
-            if (auth instanceof org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken token) {
-                return Optional.ofNullable(token.getToken());
-            }
-            return Optional.empty();
+            return switch (auth) {
+                case org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken token ->
+                    Optional.ofNullable(token.getToken());
+                default -> Optional.empty();
+            };
         });
     }
 

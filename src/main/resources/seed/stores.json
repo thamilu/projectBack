@@ -1,0 +1,46 @@
+[
+  {
+    "storeName": "Tech Retail Store",
+    "description": "Best electronics for consumers - retail prices only",
+    "address": "123 Tech Park, Electronic City",
+    "city": "Bangalore",
+    "state": "Karnataka",
+    "pincode": "560100",
+    "country": "India",
+    "sellerEmail": "retail1@eshop.com",
+    "sellerType": "RETAILER"
+  },
+  {
+    "storeName": "Mega Wholesale Center",
+    "description": "Bulk products for businesses - wholesale prices only",
+    "address": "456 Market Road, Industrial Area",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "pincode": "400001",
+    "country": "India",
+    "sellerEmail": "wholesale1@eshop.com",
+    "sellerType": "WHOLESALER"
+  },
+  {
+    "storeName": "FlexiMart",
+    "description": "One-stop shop - retail for small orders, wholesale for bulk",
+    "address": "789 Main St, Downtown",
+    "city": "Delhi",
+    "state": "Delhi",
+    "pincode": "110001",
+    "country": "India",
+    "sellerEmail": "shop1@eshop.com",
+    "sellerType": "RETAILER"
+  },
+  {
+    "storeName": "Green Valley Farm",
+    "description": "Fresh organic vegetables and fruits directly from farm",
+    "address": "Farm No 10, Green Valley",
+    "city": "Mysore",
+    "state": "Karnataka",
+    "pincode": "570001",
+    "country": "India",
+    "sellerEmail": "farmer1@eshop.com",
+    "sellerType": "FARMER"
+  }
+]

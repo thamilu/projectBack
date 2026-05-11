@@ -76,18 +76,18 @@ public class UserSecurityExpression {
     }
 
     /**
-     * Checks if the currently authenticated user matches the given username.
+     * Checks if the currently authenticated user matches the given email.
      *
-     * @param username the username to check against
-     * @return true if the current user's username matches, false otherwise
+     * @param email the email to check against
+     * @return true if the current user's email matches, false otherwise
      */
-    public boolean isCurrentUserByUsername(String username) {
-        if (username == null || username.isBlank()) {
+    public boolean isCurrentUserByEmail(String email) {
+        if (email == null || email.isBlank()) {
             return false;
         }
 
-        return getCurrentUsername()
-                .map(current -> current.equalsIgnoreCase(username))
+        return getCurrentEmail()
+                .map(current -> current.equalsIgnoreCase(email))
                 .orElse(false);
     }
 
@@ -252,13 +252,13 @@ public class UserSecurityExpression {
     }
 
     /**
-     * Gets the current authenticated user's username.
+     * Gets the current authenticated user's email.
      *
-     * @return Optional containing username, or empty if not authenticated
+     * @return Optional containing email, or empty if not authenticated
      */
-    public Optional<String> getCurrentUsername() {
+    public Optional<String> getCurrentEmail() {
         return getCurrentPrincipal()
-                .map(PrincipalDetails::getUsername);
+                .map(PrincipalDetails::getEmail);
     }
 
     /**
@@ -299,22 +299,21 @@ public class UserSecurityExpression {
 
             Object principal = authentication.getPrincipal();
 
-            if (principal instanceof PrincipalDetails pd) {
-                return Optional.of(pd);
-            }
-
-            if (principal instanceof Jwt jwt) {
-                log.trace("JWT principal detected, extracting user details");
-                return extractFromJwt(jwt);
-            }
-
-            if (principal instanceof String) {
-                log.trace("String principal detected: {}", principal);
-                return Optional.empty();
-            }
-
-            log.warn("Unknown principal type: {}", principal.getClass().getName());
-            return Optional.empty();
+            return switch (principal) {
+                case PrincipalDetails pd -> Optional.of(pd);
+                case Jwt jwt -> {
+                    log.trace("JWT principal detected, extracting user details");
+                    yield extractFromJwt(jwt);
+                }
+                case String s -> {
+                    log.trace("String principal detected: {}", s);
+                    yield Optional.empty();
+                }
+                default -> {
+                    log.warn("Unknown principal type: {}", principal.getClass().getName());
+                    yield Optional.empty();
+                }
+            };
 
         } catch (Exception e) {
             log.error("Error retrieving user details from security context", e);
@@ -336,7 +335,6 @@ public class UserSecurityExpression {
             
             return Optional.of(PrincipalDetails.builder()
                     .id(null) // ID resolution should happen in a filter or service
-                    .username(jwt.getClaimAsString("preferred_username"))
                     .email(jwt.getClaimAsString("email"))
                     .keycloakId(subject)
                     .build());

@@ -1530,7 +1530,7 @@ public class Product {
         if (image != null && images.remove(image)) {
             image.setProduct(null);
             if (Objects.equals(primaryImage, image)) {
-                this.primaryImage = images.isEmpty() ? null : images.get(0);
+                this.primaryImage = images.isEmpty() ? null : images.getFirst();
             }
         }
     }
