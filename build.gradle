@@ -127,7 +127,7 @@ dependencies {
 	compileOnly 'org.springframework.boot:spring-boot-configuration-processor'
 	
 	// Payment Processing
-	implementation 'com.stripe:stripe-java:24.18.0'
+	implementation 'com.stripe:stripe-java:32.1.0'
 	implementation 'com.paypal.sdk:checkout-sdk:2.0.0'
 	implementation 'com.razorpay:razorpay-java:1.4.6'
 
