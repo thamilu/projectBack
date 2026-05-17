@@ -1,6 +1,6 @@
 package com.eshop.app.seed.validation;
 
-import com.eshop.app.config.properties.SeedProperties;
+import com.eshop.app.core.infrastructure.config.properties.SeedProperties;
 import com.eshop.app.seed.exception.InvalidSeedConfigException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;

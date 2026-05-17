@@ -1,6 +1,6 @@
 package com.eshop.app.seed.service;
+import com.eshop.app.catalog.domain.entity.Category;
 
-import com.eshop.app.entity.Category;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;

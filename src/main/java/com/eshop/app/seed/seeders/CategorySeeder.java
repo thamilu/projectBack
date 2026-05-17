@@ -1,7 +1,9 @@
 package com.eshop.app.seed.seeders;
 
-import com.eshop.app.exception.CategorySeedingException;
-import com.eshop.app.repository.CategoryRepository;
+import com.eshop.app.catalog.shared.exception.CategorySeedingException;
+import com.eshop.app.catalog.domain.repository.CategoryRepository;
+import com.eshop.app.catalog.domain.entity.Category;
+
 import com.eshop.app.seed.model.CategoryNode;
 import com.eshop.app.seed.provider.CategoryDataProvider;
 import com.eshop.app.seed.service.CategoryPersistenceService;
@@ -9,7 +11,6 @@ import com.eshop.app.seed.service.CategoryTreeBuilder;
 import com.eshop.app.seed.validation.CategoryValidator;
 import com.eshop.app.seed.core.BaseSeeder;
 import com.eshop.app.seed.core.SeederContext;
-import com.eshop.app.entity.Category;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,51 +23,60 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Enterprise-grade Category Seeder with batch processing and distributed locking.
+ * Enterprise-grade Category Seeder with batch processing and distributed
+ * locking.
  * 
- * <p><b>Features:</b>
+ * <p>
+ * <b>Features:</b>
  * <ul>
- *   <li>✅ Profile-restricted execution (dev, test, local only)</li>
- *   <li>✅ Distributed locking via ShedLock (prevents race conditions)</li>
- *   <li>✅ Batch database operations (~10 queries vs 400+ previously)</li>
- *   <li>✅ Hierarchical uniqueness (same name allowed under different parents)</li>
- *   <li>✅ SEO-friendly slug generation</li>
- *   <li>✅ Materialized path for efficient tree queries</li>
- *   <li>✅ Prometheus metrics integration</li>
- *   <li>✅ Structured logging with MDC context</li>
- *   <li>✅ SOLID design: orchestrator delegating to specialized services</li>
+ * <li>âœ… Profile-restricted execution (dev, test, local only)</li>
+ * <li>âœ… Distributed locking via ShedLock (prevents race conditions)</li>
+ * <li>âœ… Batch database operations (~10 queries vs 400+ previously)</li>
+ * <li>âœ… Hierarchical uniqueness (same name allowed under different
+ * parents)</li>
+ * <li>âœ… SEO-friendly slug generation</li>
+ * <li>âœ… Materialized path for efficient tree queries</li>
+ * <li>âœ… Prometheus metrics integration</li>
+ * <li>âœ… Structured logging with MDC context</li>
+ * <li>âœ… SOLID design: orchestrator delegating to specialized services</li>
  * </ul>
  *
- * <p><b>Performance:</b>
+ * <p>
+ * <b>Performance:</b>
  * <ul>
- *   <li>Seeding Time: < 1 second for 200+ categories</li>
- *   <li>Database Queries: ~10 batch operations</li>
- *   <li>Memory Usage: O(n) for category tree</li>
+ * <li>Seeding Time: < 1 second for 200+ categories</li>
+ * <li>Database Queries: ~10 batch operations</li>
+ * <li>Memory Usage: O(n) for category tree</li>
  * </ul>
  *
- * <p><b>Security:</b>
+ * <p>
+ * <b>Security:</b>
  * <ul>
- *   <li>Only runs in dev/test/local profiles</li>
- *   <li>Disabled in production (use Flyway migrations instead)</li>
- *   <li>Distributed lock prevents concurrent execution</li>
- *   <li>Lock duration: minimum 30s, maximum 5 minutes</li>
+ * <li>Only runs in dev/test/local profiles</li>
+ * <li>Disabled in production (use Flyway migrations instead)</li>
+ * <li>Distributed lock prevents concurrent execution</li>
+ * <li>Lock duration: minimum 30s, maximum 5 minutes</li>
  * </ul>
  *
- * <p><b>Configuration:</b>
+ * <p>
+ * <b>Configuration:</b>
+ * 
  * <pre>
  * app.seeding.categories.enabled=true      # Enable/disable seeding
  * app.seeding.categories.batch-size=50     # Entities per batch
  * app.seeding.categories.max-depth=10      # Maximum hierarchy depth
  * </pre>
  *
- * <p><b>Architecture:</b>
+ * <p>
+ * <b>Architecture:</b>
+ * 
  * <pre>
  * CategorySeeder (Orchestrator)
- *   ├── CategoryDataProvider → Loads category definitions
- *   ├── CategoryValidator → Validates hierarchy structure
- *   ├── CategoryTreeBuilder → Builds Category entities
- *   ├── CategoryPersistenceService → Batch persists to database
- *   └── MeterRegistry → Records Prometheus metrics
+ *   â”œâ”€â”€ CategoryDataProvider â†’ Loads category definitions
+ *   â”œâ”€â”€ CategoryValidator â†’ Validates hierarchy structure
+ *   â”œâ”€â”€ CategoryTreeBuilder â†’ Builds Category entities
+ *   â”œâ”€â”€ CategoryPersistenceService â†’ Batch persists to database
+ *   â””â”€â”€ MeterRegistry â†’ Records Prometheus metrics
  * </pre>
  *
  * @author E-Shop Team
@@ -76,12 +86,8 @@ import java.util.List;
 @Slf4j
 @Component
 @Order(2)
-@Profile({"dev", "test", "local"})
-@ConditionalOnProperty(
-    name = "app.seeding.categories.enabled",
-    havingValue = "true",
-    matchIfMissing = true
-)
+@Profile({ "dev", "test", "local" })
+@ConditionalOnProperty(name = "app.seeding.categories.enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class CategorySeeder extends BaseSeeder<Category, SeederContext> {
 
@@ -95,14 +101,15 @@ public class CategorySeeder extends BaseSeeder<Category, SeederContext> {
     /**
      * Runs the category seeding process with distributed locking.
      * 
-     * <p>Execution flow:
+     * <p>
+     * Execution flow:
      * <ol>
-     *   <li>Check if categories already exist (skip if present)</li>
-     *   <li>Load category definitions from provider</li>
-     *   <li>Validate category structure</li>
-     *   <li>Build Category entities</li>
-     *   <li>Batch persist to database</li>
-     *   <li>Record metrics</li>
+     * <li>Check if categories already exist (skip if present)</li>
+     * <li>Load category definitions from provider</li>
+     * <li>Validate category structure</li>
+     * <li>Build Category entities</li>
+     * <li>Batch persist to database</li>
+     * <li>Record metrics</li>
      * </ol>
      *
      * @param args application arguments (unused)

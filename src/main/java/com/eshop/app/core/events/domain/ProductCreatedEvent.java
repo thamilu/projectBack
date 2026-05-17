@@ -1,13 +1,15 @@
 package com.eshop.app.core.events.domain;
 
-import com.eshop.app.entity.Product;
+import com.eshop.app.catalog.domain.entity.Product;
+
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
 /**
  * Domain event published when a new product is created.
  *
- * <p>Listeners execute asynchronously after the creating transaction commits,
+ * <p>
+ * Listeners execute asynchronously after the creating transaction commits,
  * ensuring decoupled side-effects (search indexing, notifications).
  *
  * @see com.eshop.app.core.events.listeners.ProductEventListener

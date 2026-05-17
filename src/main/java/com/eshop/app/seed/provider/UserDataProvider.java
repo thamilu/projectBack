@@ -1,6 +1,6 @@
 package com.eshop.app.seed.provider;
 
-import com.eshop.app.config.properties.SeedProperties;
+import com.eshop.app.core.infrastructure.config.properties.SeedProperties;
 import java.util.List;
 
 /**

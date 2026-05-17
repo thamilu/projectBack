@@ -1,9 +1,12 @@
 package com.eshop.app.seed.seeders;
 
-
-import com.eshop.app.entity.*;
-import com.eshop.app.entity.enums.ProductStatus;
-import com.eshop.app.repository.ProductRepository;
+import com.eshop.app.catalog.domain.repository.ProductRepository;
+import com.eshop.app.catalog.domain.entity.ProductStatus;
+import com.eshop.app.catalog.domain.entity.Product;
+import com.eshop.app.catalog.domain.entity.Category;
+import com.eshop.app.catalog.domain.entity.Brand;
+import com.eshop.app.store.domain.entity.Store;
+import com.eshop.app.catalog.domain.entity.Tag;
 import com.eshop.app.seed.core.BaseSeeder;
 import com.eshop.app.seed.core.SeederContext;
 import lombok.RequiredArgsConstructor;
@@ -89,6 +92,5 @@ public class ProductSeeder extends BaseSeeder<Product, SeederContext> {
                 .status(ProductStatus.ACTIVE)
                 .build());
     }
-
 
 }

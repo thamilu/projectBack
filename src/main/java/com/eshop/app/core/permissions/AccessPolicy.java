@@ -1,6 +1,7 @@
 package com.eshop.app.core.permissions;
 
-import com.eshop.app.util.SecurityUtils;
+import com.eshop.app.core.util.SecurityUtils;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 /**
@@ -48,9 +49,8 @@ public class AccessPolicy {
 
     /** Returns true if the current user is authenticated with any recognized role. */
     public boolean isAuthenticated() {
-        return SecurityUtils.getCurrentAuthentication()
-                .map(auth -> auth.isAuthenticated())
-                .orElse(false);
+        Authentication auth = SecurityUtils.getCurrentAuthentication();
+        return auth != null && auth.isAuthenticated();
     }
 
     // ── Ownership Checks ─────────────────────────────────────────────────────

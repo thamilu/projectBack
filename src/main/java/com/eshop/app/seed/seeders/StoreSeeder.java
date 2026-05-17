@@ -1,9 +1,13 @@
 package com.eshop.app.seed.seeders;
 
+import com.eshop.app.store.domain.entity.Store;
+import com.eshop.app.user.domain.entity.User;
+import com.eshop.app.store.domain.repository.StoreRepository;
 
-import com.eshop.app.entity.Store;
-import com.eshop.app.entity.User;
-import com.eshop.app.repository.StoreRepository;
+import com.eshop.app.core.infrastructure.config.properties.SeedProperties;
+import com.eshop.app.seller.shared.domain.enums.SellerIdentityType;
+import com.eshop.app.seller.shared.domain.enums.SellerStatus;
+
 import com.eshop.app.seed.core.BaseSeeder;
 import com.eshop.app.seed.core.SeederContext;
 import lombok.RequiredArgsConstructor;
@@ -29,13 +33,14 @@ public class StoreSeeder extends BaseSeeder<Store, SeederContext> {
 
     private final StoreRepository storeRepository;
     private final com.eshop.app.seed.provider.StoreDataProvider storeDataProvider;
-    private final com.eshop.app.repository.SellerProfileRepository sellerProfileRepository;
-    private final com.eshop.app.config.properties.SeedProperties seedProperties;
+    private final com.eshop.app.user.domain.repository.SellerProfileRepository sellerProfileRepository;
+    private final SeedProperties seedProperties;
 
     @Override
     protected List<Store> doSeed(SeederContext context) {
         // Pre-fetch all existing seller profiles to avoid N+1 queries during the loop
-        Map<Long, com.eshop.app.entity.SellerProfile> existingProfiles = sellerProfileRepository.findAll().stream()
+        Map<Long, com.eshop.app.user.domain.entity.SellerProfile> existingProfiles = sellerProfileRepository.findAll()
+                .stream()
                 .collect(Collectors.toMap(p -> p.getUser().getId(), p -> p));
 
         List<Store> storesList = storeDataProvider.getStores().stream()
@@ -66,21 +71,21 @@ public class StoreSeeder extends BaseSeeder<Store, SeederContext> {
      * Build store with null-safe seller lookup.
      * Skips store if seller not found.
      */
-    private Optional<Store> buildStoreWithCache(com.eshop.app.seed.model.StoreData cfg, 
-                                                SeederContext context,
-                                                Map<Long, com.eshop.app.entity.SellerProfile> existingProfiles) {
+    private Optional<Store> buildStoreWithCache(com.eshop.app.seed.model.StoreData cfg,
+            SeederContext context,
+            Map<Long, com.eshop.app.user.domain.entity.SellerProfile> existingProfiles) {
         User seller = context.getRequiredUser(cfg.sellerEmail());
 
-        com.eshop.app.entity.SellerProfile profile = existingProfiles.get(seller.getId());
+        com.eshop.app.user.domain.entity.SellerProfile profile = existingProfiles.get(seller.getId());
         if (profile == null) {
-            com.eshop.app.enums.SellerIdentityType identityType;
+            SellerIdentityType identityType;
             try {
-                identityType = com.eshop.app.enums.SellerIdentityType.valueOf(cfg.sellerType().toUpperCase());
+                identityType = SellerIdentityType.valueOf(cfg.sellerType().toUpperCase());
             } catch (Exception e) {
-                identityType = com.eshop.app.enums.SellerIdentityType.BUSINESS;
+                identityType = SellerIdentityType.BUSINESS;
             }
 
-            profile = com.eshop.app.entity.SellerProfile.builder()
+            profile = com.eshop.app.user.domain.entity.SellerProfile.builder()
                     .user(seller)
                     .businessName(cfg.storeName())
                     .shopName(cfg.storeName())
@@ -90,7 +95,7 @@ public class StoreSeeder extends BaseSeeder<Store, SeederContext> {
                     .state(Optional.ofNullable(cfg.state()).orElse(seedProperties.getDefaultState()))
                     .pincode(Optional.ofNullable(cfg.pincode()).orElse(seedProperties.getDefaultPincode()))
                     .country(Optional.ofNullable(cfg.country()).orElse(seedProperties.getDefaultCountry()))
-                    .status(com.eshop.app.enums.SellerStatus.ACTIVE)
+                    .status(SellerStatus.ACTIVE)
                     .identityType(identityType)
                     .build();
             // We still need to save it to get an ID for the Store relationship if it's new

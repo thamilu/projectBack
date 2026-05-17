@@ -1,18 +1,19 @@
 package com.eshop.app.seed.seeders;
 
-import com.eshop.app.config.properties.SeedProperties;
-import com.eshop.app.dto.auth.RegisterRequest;
-import com.eshop.app.entity.User;
-import com.eshop.app.repository.UserRepository;
-import com.eshop.app.repository.UserProfileRepository;
-import com.eshop.app.repository.SellerProfileRepository;
+import com.eshop.app.user.domain.entity.User;
+import com.eshop.app.user.domain.repository.UserRepository;
+import com.eshop.app.user.domain.repository.UserProfileRepository;
+import com.eshop.app.user.domain.repository.SellerProfileRepository;
+import com.eshop.app.admin.application.service.KeycloakAdminService;
+import com.eshop.app.user.domain.entity.Role;
+
+import com.eshop.app.core.infrastructure.config.properties.SeedProperties;
+import com.eshop.app.user.api.request.RegisterRequest;
 import com.eshop.app.seed.core.BaseSeeder;
 import com.eshop.app.seed.core.SeederContext;
 import com.eshop.app.seed.security.SecurePasswordGenerator;
-import com.eshop.app.service.auth.KeycloakAdminService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.eshop.app.enums.UserRole;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -33,14 +34,14 @@ public class UserSeeder extends BaseSeeder<User, SeederContext> {
 
     private final UserRepository userRepository;
     private final UserProfileRepository userProfileRepository;
-    private final com.eshop.app.repository.UserAddressRepository userAddressRepository;
+    private final com.eshop.app.user.domain.repository.UserAddressRepository userAddressRepository;
     private final SellerProfileRepository sellerProfileRepository;
-    private final com.eshop.app.repository.SellerKYCRepository sellerKYCRepository;
-    private final com.eshop.app.repository.SellerFarmerDetailsRepository sellerFarmerDetailsRepository;
-    private final com.eshop.app.repository.SellerBusinessDetailsRepository sellerBusinessDetailsRepository;
-    private final com.eshop.app.repository.SellerWholesaleConfigRepository sellerWholesaleConfigRepository;
-    private final com.eshop.app.repository.SellerBankAccountRepository sellerBankAccountRepository;
-    private final com.eshop.app.repository.SellerDocumentRepository sellerDocumentRepository;
+    private final com.eshop.app.seller.domain.repository.SellerKYCRepository sellerKYCRepository;
+    private final com.eshop.app.seller.domain.repository.SellerFarmerDetailsRepository sellerFarmerDetailsRepository;
+    private final com.eshop.app.seller.domain.repository.SellerBusinessDetailsRepository sellerBusinessDetailsRepository;
+    private final com.eshop.app.seller.domain.repository.SellerWholesaleConfigRepository sellerWholesaleConfigRepository;
+    private final com.eshop.app.seller.domain.repository.SellerBankAccountRepository sellerBankAccountRepository;
+    private final com.eshop.app.seller.domain.repository.SellerDocumentRepository sellerDocumentRepository;
     private final SecurePasswordGenerator passwordGenerator;
     private final SeedProperties seedProperties;
     private final KeycloakAdminService keycloakAdminService;
@@ -82,25 +83,27 @@ public class UserSeeder extends BaseSeeder<User, SeederContext> {
             return;
         }
 
-        // Note: We only clean up local DB. Cleaning up Keycloak is risky/complex for dev
-        
-        // 1. Clean up Seller Profile Children (children before parent to avoid FK errors)
+        // Note: We only clean up local DB. Cleaning up Keycloak is risky/complex for
+        // dev
+
+        // 1. Clean up Seller Profile Children (children before parent to avoid FK
+        // errors)
         sellerKYCRepository.deleteAllInBatch();
         sellerFarmerDetailsRepository.deleteAllInBatch();
         sellerBusinessDetailsRepository.deleteAllInBatch();
         sellerWholesaleConfigRepository.deleteAllInBatch();
         sellerBankAccountRepository.deleteAllInBatch();
         sellerDocumentRepository.deleteAllInBatch();
-        
+
         // 2. Clean up Seller Profiles
         sellerProfileRepository.deleteAllInBatch();
-        
+
         // 3. Clean up User Profile Children (addresses before profiles)
         userAddressRepository.deleteAllInBatch();
-        
+
         // 4. Clean up User Profiles (before users, FK dependency)
         userProfileRepository.deleteAllInBatch();
-        
+
         // 5. Clean up Users (last, no more FKs pointing to it)
         userRepository.deleteAllInBatch();
     }
@@ -130,7 +133,7 @@ public class UserSeeder extends BaseSeeder<User, SeederContext> {
                 .role(parseRole(cfg.getRole()))
                 .build();
 
-        com.eshop.app.entity.UserProfile profile = com.eshop.app.entity.UserProfile.builder()
+        com.eshop.app.user.domain.entity.UserProfile profile = com.eshop.app.user.domain.entity.UserProfile.builder()
                 .firstName(cfg.getFirstName())
                 .lastName(cfg.getLastName())
                 .phone(cfg.getPhone())
@@ -138,7 +141,8 @@ public class UserSeeder extends BaseSeeder<User, SeederContext> {
                 .build();
 
         if (cfg.getAddress() != null && !cfg.getAddress().isBlank()) {
-            com.eshop.app.entity.UserAddress address = com.eshop.app.entity.UserAddress.builder()
+            com.eshop.app.user.domain.entity.UserAddress address = com.eshop.app.user.domain.entity.UserAddress
+                    .builder()
                     .userProfile(profile)
                     .addressLine1(cfg.getAddress())
                     .isDefault(true)
@@ -185,15 +189,15 @@ public class UserSeeder extends BaseSeeder<User, SeederContext> {
     /**
      * Parse role with fallback to CUSTOMER if invalid.
      */
-    private UserRole parseRole(String role) {
+    private Role parseRole(String role) {
         if (role == null || role.isBlank()) {
-            return UserRole.CUSTOMER;
+            return Role.CUSTOMER;
         }
         try {
-            return UserRole.valueOf(role.toUpperCase());
+            return Role.valueOf(role.toUpperCase());
         } catch (IllegalArgumentException e) {
             log.warn("Invalid role '{}', defaulting to CUSTOMER", role);
-            return UserRole.CUSTOMER;
+            return Role.CUSTOMER;
         }
     }
 

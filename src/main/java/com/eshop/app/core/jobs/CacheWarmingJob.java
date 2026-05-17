@@ -1,7 +1,7 @@
 package com.eshop.app.core.jobs;
+import com.eshop.app.core.infrastructure.config.security.oauth.SystemAuthenticationProvider;
+import com.eshop.app.catalog.application.port.in.ProductUseCase;
 
-import com.eshop.app.config.SystemAuthenticationProvider;
-import com.eshop.app.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class CacheWarmingJob {
 
-    private final ProductService productService;
+    private final ProductUseCase productUseCase;
     private final CacheManager cacheManager;
     private final SystemAuthenticationProvider systemAuthProvider;
 
@@ -51,10 +51,10 @@ public class CacheWarmingJob {
         try {
             long start = System.currentTimeMillis();
             systemAuthProvider.runAsSystem(() -> {
-                productService.getFeaturedProducts(PageRequest.of(0, 20));
+                productUseCase.getFeaturedProducts(PageRequest.of(0, 20));
                 return null;
             });
-            log.info("✓ Featured products cache warmed in {}ms", System.currentTimeMillis() - start);
+            log.info("âœ“ Featured products cache warmed in {}ms", System.currentTimeMillis() - start);
         } catch (Exception e) {
             log.error("Failed to warm featured products cache: {}", e.getMessage(), e);
         }
@@ -69,10 +69,10 @@ public class CacheWarmingJob {
         try {
             long start = System.currentTimeMillis();
             systemAuthProvider.runAsSystem(() -> {
-                productService.getTopSellingProducts(10);
+                productUseCase.getTopSellingProducts(10);
                 return null;
             });
-            log.info("✓ Top-selling products cache warmed in {}ms", System.currentTimeMillis() - start);
+            log.info("âœ“ Top-selling products cache warmed in {}ms", System.currentTimeMillis() - start);
         } catch (Exception e) {
             log.error("Failed to warm top-selling products cache: {}", e.getMessage(), e);
         }
@@ -92,7 +92,7 @@ public class CacheWarmingJob {
                     log.debug("Cleared cache: {}", cacheName);
                 }
             });
-            log.info("✓ All caches cleared successfully");
+            log.info("âœ“ All caches cleared successfully");
         } catch (Exception e) {
             log.error("Failed to clear stale caches: {}", e.getMessage(), e);
         }
@@ -103,7 +103,7 @@ public class CacheWarmingJob {
      */
     @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.HOURS)
     public void logCacheStatistics() {
-        log.info("📊 Cache Statistics:");
+        log.info("ðŸ“Š Cache Statistics:");
         cacheManager.getCacheNames().forEach(cacheName -> {
             var cache = cacheManager.getCache(cacheName);
             if (cache != null) {

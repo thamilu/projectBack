@@ -1,8 +1,10 @@
 package com.eshop.app.seed.seeders;
+import com.eshop.app.cart.domain.entity.Cart;
+import com.eshop.app.cart.domain.repository.CartRepository;
+import com.eshop.app.user.domain.entity.Role;
 
-import com.eshop.app.entity.Cart;
-import com.eshop.app.repository.CartRepository;
-import com.eshop.app.enums.UserRole;
+
+
 import com.eshop.app.seed.core.BaseSeeder;
 import com.eshop.app.seed.core.SeederContext;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +34,7 @@ public class CartSeeder extends BaseSeeder<Cart, SeederContext> {
         
         // Create cart for each customer
         context.getUsers().values().stream()
-                .filter(user -> user.getRole() == UserRole.CUSTOMER)
+                .filter(user -> user.getRole() == Role.CUSTOMER)
             .forEach(customer -> {
                 Cart cart = Cart.builder()
                     .user(customer)

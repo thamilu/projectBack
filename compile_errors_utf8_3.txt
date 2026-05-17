@@ -1,0 +1,257 @@
+﻿
+> Task :compileJava
+.\gradlew.bat : 
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\application\service\impl\HomeUseCaseImpl.java:49: error: 
+cannot find symbol
+At line:1 char:1
++ .\gradlew.bat compileJava 2>&1 | Out-File -Encoding utf8 compile_erro ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (G:\Project\esho...not find symbol:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+                .getPrincipal() instanceof com.eshop.app.core.infrastructure.config.security.PrincipalDetails details) 
+{
+                                                                                            ^
+  symbol:   class PrincipalDetails
+  location: package com.eshop.app.core.infrastructure.config.security
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService.j
+ava:90: error: cannot find symbol
+                .username(getClaimOrDefault(jwt, JwtClaimNames.PREFERRED_USERNAME, "unknown"))
+                                                              ^
+  symbol:   variable PREFERRED_USERNAME
+  location: class JwtClaimNames
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService.j
+ava:91: error: cannot find symbol
+                .email(getClaimOrDefault(jwt, JwtClaimNames.EMAIL, null))
+                                                           ^
+  symbol:   variable EMAIL
+  location: class JwtClaimNames
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService.j
+ava:92: error: cannot find symbol
+                .firstName(getClaimOrDefault(jwt, JwtClaimNames.GIVEN_NAME, null))
+                                                               ^
+  symbol:   variable GIVEN_NAME
+  location: class JwtClaimNames
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService.j
+ava:93: error: cannot find symbol
+                .lastName(getClaimOrDefault(jwt, JwtClaimNames.FAMILY_NAME, null))
+                                                              ^
+  symbol:   variable FAMILY_NAME
+  location: class JwtClaimNames
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService.j
+ava:94: error: cannot find symbol
+                .fullName(getClaimOrDefault(jwt, JwtClaimNames.NAME, null))
+                                                              ^
+  symbol:   variable NAME
+  location: class JwtClaimNames
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService.j
+ava:96: error: cannot find symbol
+                .emailVerified(Boolean.TRUE.equals(jwt.getClaimAsBoolean(JwtClaimNames.EMAIL_VERIFIED)))
+                                                                                      ^
+  symbol:   variable EMAIL_VERIFIED
+  location: class JwtClaimNames
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService.j
+ava:118: error: cannot find symbol
+                getClaimOrDefault(jwt, JwtClaimNames.PREFERRED_USERNAME, "unknown"),
+                                                    ^
+  symbol:   variable PREFERRED_USERNAME
+  location: class JwtClaimNames
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\permissions\AccessPolicy.java:52: error: cannot find symbol
+                .map(auth -> auth.isAuthenticated())
+                ^
+  symbol:   method map((auth)->au[...]ted())
+  location: interface Authentication
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\util\SecurityUtils.java:47: error: cannot find symbol
+                .anyMatch(a -> a.getAuthormty().equals(fullRole) || a.getAuthormty().equals(role));
+                                ^
+  symbol:   method getAuthormty()
+  location: variable a of type CAP#1
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends GrantedAuthority from capture of ? extends GrantedAuthority
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\util\SecurityUtils.java:47: error: cannot find symbol
+                .anyMatch(a -> a.getAuthormty().equals(fullRole) || a.getAuthormty().equals(role));
+                                                                     ^
+  symbol:   method getAuthormty()
+  location: variable a of type CAP#1
+  where CAP#1 is a fresh type-variable:
+    CAP#1 extends GrantedAuthority from capture of ? extends GrantedAuthority
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\CartSeeder.java:37: error: incomparable types: Role and 
+UserRole
+                .filter(user -> user.getRole() == UserRole.CUSTOMER)
+                                               ^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:143: error: incompatible types: 
+UserRole cannot be converted to Role
+                .role(parseRole(cfg.getRole()))
+                               ^
+G:\Project\eshop_back\src\main\java\com\eshop\app\store\api\controller\SellerStoreController.java:57: error: cannot 
+find symbol
+        if (authentication.getPrincipal() instanceof 
+com.eshop.app.core.infrastructure.config.security.PrincipalDetails pd) {
+                                                                                                      ^
+  symbol:   class PrincipalDetails
+  location: package com.eshop.app.core.infrastructure.config.security
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\KeycloakAuthController.java:111: error: cannot 
+find symbol
+        String authUrl = authService.getAuthorizationUrl(redirectUri, state);
+                                    ^
+  symbol:   method getAuthorizationUrl(String,String)
+  location: variable authService of type KeycloakAuthService
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\KeycloakAuthController.java:145: error: cannot 
+find symbol
+        return authService.exchangeAuthorizationCode(code, redirectUri)
+                          ^
+  symbol:   method exchangeAuthorizationCode(String,String)
+  location: variable authService of type KeycloakAuthService
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\KeycloakAuthController.java:214: error: cannot 
+find symbol
+        return authService.introspectToken(token)
+                          ^
+  symbol:   method introspectToken(String)
+  location: variable authService of type KeycloakAuthService
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\KeycloakAuthController.java:266: error: cannot 
+find symbol
+        return authService.getOpenIdConfiguration()
+                          ^
+  symbol:   method getOpenIdConfiguration()
+  location: variable authService of type KeycloakAuthService
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\application\service\impl\DefaultSellerProfileService.java:166: 
+error: cannot find symbol
+        if (principal instanceof com.eshop.app.core.infrastructure.config.security.PrincipalDetails pd) {
+                                                                                  ^
+  symbol:   class PrincipalDetails
+  location: package com.eshop.app.core.infrastructure.config.security
+Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+19 errors
+
+> Task :compileJava FAILED
+
+[Incubating] Problems report is available at: file:///G:/Project/eshop_back/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler output below.
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:143: error: incompatible types: 
+UserRole cannot be converted to Role
+                  .role(parseRole(cfg.getRole()))
+                                 ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\CartSeeder.java:37: error: incomparable types: Role 
+and UserRole
+                  .filter(user -> user.getRole() == UserRole.CUSTOMER)
+                                                 ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\application\service\impl\HomeUseCaseImpl.java:49: error: 
+cannot find symbol
+                  .getPrincipal() instanceof com.eshop.app.core.infrastructure.config.security.PrincipalDetails 
+details) {
+                                                                                              ^
+    symbol:   class PrincipalDetails
+    location: package com.eshop.app.core.infrastructure.config.security
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService
+.java:90: error: cannot find symbol
+                  .username(getClaimOrDefault(jwt, JwtClaimNames.PREFERRED_USERNAME, "unknown"))
+                                                                ^
+    symbol:   variable PREFERRED_USERNAME
+    location: class JwtClaimNames
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService
+.java:91: error: cannot find symbol
+                  .email(getClaimOrDefault(jwt, JwtClaimNames.EMAIL, null))
+                                                             ^
+    symbol:   variable EMAIL
+    location: class JwtClaimNames
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService
+.java:92: error: cannot find symbol
+                  .firstName(getClaimOrDefault(jwt, JwtClaimNames.GIVEN_NAME, null))
+                                                                 ^
+    symbol:   variable GIVEN_NAME
+    location: class JwtClaimNames
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService
+.java:93: error: cannot find symbol
+                  .lastName(getClaimOrDefault(jwt, JwtClaimNames.FAMILY_NAME, null))
+                                                                ^
+    symbol:   variable FAMILY_NAME
+    location: class JwtClaimNames
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService
+.java:94: error: cannot find symbol
+                  .fullName(getClaimOrDefault(jwt, JwtClaimNames.NAME, null))
+                                                                ^
+    symbol:   variable NAME
+    location: class JwtClaimNames
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService
+.java:96: error: cannot find symbol
+                  .emailVerified(Boolean.TRUE.equals(jwt.getClaimAsBoolean(JwtClaimNames.EMAIL_VERIFIED)))
+                                                                                        ^
+    symbol:   variable EMAIL_VERIFIED
+    location: class JwtClaimNames
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService
+.java:118: error: cannot find symbol
+                  getClaimOrDefault(jwt, JwtClaimNames.PREFERRED_USERNAME, "unknown"),
+                                                      ^
+    symbol:   variable PREFERRED_USERNAME
+    location: class JwtClaimNames
+  G:\Project\eshop_back\src\main\java\com\eshop\app\store\api\controller\SellerStoreController.java:57: error: cannot 
+find symbol
+          if (authentication.getPrincipal() instanceof 
+com.eshop.app.core.infrastructure.config.security.PrincipalDetails pd) {
+                                                                                                        ^
+    symbol:   class PrincipalDetails
+    location: package com.eshop.app.core.infrastructure.config.security
+  
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\application\service\impl\DefaultSellerProfileService.java:166: 
+error: cannot find symbol
+          if (principal instanceof com.eshop.app.core.infrastructure.config.security.PrincipalDetails pd) {
+                                                                                    ^
+    symbol:   class PrincipalDetails
+    location: package com.eshop.app.core.infrastructure.config.security
+  Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\permissions\AccessPolicy.java:52: error: cannot find symbol
+                  .map(auth -> auth.isAuthenticated())
+                  ^
+    symbol:   method map((auth)->au[...]ted())
+    location: interface Authentication
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\util\SecurityUtils.java:47: error: cannot find symbol
+                  .anyMatch(a -> a.getAuthormty().equals(fullRole) || a.getAuthormty().equals(role));
+                                  ^
+    symbol:   method getAuthormty()
+    location: variable a of type CAP#1
+    where CAP#1 is a fresh type-variable:
+      CAP#1 extends GrantedAuthority from capture of ? extends GrantedAuthority
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\util\SecurityUtils.java:47: error: cannot find symbol
+                  .anyMatch(a -> a.getAuthormty().equals(fullRole) || a.getAuthormty().equals(role));
+                                                                       ^
+    symbol:   method getAuthormty()
+    location: variable a of type CAP#1
+    where CAP#1 is a fresh type-variable:
+      CAP#1 extends GrantedAuthority from capture of ? extends GrantedAuthority
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\KeycloakAuthController.java:111: error: cannot 
+find symbol
+          String authUrl = authService.getAuthorizationUrl(redirectUri, state);
+                                      ^
+    symbol:   method getAuthorizationUrl(String,String)
+    location: variable authService of type KeycloakAuthService
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\KeycloakAuthController.java:145: error: cannot 
+find symbol
+          return authService.exchangeAuthorizationCode(code, redirectUri)
+                            ^
+    symbol:   method exchangeAuthorizationCode(String,String)
+    location: variable authService of type KeycloakAuthService
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\KeycloakAuthController.java:214: error: cannot 
+find symbol
+          return authService.introspectToken(token)
+                            ^
+    symbol:   method introspectToken(String)
+    location: variable authService of type KeycloakAuthService
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\KeycloakAuthController.java:266: error: cannot 
+find symbol
+          return authService.getOpenIdConfiguration()
+                            ^
+    symbol:   method getOpenIdConfiguration()
+    location: variable authService of type KeycloakAuthService
+  19 errors
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to generate a Build Scan (powered by Develocity).
+
+BUILD FAILED in 24s
+1 actionable task: 1 executed

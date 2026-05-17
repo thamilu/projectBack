@@ -8,7 +8,8 @@ import java.time.LocalDateTime;
 /**
  * Domain event published when a product's stock quantity changes.
  *
- * <p>Carries a full audit trail of the stock delta (who, what, when) to support
+ * <p>
+ * Carries a full audit trail of the stock delta (who, what, when) to support
  * compliance tracking and stock movement analytics.
  *
  * @see com.eshop.app.core.events.listeners.ProductEventListener

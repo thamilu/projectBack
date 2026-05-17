@@ -1,0 +1,1079 @@
+﻿
+> Task :compileJava
+.\gradlew.bat : 
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\application\service\KeycloakAdminService.java:3: error: cannot 
+find symbol
+At line:1 char:1
++ .\gradlew.bat compileJava 2>&1 | Out-File -Encoding utf8 compile_erro ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (G:\Project\esho...not find symbol:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+import com.eshop.app.core.infrastructure.config.security.KeycloakConfig;
+                                                        ^
+  symbol:   class KeycloakConfig
+  location: package com.eshop.app.core.infrastructure.config.security
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\application\service\KeycloakAdminService.java:21: error: 
+cannot find symbol
+import org.springframework.core.ParametermzedTypeReference;
+                               ^
+  symbol:   class ParametermzedTypeReference
+  location: package org.springframework.core
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\application\service\KeycloakAdminService.java:29: error: 
+cannot find symbol
+    private final KeycloakConfig keycloakConfig;
+                  ^
+  symbol:   class KeycloakConfig
+  location: class KeycloakAdminService
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\api\controller\AdminCategoryController.java:3: error: cannot 
+find symbol
+import com.eshop.app.catalog.api.request.RevmewRequest;
+                                        ^
+  symbol:   class RevmewRequest
+  location: package com.eshop.app.catalog.api.request
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\api\controller\AdminCategoryController.java:41: error: 
+cannot find symbol
+            @RequestBody RevmewRequest dto,
+                         ^
+  symbol:   class RevmewRequest
+  location: class AdminCategoryController
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\api\controller\CategoryController.java:5: error: cannot find 
+symbol
+import com.eshop.app.core.util.PagmnatmonUtils;
+                              ^
+  symbol:   class PagmnatmonUtils
+  location: package com.eshop.app.core.util
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\api\controller\CategoryController.java:256: error: cannot 
+find symbol
+    private vomd validateSortFmeld(String sortBy) {
+            ^
+  symbol:   class vomd
+  location: class CategoryController
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\application\service\impl\HomeUseCaseImpl.java:19: error: 
+cannot find symbol
+import java.math.BigDeoimal;
+                ^
+  symbol:   class BigDeoimal
+  location: package java.math
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\application\service\impl\HomeUseCaseImpl.java:20: error: 
+cannot find symbol
+import java.time.LooalDate;
+                ^
+  symbol:   class LooalDate
+  location: package java.time
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\application\service\impl\HomeUseCaseImpl.java:21: error: 
+cannot find symbol
+import java.time.LooalDateTime;
+                ^
+  symbol:   class LooalDateTime
+  location: package java.time
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\application\service\impl\HomeUseCaseImpl.java:22: error: 
+cannot find symbol
+import java.time.LooalTime;
+                ^
+  symbol:   class LooalTime
+  location: package java.time
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\audit\Auditable.java:41: error: reference to AuditAction is 
+ambiguous
+    AuditAction action();
+    ^
+  both enum com.eshop.app.inventory.shared.domain.enums.AuditAction in com.eshop.app.inventory.shared.domain.enums and 
+enum com.eshop.app.enums.AuditAction in com.eshop.app.enums match
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\audit\Auditable.java:6: error: a type with the same simple name 
+is already defined by the single-type-import of AuditAction
+import com.eshop.app.enums.AuditAction;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService.j
+ava:107: error: cannot find symbol
+    public TokenInfoResponse buildTokenInfo(Jwt jwt, Authentication authentication) {
+           ^
+  symbol:   class TokenInfoResponse
+  location: class AuthenticationInfoService
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\jobs\CacheWarmingJob.java:3: error: cannot find symbol
+import com.eshop.app.catalog.application.service.ProductService;
+                                                ^
+  symbol:   class ProductService
+  location: package com.eshop.app.catalog.application.service
+G:\Project\eshop_back\src\main\java\com\eshop\app\core\jobs\CacheWarmingJob.java:40: error: cannot find symbol
+    private final ProductService productService;
+                  ^
+  symbol:   class ProductService
+  location: class CacheWarmingJob
+G:\Project\eshop_back\src\main\java\com\eshop\app\processor\impl\BusinessDetailsProcessor.java:8: error: a type with 
+the same simple name is already defined by the single-type-import of SellerIdentityType
+import com.eshop.app.enums.SellerIdentityType;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\processor\impl\FarmerProcessor.java:8: error: a type with the same 
+simple name is already defined by the single-type-import of SellerBusinessType
+import com.eshop.app.enums.SellerBusinessType;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\BrandSeeder.java:24: error: reference to Order is 
+ambiguous
+@Order(3)
+ ^
+  both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\BrandSeeder.java:13: error: a type with the same simple 
+name is already defined by the single-type-import of Order
+import org.springframework.core.annotation.Order;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\CartSeeder.java:25: error: reference to Order is 
+ambiguous
+@Order(7)
+ ^
+  both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\CartSeeder.java:7: error: a type with the same simple 
+name is already defined by the single-type-import of UserRole
+import com.eshop.app.enums.UserRole;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\CartSeeder.java:12: error: a type with the same simple 
+name is already defined by the single-type-import of Order
+import org.springframework.core.annotation.Order;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\CategorySeeder.java:81: error: reference to Order is 
+ambiguous
+@Order(2)
+ ^
+  both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\CategorySeeder.java:21: error: a type with the same 
+simple name is already defined by the single-type-import of Order
+import org.springframework.core.annotation.Order;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\PostalCodeSeeder.java:50: error: reference to Order is 
+ambiguous
+@Order(0)
+ ^
+  both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\PostalCodeSeeder.java:29: error: a type with the same 
+simple name is already defined by the single-type-import of Order
+import org.springframework.core.annotation.Order;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\StoreSeeder.java:34: error: reference to Order is 
+ambiguous
+@Order(5)
+ ^
+  both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\StoreSeeder.java:40: error: cannot find symbol
+    private final com.eshop.app.user.domain.entity.SellerProfileRepository sellerProfileRepository;
+                                                  ^
+  symbol:   class SellerProfileRepository
+  location: package com.eshop.app.user.domain.entity
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\StoreSeeder.java:19: error: a type with the same simple 
+name is already defined by the single-type-import of Order
+import org.springframework.core.annotation.Order;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\TagSeeder.java:23: error: reference to Order is 
+ambiguous
+@Order(4)
+ ^
+  both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\TagSeeder.java:12: error: a type with the same simple 
+name is already defined by the single-type-import of Order
+import org.springframework.core.annotation.Order;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:43: error: reference to Order is 
+ambiguous
+@Order(1)
+ ^
+  both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:49: error: cannot find symbol
+    private final com.eshop.app.user.domain.entity.UserAddressRepository userAddressRepository;
+                                                  ^
+  symbol:   class UserAddressRepository
+  location: package com.eshop.app.user.domain.entity
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:51: error: cannot find symbol
+    private final com.eshop.app.seller.domain.entity.SellerKYCRepository sellerKYCRepository;
+                                                    ^
+  symbol:   class SellerKYCRepository
+  location: package com.eshop.app.seller.domain.entity
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:54: error: cannot find symbol
+    private final com.eshop.app.seller.domain.entity.SellerWholesaleConfigRepository sellerWholesaleConfigRepository;
+                                                    ^
+  symbol:   class SellerWholesaleConfigRepository
+  location: package com.eshop.app.seller.domain.entity
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:55: error: cannot find symbol
+    private final com.eshop.app.seller.domain.entity.SellerBankAccountRepository sellerBankAccountRepository;
+                                                    ^
+  symbol:   class SellerBankAccountRepository
+  location: package com.eshop.app.seller.domain.entity
+G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:29: error: a type with the same simple 
+name is already defined by the single-type-import of Order
+import org.springframework.core.annotation.Order;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\mapper\SellerMapper.java:102: error: cannot find 
+symbol
+            @MappingTarget SellerProfileResponse.SellerProfileResponseBuilder response) {
+                                                ^
+  symbol:   class SellerProfileResponseBuilder
+  location: class SellerProfileResponse
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\BankProcessor.java:21: error: 
+reference to SellerModuleProcessor is ambiguous
+public class BankProcessor implements SellerModuleProcessor {
+                                      ^
+  both interface com.eshop.app.processor.SellerModuleProcessor in com.eshop.app.processor and interface 
+com.eshop.app.seller.application.processor.SellerModuleProcessor in com.eshop.app.seller.application.processor match
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\BankProcessor.java:3: error: 
+BankProcessor is already defined in this compilation unit
+import com.eshop.app.processor.impl.BankProcessor;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\BankProcessor.java:5: error: a 
+type with the same simple name is already defined by the single-type-import of SellerModuleProcessor
+import com.eshop.app.seller.application.processor.SellerModuleProcessor;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\SellerModuleProcessor.java:2: error: 
+SellerModuleProcessor is already defined in this compilation unit
+import com.eshop.app.processor.SellerModuleProcessor;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\BusinessDetailsProcessor.java:18: 
+error: reference to SellerModuleProcessor is ambiguous
+public class BusinessDetailsProcessor implements SellerModuleProcessor {
+                                                 ^
+  both interface com.eshop.app.processor.SellerModuleProcessor in com.eshop.app.processor and interface 
+com.eshop.app.seller.application.processor.SellerModuleProcessor in com.eshop.app.seller.application.processor match
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\BusinessDetailsProcessor.java:3: 
+error: BusinessDetailsProcessor is already defined in this compilation unit
+import com.eshop.app.processor.impl.BusinessDetailsProcessor;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\BusinessDetailsProcessor.java:5: 
+error: a type with the same simple name is already defined by the single-type-import of SellerModuleProcessor
+import com.eshop.app.seller.application.processor.SellerModuleProcessor;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\FarmerProcessor.java:18: error: 
+reference to SellerModuleProcessor is ambiguous
+public class FarmerProcessor implements SellerModuleProcessor {
+                                        ^
+  both interface com.eshop.app.processor.SellerModuleProcessor in com.eshop.app.processor and interface 
+com.eshop.app.seller.application.processor.SellerModuleProcessor in com.eshop.app.seller.application.processor match
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\FarmerProcessor.java:3: error: 
+FarmerProcessor is already defined in this compilation unit
+import com.eshop.app.processor.impl.FarmerProcessor;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\FarmerProcessor.java:5: error: a 
+type with the same simple name is already defined by the single-type-import of SellerModuleProcessor
+import com.eshop.app.seller.application.processor.SellerModuleProcessor;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\KycProcessor.java:17: error: 
+reference to SellerModuleProcessor is ambiguous
+public class KycProcessor implements SellerModuleProcessor {
+                                     ^
+  both interface com.eshop.app.processor.SellerModuleProcessor in com.eshop.app.processor and interface 
+com.eshop.app.seller.application.processor.SellerModuleProcessor in com.eshop.app.seller.application.processor match
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\KycProcessor.java:3: error: 
+KycProcessor is already defined in this compilation unit
+import com.eshop.app.processor.impl.KycProcessor;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\KycProcessor.java:5: error: a type 
+with the same simple name is already defined by the single-type-import of SellerModuleProcessor
+import com.eshop.app.seller.application.processor.SellerModuleProcessor;
+^
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\application\service\KeycloakAuthService.java:3: error: cannot 
+find symbol
+import com.eshop.app.core.infrastructure.config.security.KeycloakConfig;
+                                                        ^
+  symbol:   class KeycloakConfig
+  location: package com.eshop.app.core.infrastructure.config.security
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\application\service\KeycloakAuthService.java:22: error: cannot 
+find symbol
+import org.springframework.core.ParametermzedTypeReference;
+                               ^
+  symbol:   class ParametermzedTypeReference
+  location: package org.springframework.core
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\application\service\KeycloakAuthService.java:31: error: cannot 
+find symbol
+    private final KeycloakConfig keycloakConfig;
+                  ^
+  symbol:   class KeycloakConfig
+  location: class KeycloakAuthService
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\UserController.java:7: error: cannot find symbol
+import com.eshop.app.core.exception.BusmnessException;
+                                   ^
+  symbol:   class BusmnessException
+  location: package com.eshop.app.core.exception
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\UserController.java:66: error: cannot find symbol
+    private final com.eshop.app.user.application.port.in.IdentmtySyncUseCase identitySyncUseCase;
+                                                        ^
+  symbol:   class IdentmtySyncUseCase
+  location: package com.eshop.app.user.application.port.in
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\UserController.java:424: error: cannot find 
+symbol
+    private vomd validateSortFmeld(String sortBy) {
+            ^
+  symbol:   class vomd
+  location: class UserController
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:100: error: 
+cannot find symbol
+            @Parameter(hmdden = true) Pageable pageable,
+                       ^
+  symbol:   method hmdden()
+  location: @interface Parameter
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:63: error: cannot 
+find symbol
+        log.info("Γ£à ADMIN authenticated | email={}", principal.getEmail());
+        ^
+  symbol:   variable log
+  location: class AdminDashboardController
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:63: error: cannot 
+find symbol
+        log.info("Γ£à ADMIN authenticated | email={}", principal.getEmail());
+                                                              ^
+  symbol:   method getEmail()
+  location: variable principal of type PrincipalDetails
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:70: error: cannot 
+find symbol
+            log.error("Async admin dashboard fetch failed: {}", e.getMessage());
+            ^
+  symbol:   variable log
+  location: class AdminDashboardController
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:85: error: cannot 
+find symbol
+        log.info("Admin statistics requested by user: {}", jwt.getClaimAsString("email"));
+        ^
+  symbol:   variable log
+  location: class AdminDashboardController
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:103: error: 
+cannot find symbol
+        log.info("Daily sales analytics requested for {} days by user: {}", days, principal.getEmail());
+        ^
+  symbol:   variable log
+  location: class AdminDashboardController
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:103: error: 
+cannot find symbol
+        log.info("Daily sales analytics requested for {} days by user: {}", days, principal.getEmail());
+                                                                                           ^
+  symbol:   method getEmail()
+  location: variable principal of type PrincipalDetails
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:110: error: 
+cannot find symbol
+            log.error("Famled to fetch daily sales data: {}", e.getMessage());
+            ^
+  symbol:   variable log
+  location: class AdminDashboardController
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:126: error: 
+cannot find symbol
+        log.info("Revenue by category requested by user: {}", principal.getEmail());
+        ^
+  symbol:   variable log
+  location: class AdminDashboardController
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:126: error: 
+cannot find symbol
+        log.info("Revenue by category requested by user: {}", principal.getEmail());
+                                                                       ^
+  symbol:   method getEmail()
+  location: variable principal of type PrincipalDetails
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:141: error: 
+cannot find symbol
+        log.warn("Cache clear requested by admin: {} for cache: {}", principal.getEmail(), cacheName);
+        ^
+  symbol:   variable log
+  location: class AdminDashboardController
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:141: error: 
+cannot find symbol
+        log.warn("Cache clear requested by admin: {} for cache: {}", principal.getEmail(), cacheName);
+                                                                              ^
+  symbol:   method getEmail()
+  location: variable principal of type PrincipalDetails
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\domain\entity\User.java:79: error: cannot find symbol
+        if (sellerProfile != null && sellerProfile.getStores() != null && !sellerProfile.getStores().isEmpty()) {
+                                                  ^
+  symbol:   method getStores()
+  location: variable sellerProfile of type SellerProfile
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\domain\entity\User.java:79: error: cannot find symbol
+        if (sellerProfile != null && sellerProfile.getStores() != null && !sellerProfile.getStores().isEmpty()) {
+                                                                                        ^
+  symbol:   method getStores()
+  location: variable sellerProfile of type SellerProfile
+G:\Project\eshop_back\src\main\java\com\eshop\app\user\domain\entity\User.java:80: error: cannot find symbol
+            return sellerProfile.getStores().iterator().next();
+                                ^
+  symbol:   method getStores()
+  location: variable sellerProfile of type SellerProfile
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1082: error: cannot find symbol
+            if (category.getSlug() != null && !category.getSlug().isBlank()) {
+                        ^
+  symbol:   method getSlug()
+  location: variable category of type Category
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1082: error: cannot find symbol
+            if (category.getSlug() != null && !category.getSlug().isBlank()) {
+                                                       ^
+  symbol:   method getSlug()
+  location: variable category of type Category
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1083: error: cannot find symbol
+                prefix = category.getSlug().toUpperCase().replaceAll("[^A-Z0-9]", "").substring(0,
+                                 ^
+  symbol:   method getSlug()
+  location: variable category of type Category
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1084: error: cannot find symbol
+                        Math.min(3, category.getSlug().length()));
+                                            ^
+  symbol:   method getSlug()
+  location: variable category of type Category
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1430: error: cannot find symbol
+            if (review.isApproved() && review.getRating() != null) {
+                                             ^
+  symbol:   method getRating()
+  location: variable review of type ProductReview
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1431: error: cannot find symbol
+                int rating = review.getRating();
+                                   ^
+  symbol:   method getRating()
+  location: variable review of type ProductReview
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1460: error: cannot find symbol
+        review.setProduct(this);
+              ^
+  symbol:   method setProduct(Product)
+  location: variable review of type ProductReview
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1469: error: cannot find symbol
+            review.setProduct(null);
+                  ^
+  symbol:   method setProduct(<null>)
+  location: variable review of type ProductReview
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1480: error: cannot find symbol
+        if (tag.getProducts() != null) {
+               ^
+  symbol:   method getProducts()
+  location: variable tag of type Tag
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1481: error: cannot find symbol
+            tag.getProducts().add(this);
+               ^
+  symbol:   method getProducts()
+  location: variable tag of type Tag
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1490: error: cannot find symbol
+            if (tag.getProducts() != null) {
+                   ^
+  symbol:   method getProducts()
+  location: variable tag of type Tag
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1491: error: cannot find symbol
+                tag.getProducts().remove(this);
+                   ^
+  symbol:   method getProducts()
+  location: variable tag of type Tag
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1514: error: cannot find symbol
+        variant.setParentProduct(this);
+               ^
+  symbol:   method setParentProduct(Product)
+  location: variable variant of type Product
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1522: error: cannot find symbol
+            variant.setParentProduct(null);
+                   ^
+  symbol:   method setParentProduct(<null>)
+  location: variable variant of type Product
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1532: error: cannot find symbol
+        image.setProduct(this);
+             ^
+  symbol:   method setProduct(Product)
+  location: variable image of type ProductImage
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1543: error: cannot find symbol
+            image.setProduct(null);
+                 ^
+  symbol:   method setProduct(<null>)
+  location: variable image of type ProductImage
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1555: error: cannot find symbol
+        if (!Objects.equals(this.id, related.getId())) {
+                                            ^
+  symbol:   method getId()
+  location: variable related of type Product
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1565: error: cannot find symbol
+        if (!Objects.equals(this.id, crossSell.getId())) {
+                                              ^
+  symbol:   method getId()
+  location: variable crossSell of type Product
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1575: error: cannot find symbol
+        if (!Objects.equals(this.id, upSell.getId())) {
+                                           ^
+  symbol:   method getId()
+  location: variable upSell of type Product
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1787: error: cannot find symbol
+        return Product.builder()
+                      ^
+  symbol:   method builder()
+  location: class Product
+G:\Project\eshop_back\src\main\java\com\eshop\app\order\domain\entity\Order.java:165: error: cannot find symbol
+        item.setOrder(this);
+            ^
+  symbol:   method setOrder(Order)
+  location: variable item of type OrderItem
+G:\Project\eshop_back\src\main\java\com\eshop\app\order\domain\entity\Order.java:171: error: invalid method reference
+                .map(OrderItem::getSubtotal)
+                     ^
+  cannot find symbol
+    symbol:   method getSubtotal()
+    location: class OrderItem
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\ProductImage.java:125: error: cannot find 
+symbol
+            this.url = imageUrl;
+                ^
+  symbol: variable url
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\ProductImage.java:134: error: cannot find 
+symbol
+            return sortOrder(displayOrder);
+                   ^
+  symbol:   method sortOrder(Integer)
+  location: class ProductImageBuilder
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Category.java:114: error: cannot find symbol
+        child.setParent(this);
+             ^
+  symbol:   method setParent(Category)
+  location: variable child of type Category
+G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Category.java:116: error: cannot find symbol
+            child.setDepth(this.depth + 1);
+                 ^
+  symbol:   method setDepth(int)
+  location: variable child of type Category
+G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\KeycloakAdminController.java:35: error: cannot 
+find symbol
+        log.info("Admin creating user with email: {}", request.getEmail());
+        ^
+  symbol:   variable log
+  location: class KeycloakAdminController
+100 errors
+
+> Task :compileJava FAILED
+
+[Incubating] Problems report is available at: file:///G:/Project/eshop_back/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler output below.
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\audit\Auditable.java:6: error: a type with the same simple 
+name is already defined by the single-type-import of AuditAction
+  import com.eshop.app.enums.AuditAction;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\processor\impl\BusinessDetailsProcessor.java:8: error: a type with 
+the same simple name is already defined by the single-type-import of SellerIdentityType
+  import com.eshop.app.enums.SellerIdentityType;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\processor\impl\FarmerProcessor.java:8: error: a type with the same 
+simple name is already defined by the single-type-import of SellerBusinessType
+  import com.eshop.app.enums.SellerBusinessType;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\BrandSeeder.java:13: error: a type with the same 
+simple name is already defined by the single-type-import of Order
+  import org.springframework.core.annotation.Order;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\CartSeeder.java:7: error: a type with the same simple 
+name is already defined by the single-type-import of UserRole
+  import com.eshop.app.enums.UserRole;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\CartSeeder.java:12: error: a type with the same 
+simple name is already defined by the single-type-import of Order
+  import org.springframework.core.annotation.Order;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\CategorySeeder.java:21: error: a type with the same 
+simple name is already defined by the single-type-import of Order
+  import org.springframework.core.annotation.Order;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\PostalCodeSeeder.java:29: error: a type with the same 
+simple name is already defined by the single-type-import of Order
+  import org.springframework.core.annotation.Order;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\StoreSeeder.java:19: error: a type with the same 
+simple name is already defined by the single-type-import of Order
+  import org.springframework.core.annotation.Order;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\TagSeeder.java:12: error: a type with the same simple 
+name is already defined by the single-type-import of Order
+  import org.springframework.core.annotation.Order;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:29: error: a type with the same 
+simple name is already defined by the single-type-import of Order
+  import org.springframework.core.annotation.Order;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\BankProcessor.java:5: error: a 
+type with the same simple name is already defined by the single-type-import of SellerModuleProcessor
+  import com.eshop.app.seller.application.processor.SellerModuleProcessor;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\BusinessDetailsProcessor.java:5: 
+error: a type with the same simple name is already defined by the single-type-import of SellerModuleProcessor
+  import com.eshop.app.seller.application.processor.SellerModuleProcessor;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\FarmerProcessor.java:5: error: a 
+type with the same simple name is already defined by the single-type-import of SellerModuleProcessor
+  import com.eshop.app.seller.application.processor.SellerModuleProcessor;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\KycProcessor.java:5: error: a 
+type with the same simple name is already defined by the single-type-import of SellerModuleProcessor
+  import com.eshop.app.seller.application.processor.SellerModuleProcessor;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\audit\Auditable.java:41: error: reference to AuditAction is 
+ambiguous
+      AuditAction action();
+      ^
+    both enum com.eshop.app.inventory.shared.domain.enums.AuditAction in com.eshop.app.inventory.shared.domain.enums 
+and enum com.eshop.app.enums.AuditAction in com.eshop.app.enums match
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\BrandSeeder.java:24: error: reference to Order is 
+ambiguous
+  @Order(3)
+   ^
+    both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\CartSeeder.java:25: error: reference to Order is 
+ambiguous
+  @Order(7)
+   ^
+    both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\CategorySeeder.java:81: error: reference to Order is 
+ambiguous
+  @Order(2)
+   ^
+    both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\PostalCodeSeeder.java:50: error: reference to Order 
+is ambiguous
+  @Order(0)
+   ^
+    both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\StoreSeeder.java:34: error: reference to Order is 
+ambiguous
+  @Order(5)
+   ^
+    both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\TagSeeder.java:23: error: reference to Order is 
+ambiguous
+  @Order(4)
+   ^
+    both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:43: error: reference to Order is 
+ambiguous
+  @Order(1)
+   ^
+    both class com.eshop.app.order.domain.entity.Order in com.eshop.app.order.domain.entity and class 
+org.springframework.core.annotation.Order in org.springframework.core.annotation match
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\BankProcessor.java:21: error: 
+reference to SellerModuleProcessor is ambiguous
+  public class BankProcessor implements SellerModuleProcessor {
+                                        ^
+    both interface com.eshop.app.processor.SellerModuleProcessor in com.eshop.app.processor and interface 
+com.eshop.app.seller.application.processor.SellerModuleProcessor in com.eshop.app.seller.application.processor match
+  
+G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\BusinessDetailsProcessor.java:18: 
+error: reference to SellerModuleProcessor is ambiguous
+  public class BusinessDetailsProcessor implements SellerModuleProcessor {
+                                                   ^
+    both interface com.eshop.app.processor.SellerModuleProcessor in com.eshop.app.processor and interface 
+com.eshop.app.seller.application.processor.SellerModuleProcessor in com.eshop.app.seller.application.processor match
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\FarmerProcessor.java:18: error: 
+reference to SellerModuleProcessor is ambiguous
+  public class FarmerProcessor implements SellerModuleProcessor {
+                                          ^
+    both interface com.eshop.app.processor.SellerModuleProcessor in com.eshop.app.processor and interface 
+com.eshop.app.seller.application.processor.SellerModuleProcessor in com.eshop.app.seller.application.processor match
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\KycProcessor.java:17: error: 
+reference to SellerModuleProcessor is ambiguous
+  public class KycProcessor implements SellerModuleProcessor {
+                                       ^
+    both interface com.eshop.app.processor.SellerModuleProcessor in com.eshop.app.processor and interface 
+com.eshop.app.seller.application.processor.SellerModuleProcessor in com.eshop.app.seller.application.processor match
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\BankProcessor.java:3: error: 
+BankProcessor is already defined in this compilation unit
+  import com.eshop.app.processor.impl.BankProcessor;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\SellerModuleProcessor.java:2: error: 
+SellerModuleProcessor is already defined in this compilation unit
+  import com.eshop.app.processor.SellerModuleProcessor;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\BusinessDetailsProcessor.java:3: 
+error: BusinessDetailsProcessor is already defined in this compilation unit
+  import com.eshop.app.processor.impl.BusinessDetailsProcessor;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\FarmerProcessor.java:3: error: 
+FarmerProcessor is already defined in this compilation unit
+  import com.eshop.app.processor.impl.FarmerProcessor;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\processor\impl\KycProcessor.java:3: error: 
+KycProcessor is already defined in this compilation unit
+  import com.eshop.app.processor.impl.KycProcessor;
+  ^
+  G:\Project\eshop_back\src\main\java\com\eshop\app\order\domain\entity\Order.java:171: error: invalid method reference
+                  .map(OrderItem::getSubtotal)
+                       ^
+    cannot find symbol
+      symbol:   method getSubtotal()
+      location: class OrderItem
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\application\service\KeycloakAdminService.java:3: error: 
+cannot find symbol
+  import com.eshop.app.core.infrastructure.config.security.KeycloakConfig;
+                                                          ^
+    symbol:   class KeycloakConfig
+    location: package com.eshop.app.core.infrastructure.config.security
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\application\service\KeycloakAdminService.java:21: error: 
+cannot find symbol
+  import org.springframework.core.ParametermzedTypeReference;
+                                 ^
+    symbol:   class ParametermzedTypeReference
+    location: package org.springframework.core
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\application\service\KeycloakAdminService.java:29: error: 
+cannot find symbol
+      private final KeycloakConfig keycloakConfig;
+                    ^
+    symbol:   class KeycloakConfig
+    location: class KeycloakAdminService
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\api\controller\AdminCategoryController.java:3: error: 
+cannot find symbol
+  import com.eshop.app.catalog.api.request.RevmewRequest;
+                                          ^
+    symbol:   class RevmewRequest
+    location: package com.eshop.app.catalog.api.request
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\api\controller\AdminCategoryController.java:41: error: 
+cannot find symbol
+              @RequestBody RevmewRequest dto,
+                           ^
+    symbol:   class RevmewRequest
+    location: class AdminCategoryController
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\api\controller\CategoryController.java:5: error: cannot 
+find symbol
+  import com.eshop.app.core.util.PagmnatmonUtils;
+                                ^
+    symbol:   class PagmnatmonUtils
+    location: package com.eshop.app.core.util
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\api\controller\CategoryController.java:256: error: cannot 
+find symbol
+      private vomd validateSortFmeld(String sortBy) {
+              ^
+    symbol:   class vomd
+    location: class CategoryController
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\application\service\impl\HomeUseCaseImpl.java:19: error: 
+cannot find symbol
+  import java.math.BigDeoimal;
+                  ^
+    symbol:   class BigDeoimal
+    location: package java.math
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\application\service\impl\HomeUseCaseImpl.java:20: error: 
+cannot find symbol
+  import java.time.LooalDate;
+                  ^
+    symbol:   class LooalDate
+    location: package java.time
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\application\service\impl\HomeUseCaseImpl.java:21: error: 
+cannot find symbol
+  import java.time.LooalDateTime;
+                  ^
+    symbol:   class LooalDateTime
+    location: package java.time
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\application\service\impl\HomeUseCaseImpl.java:22: error: 
+cannot find symbol
+  import java.time.LooalTime;
+                  ^
+    symbol:   class LooalTime
+    location: package java.time
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\infrastructure\config\security\oauth\AuthenticationInfoService
+.java:107: error: cannot find symbol
+      public TokenInfoResponse buildTokenInfo(Jwt jwt, Authentication authentication) {
+             ^
+    symbol:   class TokenInfoResponse
+    location: class AuthenticationInfoService
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\jobs\CacheWarmingJob.java:3: error: cannot find symbol
+  import com.eshop.app.catalog.application.service.ProductService;
+                                                  ^
+    symbol:   class ProductService
+    location: package com.eshop.app.catalog.application.service
+  G:\Project\eshop_back\src\main\java\com\eshop\app\core\jobs\CacheWarmingJob.java:40: error: cannot find symbol
+      private final ProductService productService;
+                    ^
+    symbol:   class ProductService
+    location: class CacheWarmingJob
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\StoreSeeder.java:40: error: cannot find symbol
+      private final com.eshop.app.user.domain.entity.SellerProfileRepository sellerProfileRepository;
+                                                    ^
+    symbol:   class SellerProfileRepository
+    location: package com.eshop.app.user.domain.entity
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:49: error: cannot find symbol
+      private final com.eshop.app.user.domain.entity.UserAddressRepository userAddressRepository;
+                                                    ^
+    symbol:   class UserAddressRepository
+    location: package com.eshop.app.user.domain.entity
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:51: error: cannot find symbol
+      private final com.eshop.app.seller.domain.entity.SellerKYCRepository sellerKYCRepository;
+                                                      ^
+    symbol:   class SellerKYCRepository
+    location: package com.eshop.app.seller.domain.entity
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:54: error: cannot find symbol
+      private final com.eshop.app.seller.domain.entity.SellerWholesaleConfigRepository sellerWholesaleConfigRepository;
+                                                      ^
+    symbol:   class SellerWholesaleConfigRepository
+    location: package com.eshop.app.seller.domain.entity
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seed\seeders\UserSeeder.java:55: error: cannot find symbol
+      private final com.eshop.app.seller.domain.entity.SellerBankAccountRepository sellerBankAccountRepository;
+                                                      ^
+    symbol:   class SellerBankAccountRepository
+    location: package com.eshop.app.seller.domain.entity
+  G:\Project\eshop_back\src\main\java\com\eshop\app\seller\application\mapper\SellerMapper.java:102: error: cannot 
+find symbol
+              @MappingTarget SellerProfileResponse.SellerProfileResponseBuilder response) {
+                                                  ^
+    symbol:   class SellerProfileResponseBuilder
+    location: class SellerProfileResponse
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\application\service\KeycloakAuthService.java:3: error: cannot 
+find symbol
+  import com.eshop.app.core.infrastructure.config.security.KeycloakConfig;
+                                                          ^
+    symbol:   class KeycloakConfig
+    location: package com.eshop.app.core.infrastructure.config.security
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\application\service\KeycloakAuthService.java:22: error: 
+cannot find symbol
+  import org.springframework.core.ParametermzedTypeReference;
+                                 ^
+    symbol:   class ParametermzedTypeReference
+    location: package org.springframework.core
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\application\service\KeycloakAuthService.java:31: error: 
+cannot find symbol
+      private final KeycloakConfig keycloakConfig;
+                    ^
+    symbol:   class KeycloakConfig
+    location: class KeycloakAuthService
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\UserController.java:7: error: cannot find 
+symbol
+  import com.eshop.app.core.exception.BusmnessException;
+                                     ^
+    symbol:   class BusmnessException
+    location: package com.eshop.app.core.exception
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\UserController.java:66: error: cannot find 
+symbol
+      private final com.eshop.app.user.application.port.in.IdentmtySyncUseCase identitySyncUseCase;
+                                                          ^
+    symbol:   class IdentmtySyncUseCase
+    location: package com.eshop.app.user.application.port.in
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\api\controller\UserController.java:424: error: cannot find 
+symbol
+      private vomd validateSortFmeld(String sortBy) {
+              ^
+    symbol:   class vomd
+    location: class UserController
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:63: error: 
+cannot find symbol
+          log.info("Γ£à ADMIN authenticated | email={}", principal.getEmail());
+          ^
+    symbol:   variable log
+    location: class AdminDashboardController
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:70: error: 
+cannot find symbol
+              log.error("Async admin dashboard fetch failed: {}", e.getMessage());
+              ^
+    symbol:   variable log
+    location: class AdminDashboardController
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:85: error: 
+cannot find symbol
+          log.info("Admin statistics requested by user: {}", jwt.getClaimAsString("email"));
+          ^
+    symbol:   variable log
+    location: class AdminDashboardController
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:103: error: 
+cannot find symbol
+          log.info("Daily sales analytics requested for {} days by user: {}", days, principal.getEmail());
+          ^
+    symbol:   variable log
+    location: class AdminDashboardController
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:110: error: 
+cannot find symbol
+              log.error("Famled to fetch daily sales data: {}", e.getMessage());
+              ^
+    symbol:   variable log
+    location: class AdminDashboardController
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:126: error: 
+cannot find symbol
+          log.info("Revenue by category requested by user: {}", principal.getEmail());
+          ^
+    symbol:   variable log
+    location: class AdminDashboardController
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:141: error: 
+cannot find symbol
+          log.warn("Cache clear requested by admin: {} for cache: {}", principal.getEmail(), cacheName);
+          ^
+    symbol:   variable log
+    location: class AdminDashboardController
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\KeycloakAdminController.java:35: error: 
+cannot find symbol
+          log.info("Admin creating user with email: {}", request.getEmail());
+          ^
+    symbol:   variable log
+    location: class KeycloakAdminController
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\ProductImage.java:125: error: cannot find 
+symbol
+              this.url = imageUrl;
+                  ^
+    symbol: variable url
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:100: error: 
+cannot find symbol
+              @Parameter(hmdden = true) Pageable pageable,
+                         ^
+    symbol:   method hmdden()
+    location: @interface Parameter
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:63: error: 
+cannot find symbol
+          log.info("Γ£à ADMIN authenticated | email={}", principal.getEmail());
+                                                                ^
+    symbol:   method getEmail()
+    location: variable principal of type PrincipalDetails
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:103: error: 
+cannot find symbol
+          log.info("Daily sales analytics requested for {} days by user: {}", days, principal.getEmail());
+                                                                                             ^
+    symbol:   method getEmail()
+    location: variable principal of type PrincipalDetails
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:126: error: 
+cannot find symbol
+          log.info("Revenue by category requested by user: {}", principal.getEmail());
+                                                                         ^
+    symbol:   method getEmail()
+    location: variable principal of type PrincipalDetails
+  G:\Project\eshop_back\src\main\java\com\eshop\app\admin\api\controller\AdminDashboardController.java:141: error: 
+cannot find symbol
+          log.warn("Cache clear requested by admin: {} for cache: {}", principal.getEmail(), cacheName);
+                                                                                ^
+    symbol:   method getEmail()
+    location: variable principal of type PrincipalDetails
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\domain\entity\User.java:79: error: cannot find symbol
+          if (sellerProfile != null && sellerProfile.getStores() != null && !sellerProfile.getStores().isEmpty()) {
+                                                    ^
+    symbol:   method getStores()
+    location: variable sellerProfile of type SellerProfile
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\domain\entity\User.java:79: error: cannot find symbol
+          if (sellerProfile != null && sellerProfile.getStores() != null && !sellerProfile.getStores().isEmpty()) {
+                                                                                          ^
+    symbol:   method getStores()
+    location: variable sellerProfile of type SellerProfile
+  G:\Project\eshop_back\src\main\java\com\eshop\app\user\domain\entity\User.java:80: error: cannot find symbol
+              return sellerProfile.getStores().iterator().next();
+                                  ^
+    symbol:   method getStores()
+    location: variable sellerProfile of type SellerProfile
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1082: error: cannot find symbol
+              if (category.getSlug() != null && !category.getSlug().isBlank()) {
+                          ^
+    symbol:   method getSlug()
+    location: variable category of type Category
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1082: error: cannot find symbol
+              if (category.getSlug() != null && !category.getSlug().isBlank()) {
+                                                         ^
+    symbol:   method getSlug()
+    location: variable category of type Category
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1083: error: cannot find symbol
+                  prefix = category.getSlug().toUpperCase().replaceAll("[^A-Z0-9]", "").substring(0,
+                                   ^
+    symbol:   method getSlug()
+    location: variable category of type Category
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1084: error: cannot find symbol
+                          Math.min(3, category.getSlug().length()));
+                                              ^
+    symbol:   method getSlug()
+    location: variable category of type Category
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1430: error: cannot find symbol
+              if (review.isApproved() && review.getRating() != null) {
+                                               ^
+    symbol:   method getRating()
+    location: variable review of type ProductReview
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1431: error: cannot find symbol
+                  int rating = review.getRating();
+                                     ^
+    symbol:   method getRating()
+    location: variable review of type ProductReview
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1460: error: cannot find symbol
+1 actionable task: 1 executed
+          review.setProduct(this);
+                ^
+    symbol:   method setProduct(Product)
+    location: variable review of type ProductReview
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1469: error: cannot find symbol
+              review.setProduct(null);
+                    ^
+    symbol:   method setProduct(<null>)
+    location: variable review of type ProductReview
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1480: error: cannot find symbol
+          if (tag.getProducts() != null) {
+                 ^
+    symbol:   method getProducts()
+    location: variable tag of type Tag
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1481: error: cannot find symbol
+              tag.getProducts().add(this);
+                 ^
+    symbol:   method getProducts()
+    location: variable tag of type Tag
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1490: error: cannot find symbol
+              if (tag.getProducts() != null) {
+                     ^
+    symbol:   method getProducts()
+    location: variable tag of type Tag
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1491: error: cannot find symbol
+                  tag.getProducts().remove(this);
+                     ^
+    symbol:   method getProducts()
+    location: variable tag of type Tag
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1514: error: cannot find symbol
+          variant.setParentProduct(this);
+                 ^
+    symbol:   method setParentProduct(Product)
+    location: variable variant of type Product
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1522: error: cannot find symbol
+              variant.setParentProduct(null);
+                     ^
+    symbol:   method setParentProduct(<null>)
+    location: variable variant of type Product
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1532: error: cannot find symbol
+          image.setProduct(this);
+               ^
+    symbol:   method setProduct(Product)
+    location: variable image of type ProductImage
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1543: error: cannot find symbol
+              image.setProduct(null);
+                   ^
+    symbol:   method setProduct(<null>)
+    location: variable image of type ProductImage
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1555: error: cannot find symbol
+          if (!Objects.equals(this.id, related.getId())) {
+                                              ^
+    symbol:   method getId()
+    location: variable related of type Product
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1565: error: cannot find symbol
+          if (!Objects.equals(this.id, crossSell.getId())) {
+                                                ^
+    symbol:   method getId()
+    location: variable crossSell of type Product
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1575: error: cannot find symbol
+          if (!Objects.equals(this.id, upSell.getId())) {
+                                             ^
+    symbol:   method getId()
+    location: variable upSell of type Product
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Product.java:1787: error: cannot find symbol
+          return Product.builder()
+                        ^
+    symbol:   method builder()
+    location: class Product
+  G:\Project\eshop_back\src\main\java\com\eshop\app\order\domain\entity\Order.java:165: error: cannot find symbol
+          item.setOrder(this);
+              ^
+    symbol:   method setOrder(Order)
+    location: variable item of type OrderItem
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\ProductImage.java:134: error: cannot find 
+symbol
+              return sortOrder(displayOrder);
+                     ^
+    symbol:   method sortOrder(Integer)
+    location: class ProductImageBuilder
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Category.java:114: error: cannot find symbol
+          child.setParent(this);
+               ^
+    symbol:   method setParent(Category)
+    location: variable child of type Category
+  G:\Project\eshop_back\src\main\java\com\eshop\app\catalog\domain\entity\Category.java:116: error: cannot find symbol
+              child.setDepth(this.depth + 1);
+                   ^
+    symbol:   method setDepth(int)
+    location: variable child of type Category
+  100 errors
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to generate a Build Scan (powered by Develocity).
+
+BUILD FAILED in 11s

@@ -1,6 +1,6 @@
 package com.eshop.app.seed.provider;
 
-import com.eshop.app.config.properties.SeedProperties;
+import com.eshop.app.core.infrastructure.config.properties.SeedProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Slf4j
 @Component
-@Profile({"dev", "test", "local"})
+@Profile({ "dev", "test", "local" })
 @RequiredArgsConstructor
 public class JsonFileUserDataProvider implements UserDataProvider {
 
@@ -39,9 +39,9 @@ public class JsonFileUserDataProvider implements UserDataProvider {
             }
 
             List<SeedProperties.UserSeed> users = objectMapper.readValue(
-                resource.getInputStream(), 
-                new TypeReference<List<SeedProperties.UserSeed>>() {}
-            );
+                    resource.getInputStream(),
+                    new TypeReference<List<SeedProperties.UserSeed>>() {
+                    });
 
             // Resolve placeholders for sensitive fields (like passwords)
             users.forEach(user -> {

@@ -1,6 +1,6 @@
 package com.eshop.app.core.outbox;
+import com.eshop.app.core.exception.base.BusinessException;
 
-import com.eshop.app.exception.BusinessException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -68,3 +68,4 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
         return true;
     }
 }
+

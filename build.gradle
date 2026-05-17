@@ -247,13 +247,18 @@ def loadEnvVariables(task) {
 }
 
 tasks.named('bootRun').configure {
-    loadEnvVariables(it)
-    println "Γ£à Loaded environment variables from .env for bootRun"
+    if (file(".env").exists()) {
+        loadEnvVariables(it)
+        println "✅ Loaded environment variables from .env for bootRun"
+    } else {
+        println "⚠️ .env file not found. System environment variables will be used."
+    }
 }
 
 tasks.named('test').configure {
-    loadEnvVariables(it)
-    // println "Γ£à Loaded environment variables from .env for test"
+    if (file(".env").exists()) {
+        loadEnvVariables(it)
+    }
 }
 
 // Prevent BootJar failure on duplicate META-INF entries (e.g. spring-configuration-metadata.json)

@@ -1,8 +1,9 @@
 package com.eshop.app.core.audit;
 
-import com.eshop.app.entity.AuditLog;
-import com.eshop.app.repository.AuditLogRepository;
-import com.eshop.app.util.SecurityUtils;
+import com.eshop.app.inventory.domain.entity.AuditLog;
+import com.eshop.app.inventory.domain.repository.AuditLogRepository;
+
+import com.eshop.app.core.util.SecurityUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +22,13 @@ import java.time.LocalDateTime;
 /**
  * AOP Aspect for automatic audit trail generation.
  *
- * <p>Intercepts any method annotated with {@link Auditable} and asynchronously
- * persists a complete audit record (who, what, when, source IP, success/failure).
+ * <p>
+ * Intercepts any method annotated with {@link Auditable} and asynchronously
+ * persists a complete audit record (who, what, when, source IP,
+ * success/failure).
  *
- * <p>Part of the Enterprise Core Audit Layer. All sensitive administrative,
+ * <p>
+ * Part of the Enterprise Core Audit Layer. All sensitive administrative,
  * financial, and seller operations MUST use {@link Auditable} to maintain
  * a tamper-evident compliance trail.
  *
@@ -79,7 +83,8 @@ public class AuditLoggingAspect {
             boolean success,
             String errorMessage) {
 
-        if (auditable == null) return;
+        if (auditable == null)
+            return;
 
         try {
             AuditLog auditLog = buildAuditLog(joinPoint, auditable, result, success, errorMessage);
@@ -162,8 +167,8 @@ public class AuditLoggingAspect {
 
     private HttpServletRequest getCurrentHttpRequest() {
         try {
-            ServletRequestAttributes attributes =
-                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
+                    .getRequestAttributes();
             return attributes != null ? attributes.getRequest() : null;
         } catch (Exception e) {
             return null;
@@ -171,10 +176,11 @@ public class AuditLoggingAspect {
     }
 
     /**
-     * Resolves real client IP, respecting reverse-proxy headers (X-Forwarded-For, X-Real-IP).
+     * Resolves real client IP, respecting reverse-proxy headers (X-Forwarded-For,
+     * X-Real-IP).
      */
     private String resolveClientIp(HttpServletRequest request) {
-        for (String header : new String[]{"X-Forwarded-For", "X-Real-IP"}) {
+        for (String header : new String[] { "X-Forwarded-For", "X-Real-IP" }) {
             String ip = request.getHeader(header);
             if (ip != null && !ip.isBlank() && !"unknown".equalsIgnoreCase(ip)) {
                 return ip.contains(",") ? ip.split(",")[0].trim() : ip;

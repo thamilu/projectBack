@@ -22,11 +22,11 @@ public abstract class BaseSeeder<T, C> implements Seeder<T, C> {
             log.info("✅ {} completed: {} entities created", name(), result != null ? result.size() : 0);
             return result != null ? result : Collections.emptyList();
         } catch (DataAccessException e) {
-            log.error("❌ {} failed due to database error: {}", name(), e.getMessage());
+            log.error("❌ {} failed due to database error: {}", name(), e.getMessage(), e);
             throw new SeedingException("Database error in " + name() + ": " + e.getMessage(), e, SeedingException.SeedPhase.ORCHESTRATION);
         } catch (Exception e) {
-            log.error("❌ {} failed: {}", name(), e.getMessage());
-            throw new SeedingException("Unexpected error in " + name() + ": " + e.getMessage(), SeedingException.SeedPhase.ORCHESTRATION);
+            log.error("❌ {} failed: {}", name(), e.getMessage(), e);
+            throw new SeedingException("Unexpected error in " + name() + ": " + e.getMessage(), e, SeedingException.SeedPhase.ORCHESTRATION);
         }
     }
 

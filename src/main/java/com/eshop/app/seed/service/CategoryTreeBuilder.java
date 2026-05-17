@@ -1,6 +1,6 @@
 package com.eshop.app.seed.service;
+import com.eshop.app.catalog.domain.entity.Category;
 
-import com.eshop.app.entity.Category;
 import com.eshop.app.seed.model.CategoryNode;
 import com.github.slugify.Slugify;
 import lombok.RequiredArgsConstructor;
@@ -133,9 +133,9 @@ public class CategoryTreeBuilder {
      * 
      * <p>Examples:
      * <ul>
-     *   <li>{@code "Fashion & Apparel"} → {@code "fashion-apparel"}</li>
-     *   <li>{@code "Men"} (under Fashion) → {@code "fashion-apparel-men"}</li>
-     *   <li>{@code "T-Shirts"} (under Men) → {@code "fashion-apparel-men-t-shirts"}</li>
+     *   <li>{@code "Fashion & Apparel"} â†’ {@code "fashion-apparel"}</li>
+     *   <li>{@code "Men"} (under Fashion) â†’ {@code "fashion-apparel-men"}</li>
+     *   <li>{@code "T-Shirts"} (under Men) â†’ {@code "fashion-apparel-men-t-shirts"}</li>
      * </ul>
      *
      * @param name the category name

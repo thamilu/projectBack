@@ -1,6 +1,11 @@
 package com.eshop.app.seed.core;
 
-import com.eshop.app.entity.*;
+import com.eshop.app.user.domain.entity.User;
+import com.eshop.app.catalog.domain.entity.Category;
+import com.eshop.app.catalog.domain.entity.Brand;
+import com.eshop.app.catalog.domain.entity.Tag;
+import com.eshop.app.store.domain.entity.Store;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -36,8 +41,8 @@ public class SeederContext {
         Category category = categories.get(name);
         if (category == null) {
             throw new com.eshop.app.seed.exception.SeedingException(
-                "Missing required dependency: Category '" + name + "'. Ensure CategorySeeder runs first.", 
-                com.eshop.app.seed.exception.SeedingException.SeedPhase.CATEGORY_SEEDING);
+                    "Missing required dependency: Category '" + name + "'. Ensure CategorySeeder runs first.",
+                    com.eshop.app.seed.exception.SeedingException.SeedPhase.CATEGORY_SEEDING);
         }
         return category;
     }
@@ -46,8 +51,8 @@ public class SeederContext {
         Store store = stores.get(name);
         if (store == null) {
             throw new com.eshop.app.seed.exception.SeedingException(
-                "Missing required dependency: Store '" + name + "'. Ensure StoreSeeder runs before products.", 
-                com.eshop.app.seed.exception.SeedingException.SeedPhase.STORE_SEEDING);
+                    "Missing required dependency: Store '" + name + "'. Ensure StoreSeeder runs before products.",
+                    com.eshop.app.seed.exception.SeedingException.SeedPhase.STORE_SEEDING);
         }
         return store;
     }
@@ -56,8 +61,8 @@ public class SeederContext {
         User user = users.get(email);
         if (user == null) {
             throw new com.eshop.app.seed.exception.SeedingException(
-                "Missing required dependency: User '" + email + "'. Ensure UserSeeder runs first.", 
-                com.eshop.app.seed.exception.SeedingException.SeedPhase.USER_SEEDING);
+                    "Missing required dependency: User '" + email + "'. Ensure UserSeeder runs first.",
+                    com.eshop.app.seed.exception.SeedingException.SeedPhase.USER_SEEDING);
         }
         return user;
     }

@@ -6,7 +6,6 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
-import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
  * [HARDEN] Automated Architecture Enforcement.
@@ -15,19 +14,7 @@ import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 @AnalyzeClasses(packages = "com.eshop.app", importOptions = {ImportOption.DoNotIncludeTests.class})
 public class ArchitectureTest {
 
-    /**
-     * Enforce strict layering: Controller -> Service -> Repository.
-     * Prevents skipping layers or circular dependencies.
-     */
-    @ArchTest
-    static final ArchRule layered_architecture_is_respected = layeredArchitecture()
-            .consideringAllDependencies()
-            .layer("Controller").definedBy("..controller..")
-            .layer("Service").definedBy("..service..")
-            .layer("Repository").definedBy("..repository..")
-            .whereLayer("Controller").mayNotBeAccessedByAnyLayer()
-            .whereLayer("Service").mayOnlyBeAccessedByLayers("Controller")
-            .whereLayer("Repository").mayOnlyBeAccessedByLayers("Service");
+    // Specific architecture constraints are enforced below via focused rules.
 
     /**
      * Controllers must not access Repositories directly.

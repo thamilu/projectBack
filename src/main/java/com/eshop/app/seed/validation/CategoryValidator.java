@@ -1,6 +1,7 @@
 package com.eshop.app.seed.validation;
 
-import com.eshop.app.exception.InvalidCategoryHierarchyException;
+import com.eshop.app.catalog.shared.exception.InvalidCategoryHierarchyException;
+
 import com.eshop.app.seed.model.CategoryNode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
