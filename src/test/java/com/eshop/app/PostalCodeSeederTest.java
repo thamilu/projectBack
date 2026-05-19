@@ -105,7 +105,7 @@ public class PostalCodeSeederTest {
                             break;
                         }
                         if (token == JsonToken.START_OBJECT) {
-                            Map<String, Object> row = mapper.readValue(parser, Map.class);
+                            Map<String, Object> row = mapper.readValue(parser, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
                             count++;
                             String stateName = (String) row.get("stateName");
                             if (stateName != null) {

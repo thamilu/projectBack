@@ -1,0 +1,145 @@
+/* ==========================================================================
+   E-Shop [HARDEN] Layout & Split View CSS
+   ========================================================================== */
+
+/* Nebula-Tier Premium Split Layout (The Zenith) */
+.premium-wrapper {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    background: #000; /* Pure black for maximum contrast */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Data-Stream Scanline Effect */
+.premium-wrapper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 50%, rgba(16, 185, 129, 0.02) 50%);
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Brand Side (Balanced Nebula-Tier) */
+.brand-section {
+    display: none;
+    flex: 1.1; /* Balanced Split */
+    position: relative;
+    overflow: hidden;
+    padding: 6rem;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (min-width: 1024px) {
+    .brand-section {
+        display: flex;
+    }
+}
+
+.brand-content {
+    position: relative;
+    z-index: 100;
+    max-width: 600px;
+    animation: cardEnter 1.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Holographic Chrome Logo */
+.brand-logo-large {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #10b981, #3b82f6, #8b5cf6, #ec4899);
+    background-size: 300% 300%;
+    border-radius: 32px;
+    margin-bottom: 3.5rem;
+    box-shadow: 
+        0 0 80px rgba(16, 185, 129, 0.3),
+        0 0 160px rgba(59, 130, 246, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    animation: gradientShift 10s infinite linear;
+}
+
+.brand-title {
+    font-size: 5rem;
+    font-weight: 950;
+    margin: 0;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    background: linear-gradient(to bottom, #fff, #94a3b8, #475569);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8));
+    text-transform: uppercase;
+}
+
+.brand-subtitle {
+    font-size: 1.5rem;
+    color: var(--kc-text-muted);
+    margin: 1.5rem 0 4rem 0;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Holographic Feature Cards */
+.feature-item {
+    background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent);
+    backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 1.5rem 2rem;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+}
+
+.feature-item:hover {
+    transform: translateX(30px) translateY(-5px);
+    border-color: #ec4899; /* Holographic pink accent */
+    box-shadow: 0 30px 60px rgba(236, 72, 153, 0.1);
+}
+
+/* Form Side (High-Fashion) */
+.form-section {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 12vh 2rem;
+    position: relative;
+    z-index: 200;
+    background: #000;
+    overflow-y: auto;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Prism Glass Card */
+.pf-c-login__main {
+    background: var(--kc-surface) !important;
+    backdrop-filter: blur(24px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+    border: 1px solid var(--kc-border) !important;
+    border-top: 1px solid var(--kc-border-bright) !important;
+    border-radius: var(--kc-radius-lg) !important;
+    box-shadow: var(--kc-shadow-premium) !important;
+    padding: 5rem !important;
+    width: 100% !important;
+    max-width: 440px !important;
+}
+
+/* Standard Mobile/Tablet logic */
+@media (max-width: 767px) {
+    .pf-c-login__main {
+        padding: 3rem 2rem !important;
+        border-radius: var(--kc-radius-lg) !important;
+        margin: 6rem 1rem;
+    }
+}

@@ -35,7 +35,7 @@ public class CustomerDashboardController {
     private final CustomerDashboardService customerDashboardService;
 
     @GetMapping
-    @PreAuthorize("msAuthenticated()")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get Customer Dashboard", description = "Customer dashboard with order hmstory and personalmzed data", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<CustomerDashboardResponse>> getCustomerDashboard(
             org.springframework.security.core.Authentication authentication) {

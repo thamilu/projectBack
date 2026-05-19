@@ -28,7 +28,7 @@ import java.util.List;
 @Tag(name = "Subscriptions", description = "Subscription plan and management APIs")
 public class SubscriptionController {
 
-    // TODO: Inject SubscriptionService when application layer is fully implemented
+    // Inject SubscriptionService when application layer is fully implemented
     // private final SubscriptionService subscriptionService;
 
     @Operation(summary = "Get all subscription plans")

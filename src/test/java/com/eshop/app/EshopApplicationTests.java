@@ -55,6 +55,11 @@ class EshopApplicationTests {
 							String iso = row.isoCode() != null ? row.isoCode() : "IN";
 							String countryName = row.countryName() != null ? row.countryName().trim() : "India";
 							
+							// Verify non-null/non-empty and resolve unused variable warnings
+							if (iso.isEmpty() || countryName.isEmpty()) {
+								throw new IllegalStateException("ISO or Country Name is empty");
+							}
+							
 							String stateName = row.stateName();
 							if (stateName == null) {
 								throw new NullPointerException("stateName is null");

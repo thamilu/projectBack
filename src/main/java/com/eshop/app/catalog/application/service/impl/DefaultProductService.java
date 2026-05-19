@@ -38,7 +38,6 @@ import com.eshop.app.core.api.response.BatchOperationResult;
 import com.eshop.app.core.api.response.PageResponse;
 import com.eshop.app.core.exception.business.DuplicateResourceException;
 import com.eshop.app.catalog.shared.exception.DuplicateSkuException;
-import com.eshop.app.core.exception.business.DuplicateResourceException;
 import com.eshop.app.core.exception.business.ResourceNotFoundException;
 import com.eshop.app.store.api.response.StoreResponse;
 import com.eshop.app.store.application.port.in.StoreUseCase;
@@ -1104,8 +1103,3 @@ public class DefaultProductService implements ProductUseCase {
         return productMapper.getPrimaryImageUrl(product);
     }
 }
-
-
-
-
-

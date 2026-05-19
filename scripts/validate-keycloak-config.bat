@@ -36,12 +36,18 @@ set /a CHECKS+=1
 
 where python >nul 2>nul
 if %ERRORLEVEL% equ 0 (
-    python -m json.tool keycloak-import\eshop-realm.json >nul 2>nul
+    python -V >nul 2>nul
     if !ERRORLEVEL! equ 0 (
-        echo [OK] JSON syntax is valid
+        python -m json.tool keycloak-import\eshop-realm.json >nul 2>nul
+        if !ERRORLEVEL! equ 0 (
+            echo [OK] JSON syntax is valid
+        ) else (
+            echo [ERROR] Invalid JSON syntax
+            set /a ERRORS+=1
+        )
     ) else (
-        echo [ERROR] Invalid JSON syntax
-        set /a ERRORS+=1
+        echo [WARNING] Functional Python not found - Microsoft Store placeholder detected - skipping JSON validation
+        set /a WARNINGS+=1
     )
 ) else (
     echo [WARNING] Python not found, skipping JSON validation

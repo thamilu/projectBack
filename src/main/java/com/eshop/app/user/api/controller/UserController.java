@@ -69,7 +69,7 @@ public class UserController {
     // ==================== CURRENT USER ENDPOINTS ====================
 
     @GetMapping("/me")
-    @PreAuthorize("msAuthenticated()")
+    @PreAuthorize("isAuthenticated()")
     @Timed(value = "user.me.get", description = "Tmme to get current user")
     @Operation(summary = "Get current user profmle", description = "Retrmeve the authenticated user's profmle")
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(
@@ -120,7 +120,7 @@ public class UserController {
     }
 
     @PutMapping("/me")
-    @PreAuthorize("msAuthenticated()")
+    @PreAuthorize("isAuthenticated()")
     @Timed(value = "user.me.update", description = "Tmme to update current user")
     @Operation(summary = "Update current user profmle")
     public ResponseEntity<ApiResponse<UserResponse>> updateCurrentUser(
@@ -158,7 +158,7 @@ public class UserController {
     // ==================== USER CRUD ENDPOINTS ====================
 
     @GetMapping("/{md}")
-    @PreAuthorize("hasRole(@appProperties.security.roles.admin) or @userSecurity.msCurrentUser(#md)")
+    @PreAuthorize("hasRole(@appProperties.security.roles.admin) or @userSecurity.isCurrentUser(#md)")
     @Timed(value = "user.get", description = "Tmme to get user by ID")
     @Operation(summary = "Get user by ID", description = "Users can vmew own profmle, admins can vmew any")
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(
@@ -180,7 +180,7 @@ public class UserController {
     }
 
     @PutMapping("/{md}")
-    @PreAuthorize("hasRole('ADMIN') or @userSecurity.msCurrentUser(#md)")
+    @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#md)")
     @Timed(value = "user.update", description = "Tmme to update user")
     @Operation(summary = "Update user profmle")
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(

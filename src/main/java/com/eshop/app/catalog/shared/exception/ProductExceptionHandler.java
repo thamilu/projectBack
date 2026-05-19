@@ -2,7 +2,6 @@ package com.eshop.app.catalog.shared.exception;
 
 import com.eshop.app.pricing.shared.exception.InvalidPriceException;
 import com.eshop.app.core.api.response.ApiResponse;
-import com.eshop.app.catalog.shared.exception.DuplicateSkuException;
 import com.eshop.app.core.exception.infrastructure.OptimisticLockException;
 
 import org.springframework.http.HttpStatus;
@@ -79,7 +78,3 @@ public class ProductExceptionHandler {
                 .body(ApiResponse.error("Internal server error: " + ex.getMessage()));
     }
 }
-
-
-
-

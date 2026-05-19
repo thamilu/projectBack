@@ -1,7 +1,6 @@
 package com.eshop.app.catalog.api.response;
 
 import com.eshop.app.inventory.api.response.InventoryDto;
-import com.eshop.app.catalog.api.response.AvailabilityDto;
 import com.eshop.app.core.api.response.BaseInfoDto;
 import com.eshop.app.location.api.response.LocationPricingDto;
 import com.eshop.app.pricing.api.response.PricingDto;
@@ -188,5 +187,3 @@ public class ProductDetailResponse {
     @Schema(description = "Shipping restrictions")
     private ShippingRestrictionsDto shippingRestrictions;
 }
-
-

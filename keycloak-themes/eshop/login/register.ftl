@@ -5,24 +5,26 @@
         <p class="login-subtext">Join the E-Shop Ecosystem</p>
     <#elseif section = "form">
         <form id="kc-register-form" action="${url.registrationAction}" method="post">
-            <div class="pf-c-form__group">
-                <label for="firstName" class="pf-c-form__label">${msg("firstName")}<span class="required">*</span></label>
-                <input type="text" id="firstName" class="pf-c-form-control" name="firstName" value="${(register.formData.firstName!'')}" autocomplete="given-name" />
-                <#if messagesPerField.existsError('firstName')>
-                    <span id="input-error-firstname" class="pf-c-form__helper-text pf-m-error" aria-live="polite">
-                        ${kcSanitize(messagesPerField.get('firstName'))?no_esc}
-                    </span>
-                </#if>
-            </div>
+            <div class="name-grid">
+                <div class="pf-c-form__group">
+                    <label for="firstName" class="pf-c-form__label">${msg("firstName")}<span class="required">*</span></label>
+                    <input type="text" id="firstName" class="pf-c-form-control" name="firstName" value="${(register.formData.firstName!'')}" autocomplete="given-name" />
+                    <#if messagesPerField.existsError('firstName')>
+                        <span id="input-error-firstname" class="pf-c-form__helper-text pf-m-error" aria-live="polite">
+                            ${kcSanitize(messagesPerField.get('firstName'))?no_esc}
+                        </span>
+                    </#if>
+                </div>
 
-            <div class="pf-c-form__group">
-                <label for="lastName" class="pf-c-form__label">${msg("lastName")}<span class="required">*</span></label>
-                <input type="text" id="lastName" class="pf-c-form-control" name="lastName" value="${(register.formData.lastName!'')}" autocomplete="family-name" />
-                <#if messagesPerField.existsError('lastName')>
-                    <span id="input-error-lastname" class="pf-c-form__helper-text pf-m-error" aria-live="polite">
-                        ${kcSanitize(messagesPerField.get('lastName'))?no_esc}
-                    </span>
-                </#if>
+                <div class="pf-c-form__group">
+                    <label for="lastName" class="pf-c-form__label">${msg("lastName")}<span class="required">*</span></label>
+                    <input type="text" id="lastName" class="pf-c-form-control" name="lastName" value="${(register.formData.lastName!'')}" autocomplete="family-name" />
+                    <#if messagesPerField.existsError('lastName')>
+                        <span id="input-error-lastname" class="pf-c-form__helper-text pf-m-error" aria-live="polite">
+                            ${kcSanitize(messagesPerField.get('lastName'))?no_esc}
+                        </span>
+                    </#if>
+                </div>
             </div>
 
             <div class="pf-c-form__group">

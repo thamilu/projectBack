@@ -98,6 +98,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         auth -> auth.anyRequest().hasRole(appProperties.getSecurity().getRoles().getAdmin()))
                 .oauth2ResourceServer(oauth2 -> oauth2
+                        .bearerTokenResolver(new CustomBearerTokenResolver(objectMapper))
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoderProvider.getIfAvailable(
                                         () -> NimbusJwtDecoder.withIssuerLocation(adminRealmIssuer).build()))
@@ -123,11 +124,17 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
-                        .requestMatchers("/api/v1/public/**", "/api/v1/auth/**", "/api/v1/csp/**",
-                                "/api/v1/locations/**", "/swagger-ui/**", "/v3/api-docs/**", "/error")
+                        .requestMatchers("/api/v1/public/**", "/v1/public/**",
+                                "/api/v1/auth/**", "/v1/auth/**",
+                                "/api/v1/csp/**", "/v1/csp/**",
+                                "/api/v1/locations/**", "/v1/locations/**",
+                                "/swagger-ui/**", "/v3/api-docs/**", "/error")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/products/**", "/api/v1/categories/**",
-                                "/api/v1/brands/**", "/api/v1/stores/**")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/products/**", "/v1/products/**",
+                                "/api/v1/categories/**", "/v1/categories/**",
+                                "/api/v1/brands/**", "/v1/brands/**",
+                                "/api/v1/stores/**", "/v1/stores/**")
                         .permitAll()
 
                         // Seller onboarding (Authenticated but not yet SELLER role)
@@ -145,6 +152,7 @@ public class SecurityConfig {
 
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
+                        .bearerTokenResolver(new CustomBearerTokenResolver(objectMapper))
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoderProvider.getIfAvailable(
                                         () -> NimbusJwtDecoder.withIssuerLocation(userRealmIssuer).build()))
@@ -336,6 +344,86 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    /**
+     * [HARDEN] Custom Bearer Token Resolver that bypasses expired JWT validation
+     * to avoid 401 Unauthorized on whitelisted public endpoints for guests with stale sessions.
+     */
+    @Slf4j
+    private static class CustomBearerTokenResolver implements org.springframework.security.oauth2.server.resource.web.BearerTokenResolver {
+        private final org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver defaultResolver = 
+                new org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver();
+        private final ObjectMapper objectMapper;
+
+        public CustomBearerTokenResolver(ObjectMapper objectMapper) {
+            this.objectMapper = objectMapper;
+        }
+
+        private boolean isPublicEndpoint(jakarta.servlet.http.HttpServletRequest request) {
+            String uri = request.getRequestURI();
+            String method = request.getMethod();
+
+            // Normalize uri by removing context path if present
+            String contextPath = request.getContextPath();
+            if (contextPath != null && !contextPath.isEmpty() && uri.startsWith(contextPath)) {
+                uri = uri.substring(contextPath.length());
+            }
+
+            // Public patterns matching SecurityConfig whitelists
+            if (uri.startsWith("/api/v1/public/") || uri.startsWith("/v1/public/") ||
+                uri.startsWith("/api/v1/auth/") || uri.startsWith("/v1/auth/") ||
+                uri.startsWith("/api/v1/csp/") || uri.startsWith("/v1/csp/") ||
+                uri.startsWith("/api/v1/locations/") || uri.startsWith("/v1/locations/") ||
+                uri.startsWith("/swagger-ui/") || uri.startsWith("/v3/api-docs/") ||
+                "/error".equals(uri)) {
+                return true;
+            }
+
+            if ("GET".equalsIgnoreCase(method)) {
+                if (uri.startsWith("/api/v1/products/") || uri.startsWith("/v1/products/") ||
+                    uri.startsWith("/api/v1/categories/") || uri.startsWith("/v1/categories/") ||
+                    uri.startsWith("/api/v1/brands/") || uri.startsWith("/v1/brands/") ||
+                    uri.startsWith("/api/v1/stores/") || uri.startsWith("/v1/stores/")) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        @Override
+        public String resolve(jakarta.servlet.http.HttpServletRequest request) {
+            if (isPublicEndpoint(request)) {
+                log.debug("Public endpoint detected: {}. Bypassing bearer token resolution to allow anonymous guest access.", request.getRequestURI());
+                return null;
+            }
+
+            String token = defaultResolver.resolve(request);
+            if (token == null) {
+                return null;
+            }
+            try {
+                String[] parts = token.split("\\.");
+                if (parts.length == 3) {
+                    byte[] decoded = Base64.getUrlDecoder().decode(parts[1]);
+                    Map<?, ?> payload = objectMapper.readValue(decoded, Map.class);
+                    Number expNum = (Number) payload.get("exp");
+                    if (expNum != null) {
+                        long expTime = expNum.longValue();
+                        long currentTime = System.currentTimeMillis() / 1000;
+                        if (expTime < currentTime) {
+                            log.info("Expired JWT detected (expired at {}). Treating as anonymous to avoid 401 on public endpoints.", expTime);
+                            return null;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to parse JWT for expiration check: {}", e.getMessage());
+                return null;
+            }
+            return token;
+        }
     }
 }
 

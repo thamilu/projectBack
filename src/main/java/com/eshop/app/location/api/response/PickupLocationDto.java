@@ -1,10 +1,5 @@
 package com.eshop.app.location.api.response;
 
-
-
-
-
-import com.eshop.app.location.api.response.CoordinatesDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,5 +18,3 @@ public class PickupLocationDto {
     private Boolean available;
     private java.util.Map<String, java.util.Map<String, String>> pickupHours;
 }
-
-

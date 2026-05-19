@@ -35,6 +35,7 @@ public class OutboxEventProcessor {
                 // In a production system with message brokers, we would publish to Kafka/RabbitMQ here.
                 // For this monolith, we deserialize and publish to the local Spring event publisher context.
                 log.debug("Publishing outbox event: type={}, correlationId={}", event.getEventType(), event.getCorrelationId());
+                eventPublisher.publishEvent(event);
                 
                 event.setProcessed(true);
                 event.setProcessedAt(LocalDateTime.now());

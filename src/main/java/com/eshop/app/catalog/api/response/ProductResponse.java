@@ -1,14 +1,10 @@
 package com.eshop.app.catalog.api.response;
 
 import com.eshop.app.inventory.api.response.InventoryDto;
-import com.eshop.app.catalog.api.response.AvailabilityDto;
 import com.eshop.app.core.api.response.BaseInfoDto;
 import com.eshop.app.location.api.response.LocationPricingDto;
 import com.eshop.app.pricing.api.response.PricingDto;
 import com.eshop.app.shipping.api.response.ShippingRestrictionsDto;
-
-
-
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -56,7 +52,8 @@ public class ProductResponse {
     private InventoryDto inventory;
     private Object categoryAttributes;
 
-    // Bean-style alias for compatibility with code that expects getRating()/setRating()
+    // Bean-style alias for compatibility with code that expects
+    // getRating()/setRating()
     public Double getRating() {
         return this.averageRating;
     }
@@ -66,8 +63,11 @@ public class ProductResponse {
     }
 
     // Backwards-compatibility aliases for code expecting record-style accessors
-    public Long id() { return this.id; }
-    public java.time.LocalDateTime updatedAt() { return this.updatedAt; }
+    public Long id() {
+        return this.id;
+    }
+
+    public java.time.LocalDateTime updatedAt() {
+        return this.updatedAt;
+    }
 }
-
-

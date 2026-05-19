@@ -128,6 +128,13 @@ public class LocationService {
 
         // All rows for the same pincode share the same state/district/country
         PostalCode first = results.get(0);
+        String stateName = first.getState() != null ? first.getState().getName() : null;
+        String districtName = first.getDistrict() != null ? first.getDistrict().getName() : null;
+
+        if (stateName == null || stateName.trim().isEmpty() || districtName == null || districtName.trim().isEmpty()) {
+            log.warn("Corrupt postal code record detected for: {} (missing state/district names). Gracefully falling back to manual entry.", pinCode);
+            return new LocationResponseDTO(pinCode, null, null, null, null, null, null, List.of());
+        }
 
         List<LocalityDTO> localities = results.stream()
                 .map(pc -> new LocalityDTO(pc.getLocalityName(), pc.getPostOfficeName()))
@@ -137,9 +144,9 @@ public class LocationService {
                 pinCode,
                 first.getCountry().getName(),
                 first.getCountry().getIsoCode(),
-                first.getState().getName(),
+                stateName,
                 first.getState().getStateCode(),
-                first.getDistrict().getName(),
+                districtName,
                 first.getTaluk() != null ? first.getTaluk().getName() : null,
                 localities
         );
