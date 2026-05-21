@@ -90,8 +90,14 @@ public class SecurityConfig {
         log.info("ðŸ›¡ï¸ Configuring ADMIN Security Chain (Issuer: {})", adminRealmIssuer);
 
         http
-                .securityMatcher("/api/admin/**", "/api/v1/admin/**", "/api/v1/sellers/requests/**",
-                        "/api/v1/dashboard/admin/**")
+                .securityMatcher(
+                        "/api/admin/**",
+                        "/api/v1/admin/**",
+                        "/api/v1/sellers/requests",
+                        "/api/v1/sellers/requests/**",
+                        "/api/v1/dashboard/admin",
+                        "/api/v1/dashboard/admin/**"
+                )
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -337,8 +343,8 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(Arrays.asList(cors.getAllowedOrigins().split(",")));
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "X-Request-ID",
-                "X-Idempotency-Key", "Accept", "Origin"));
-        config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Request-ID", "X-Idempotency-Key"));
+                "X-Idempotency-Key", "X-Correlation-ID", "Accept", "Origin"));
+        config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Request-ID", "X-Idempotency-Key", "X-Correlation-ID"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -1,9 +1,10 @@
-$tokenResponse = Invoke-RestMethod -Uri "http://localhost:8080/realms/master/protocol/openid-connect/token" -Method Post -Body @{ grant_type="password"; client_id="admin-cli"; username="admin"; password="admin" }
+$tokenResponse = Invoke-RestMethod -Uri "http://localhost:8080/realms/master/protocol/openid-connect/token" -Method Post -Body @{ grant_type="password"; client_id="admin-cli"; username="admin"; password="Admin@@Secret123" }
 $token = $tokenResponse.access_token
 
 try {
-    $res = Invoke-RestMethod -Uri "http://localhost:8080/admin/realms/eshop-admin/users/fbe3a6b3-4113-4e4f-b097-62dcd4cc1cf2" -Headers @{Authorization="Bearer $token"}
-    Write-Host "User found in eshop-admin realm!"
+    $res = Invoke-RestMethod -Uri "http://localhost:8080/admin/realms/eshop-admin/clients" -Headers @{Authorization="Bearer $token"}
+    Write-Host "Clients list in eshop-admin:"
+    $res | ForEach-Object { Write-Host "- ClientID: $($_.clientId), Enabled: $($_.enabled), Public: $($_.publicClient), Redirects: $($_.redirectUris)" }
 } catch {
-    Write-Host "Not found in eshop-admin"
+    Write-Host "Error listing clients in eshop-admin: $($_.Exception.Message)"
 }

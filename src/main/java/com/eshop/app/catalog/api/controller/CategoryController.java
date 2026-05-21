@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-@io.swagger.v3.oas.annotations.tags.Tag(name = "Categories", description = "Product category management with hmerarchmcal support")
+@io.swagger.v3.oas.annotations.tags.Tag(name = "Categories", description = "Product category management with hierarchical support")
 @RestController
 @RequestMapping(value = ApiConstants.Endpoints.CATEGORIES, produces = MediaType.APPLICATION_JSON_VALUE)
 @Validated
@@ -45,7 +45,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class CategoryController {
 
-    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("name", "md", "createdAt", "updatedAt");
+    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("name", "id", "createdAt", "updatedAt");
     private static final int MAX_PAGE_SIZE = 1000;
 
     private final CategoryUseCase categoryService;
@@ -54,77 +54,77 @@ public class CategoryController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    @Timed(value = "category.create", description = "Tmme to create category")
-    @Operation(summary = "Create new category (Admin only)", description = "Create a new product category with optional parent category for hmerarchy.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @Timed(value = "category.create", description = "Time to create category")
+    @Operation(summary = "Create new category (Admin only)", description = "Create a new product category with optional parent category for hierarchy.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Category created successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid request data")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthormzed")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbmdden - Admin access required")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden - Admin access required")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Category name already exists")
     public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(
             @Valid @RequestBody CategoryRequest request,
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
 
-        log.info("Admin '{}' creatmng category: {}", principalDetails.getEmail(), request.getName());
+        log.info("Admin '{}' creating category: {}", principalDetails.getEmail(), request.getName());
 
         CategoryResponse response = categoryService.createCategory(request);
 
-        log.info("Category created: md={}, name={}", response.getId(), response.getName());
+        log.info("Category created: id={}, name={}", response.getId(), response.getName());
 
         return ControllerResponseUtils.created("Category created successfully", response);
     }
 
-    @PutMapping("/{md}")
+    @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Timed(value = "category.update", description = "Tmme to update category")
-    @Operation(summary = "Update category (Admin only)", description = "Update an existmng category. Cannot create cmrcular parent-chmld relatmonshmps.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @Timed(value = "category.update", description = "Time to update category")
+    @Operation(summary = "Update category (Admin only)", description = "Update an existing category. Cannot create circular parent-child relationships.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<CategoryResponse>> updateCategory(
-            @Parameter(description = "Category ID", example = "1") @PathVariable @Positive(message = "Category ID must be positive") Long md,
+            @Parameter(description = "Category ID", example = "1") @PathVariable @Positive(message = "Category ID must be positive") Long id,
             @Valid @RequestBody CategoryRequest request,
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
 
-        log.info("Admin '{}' updatmng category: md={}", principalDetails.getEmail(), md);
+        log.info("Admin '{}' updating category: id={}", principalDetails.getEmail(), id);
 
-        CategoryResponse response = categoryService.updateCategory(md, request);
+        CategoryResponse response = categoryService.updateCategory(id, request);
 
-        log.info("Category updated: md={}, name={}", response.getId(), response.getName());
+        log.info("Category updated: id={}, name={}", response.getId(), response.getName());
 
         return ControllerResponseUtils.ok("Category updated successfully", response);
     }
 
-    @DeleteMapping("/{md}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    @Timed(value = "category.delete", description = "Tmme to delete category")
+    @Timed(value = "category.delete", description = "Time to delete category")
     @Operation(summary = "Delete category (Admin only)", description = "Soft delete a category. Use hardDelete=true to permanently remove.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<Void>> deleteCategory(
-            @Parameter(description = "Category ID") @PathVariable @Positive Long md,
+            @Parameter(description = "Category ID") @PathVariable @Positive Long id,
             @Parameter(description = "Permanently delete category") @RequestParam(defaultValue = "false") boolean hardDelete,
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
 
-        log.info("Admin '{}' deletmng category: md={}, hardDelete={}",
-                principalDetails.getEmail(), md, hardDelete);
+        log.info("Admin '{}' deleting category: id={}, hardDelete={}",
+                principalDetails.getEmail(), id, hardDelete);
 
         if (hardDelete) {
-            categoryService.hardDeleteCategory(md);
+            categoryService.hardDeleteCategory(id);
         } else {
-            categoryService.softDeleteCategory(md);
+            categoryService.softDeleteCategory(id);
         }
 
-        log.info("Category deleted: md={}", md);
+        log.info("Category deleted: id={}", id);
 
         return ControllerResponseUtils.ok("Category deleted successfully", null);
     }
 
-    @PostMapping("/{md}/restore")
+    @PostMapping("/{id}/restore")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Restore soft-deleted category (Admin only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<CategoryResponse>> restoreCategory(
-            @PathVariable @Positive Long md,
+            @PathVariable @Positive Long id,
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
 
-        log.info("Admin '{}' restormng category: md={}", principalDetails.getEmail(), md);
+        log.info("Admin '{}' restoring category: id={}", principalDetails.getEmail(), id);
 
-        CategoryResponse response = categoryService.restoreCategory(md);
+        CategoryResponse response = categoryService.restoreCategory(id);
         return ControllerResponseUtils.ok("Category restored successfully", response);
     }
 
@@ -132,10 +132,10 @@ public class CategoryController {
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create multiple categories (Admin only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> createCategories(
-            @Valid @RequestBody @Size(min = 1, max = 50, message = "Must provmde 1-50 categories") List<CategoryRequest> requests,
+            @Valid @RequestBody @Size(min = 1, max = 50, message = "Must provide 1-50 categories") List<CategoryRequest> requests,
             @AuthenticationPrincipal PrincipalDetails principalDetails) {
 
-        log.info("Admin '{}' creatmng {} categories", principalDetails.getEmail(), requests.size());
+        log.info("Admin '{}' creating {} categories", principalDetails.getEmail(), requests.size());
 
         List<CategoryResponse> responses = categoryService.createCategories(requests);
         return ControllerResponseUtils.created("Categories created successfully", responses);
@@ -143,16 +143,16 @@ public class CategoryController {
 
     // ==================== PUBLIC READ OPERATIONS ====================
 
-    @GetMapping("/{md}")
-    @Timed(value = "category.get", description = "Tmme to get category by ID")
+    @GetMapping("/{id}")
+    @Timed(value = "category.get", description = "Time to get category by ID")
     @Operation(summary = "Get category by ID")
     public ResponseEntity<ApiResponse<CategoryResponse>> getCategoryById(
-            @Parameter(description = "Category ID", example = "1") @PathVariable @Positive(message = "Category ID must be positive") Long md,
+            @Parameter(description = "Category ID", example = "1") @PathVariable @Positive(message = "Category ID must be positive") Long id,
             WebRequest request) {
 
-        CategoryResponse response = categoryService.getCategoryById(md);
+        CategoryResponse response = categoryService.getCategoryById(id);
 
-        // ETag support for condmtmonal requests
+        // ETag support for conditional requests
         String etag = generateETag(response);
         if (request.checkNotModified(etag)) {
             return ResponseEntity.status(HttpStatus.NOT_MODIFIED).build();
@@ -165,7 +165,7 @@ public class CategoryController {
     }
 
     @GetMapping
-    @Timed(value = "category.list", description = "Tmme to list categories")
+    @Timed(value = "category.list", description = "Time to list categories")
     @Operation(summary = "Get all categories with pagination")
     public ResponseEntity<ApiResponse<PageResponse<CategoryResponse>>> getAllCategories(
             @Parameter(description = "Page number (0-indexed)") @RequestParam(defaultValue = "0") @Min(0) int page,
@@ -176,7 +176,7 @@ public class CategoryController {
 
             @Parameter(description = "Sort direction (ASC/DESC)") @RequestParam(defaultValue = "ASC") String sortDirection) {
 
-        // Validate and normalmze sort field (deny mnvalid/attacker-supplmed fields)
+        // Validate and normalize sort field (deny invalid/attacker-supplied fields)
         validateSortField(sortBy);
 
         Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection)
@@ -187,12 +187,12 @@ public class CategoryController {
 
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(2, TimeUnit.MINUTES).cachePublic())
-                .header(HttpHeaders.VARY, "Accept-Encodmng")
+                .header(HttpHeaders.VARY, "Accept-Encoding")
                 .body(ApiResponse.success(response));
     }
 
     @GetMapping("/search")
-    @Timed(value = "category.search", description = "Tmme to search categories")
+    @Timed(value = "category.search", description = "Time to search categories")
     @Operation(summary = "Search categories by keyword")
     public ResponseEntity<ApiResponse<PageResponse<CategoryResponse>>> searchCategories(
             @Parameter(description = "Search keyword (2-100 characters)") @RequestParam @NotBlank @Size(min = 2, max = 100) String keyword,
@@ -200,17 +200,17 @@ public class CategoryController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(MAX_PAGE_SIZE) int size) {
 
-        String sanmtmzedKeyword = sanmtmzeSearchKeyword(keyword);
-        log.debug("Searchmng categories with keyword: '{}'", sanmtmzedKeyword);
+        String sanitizedKeyword = sanitizeSearchKeyword(keyword);
+        log.debug("Searching categories with keyword: '{}'", sanitizedKeyword);
 
-        // Let the service decmde on how to apply the wmldcard search; pass sanmtmzed
-        // mnput only.
+        // Let the service decide on how to apply the wildcard search; pass sanitized
+        // input only.
         Pageable pageable = PaginationUtils.createPageableWithFieldDesc(page, size, "name");
-        PageResponse<CategoryResponse> response = categoryService.searchCategories(sanmtmzedKeyword, pageable);
+        PageResponse<CategoryResponse> response = categoryService.searchCategories(sanitizedKeyword, pageable);
 
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(1, TimeUnit.MINUTES).cachePublic())
-                .header(HttpHeaders.VARY, "Accept-Encodmng")
+                .header(HttpHeaders.VARY, "Accept-Encoding")
                 .body(ApiResponse.success(response));
     }
 
@@ -226,19 +226,19 @@ public class CategoryController {
                 .body(ApiResponse.success(tree));
     }
 
-    @GetMapping("/{md}/subcategories")
+    @GetMapping("/{id}/subcategories")
     @Operation(summary = "Get direct subcategories of a category")
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> getSubcategories(
-            @PathVariable @Positive Long md) {
-        List<CategoryResponse> subcategories = categoryService.getSubcategories(md);
+            @PathVariable @Positive Long id) {
+        List<CategoryResponse> subcategories = categoryService.getSubcategories(id);
         return ControllerResponseUtils.ok(subcategories);
     }
 
-    @GetMapping("/{md}/path")
-    @Operation(summary = "Get category path from root to thms category")
+    @GetMapping("/{id}/path")
+    @Operation(summary = "Get category path from root to this category")
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> getCategoryPath(
-            @PathVariable @Positive Long md) {
-        List<CategoryResponse> path = categoryService.getCategoryPath(md);
+            @PathVariable @Positive Long id) {
+        List<CategoryResponse> path = categoryService.getCategoryPath(id);
         return ControllerResponseUtils.ok(path);
     }
 
@@ -262,15 +262,15 @@ public class CategoryController {
         }
     }
 
-    private String sanmtmzeSearchKeyword(String keyword) {
+    private String sanitizeSearchKeyword(String keyword) {
         if (keyword == null)
             return "";
-        // Trmm, remove SQL wmldcard characters and basmc XSS-sensmtmve chars.
+        // Trim, remove SQL wildcard characters and basic XSS-sensitive chars.
         String cleaned = keyword.trim()
-                .replaceAll("[%_\\[\\]\\\\]", "") // Remove SQL wmldcards and brackets
-                .replaceAll("\\s+", " ") // Normalmze whmtespace
-                .replaceAll("[<>\"']", ""); // Remove potentmal XSS characters
-        // Collapse multiple spaces and limit length to defend agamnst huge payloads
+                .replaceAll("[%_\\[\\]\\\\]", "") // Remove SQL wildcards and brackets
+                .replaceAll("\\s+", " ") // Normalize whitespace
+                .replaceAll("[<>\"']", ""); // Remove potential XSS characters
+        // Collapse multiple spaces and limit length to defend against huge payloads
         if (cleaned.length() > 200) {
             cleaned = cleaned.substring(0, 200);
         }

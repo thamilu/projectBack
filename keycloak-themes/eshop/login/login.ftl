@@ -1,5 +1,5 @@
 <#import "template.ftl" as layout>
-<@layout.registrationLayout displayMessage=!messagesPerField.existsError('username','password') displayInfo=realm.password && realm.registrationAllowed && !registrationDisabled??; section>
+<@layout.registrationLayout displayMessage=!(messagesPerField.existsError('username') || messagesPerField.existsError('password')) displayInfo=realm.password && realm.registrationAllowed && !registrationDisabled??; section>
     <#if section = "header">
         ${msg("loginAccountTitle")}
         <p class="login-subtext">Secure Enterprise Access</p>
@@ -12,7 +12,7 @@
                         <label for="username" class="pf-c-form__label"><#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if><span class="required">*</span></label>
                         <input tabindex="1" id="username" class="pf-c-form-control" name="username" value="${(login.username!'')}" type="text" autofocus autocomplete="username" spellcheck="false"
                                aria-required="true"
-                               aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>" />
+                               aria-invalid="<#if messagesPerField.existsError('username')>true</#if>" />
                     </div>
 
                     <div class="pf-c-form__group">
@@ -20,7 +20,7 @@
                         <div class="password-input-wrapper">
                             <input tabindex="2" id="password" class="pf-c-form-control" name="password" type="password" autocomplete="current-password" spellcheck="false"
                                    aria-required="true"
-                                   aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>" />
+                                   aria-invalid="<#if messagesPerField.existsError('password')>true</#if>" />
                             <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
                                 <i class="fas fa-eye"></i>
                             </button>
