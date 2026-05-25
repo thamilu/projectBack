@@ -52,9 +52,9 @@ dependencies {
 	// ═══════════════════════════════════════════════════════════
 	// CLOUDFLARE R2 (S3 ASYNC) - Enterprise Core
 	// ═══════════════════════════════════════════════════════════
-	implementation platform('software.amazon.awssdk:bom:2.25.40')
+	implementation platform('software.amazon.awssdk:bom:2.44.12')
 	implementation 'software.amazon.awssdk:s3'
-	implementation 'software.amazon.awssdk:netty-nio-client:2.25.40'
+	implementation 'software.amazon.awssdk:netty-nio-client:2.44.12'
 	implementation 'software.amazon.awssdk:auth'
 	implementation 'software.amazon.awssdk:regions'
 	
