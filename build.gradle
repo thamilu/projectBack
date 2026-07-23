@@ -204,7 +204,7 @@ dependencies {
 	implementation 'org.jboss.resteasy:resteasy-jackson2-provider:6.2.5.Final'
 
 	// Architecture Testing
-	testImplementation 'com.tngtech.archunit:archunit-junit5:1.2.1'
+	testImplementation 'com.tngtech.archunit:archunit-junit5:1.4.2'
 }
 // Exclude possible JCache/Ehcache providers from all configurations to prevent multiple providers
 configurations.all {
