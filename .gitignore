@@ -40,6 +40,17 @@ out/
 .env
 .env.*
 !.env.example
+# Historical leak: production.env did not match .env/.env.* (no leading dot) and was
+# committed with a live JWT_SECRET + DB password — see CHANGELOG / git history purge.
+production.env
+*.env
+!.env.example
+
+### Keycloak exports (PII / credentials — never commit real realm/user dumps) ###
+kc_admin_users.json
+kc_all_users.json
+kc_*_users.json
+kc_*.json
 
 ### Logs and Build Artifacts ###
 *.log
