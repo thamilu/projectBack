@@ -6,6 +6,7 @@ import com.eshop.app.cart.domain.repository.CartRepository;
 import com.eshop.app.cart.shared.exception.EmptyCartException;
 import com.eshop.app.catalog.domain.entity.Product;
 
+import com.eshop.app.core.events.domain.CartChangedEvent;
 import com.eshop.app.core.util.SecurityUtils;
 import com.eshop.app.inventory.shared.exception.InsufficientStockException;
 import com.eshop.app.order.api.request.CheckoutRequest;
@@ -20,6 +21,7 @@ import com.eshop.app.user.domain.entity.User;
 import com.eshop.app.user.domain.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +42,7 @@ public class CheckoutUseCaseImpl implements CheckoutUseCase {
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
     private final OrderNumberGenerator orderNumberGenerator;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public OrderResponse checkoutAnonymousCart(String cartCode, CheckoutRequest request) {
@@ -129,6 +132,13 @@ public class CheckoutUseCaseImpl implements CheckoutUseCase {
         Order savedOrder = orderRepository.save(order);
         cart.getItems().clear();
         cartRepository.save(cart);
+        if (userId != null) {
+            // Required for multi-device sync — another device viewing this
+            // user's cart must see it emptied after checkout. Anonymous
+            // checkouts (userId == null) have no device to sync to.
+            eventPublisher.publishEvent(
+                    new CartChangedEvent(this, userId, CartChangedEvent.Action.CART_CLEARED));
+        }
 
         return orderMapper.toOrderResponse(savedOrder);
     }

@@ -12,6 +12,7 @@ import com.eshop.app.cart.domain.repository.CartItemRepository;
 import com.eshop.app.cart.domain.repository.CartRepository;
 import com.eshop.app.catalog.domain.entity.Product;
 import com.eshop.app.catalog.domain.repository.ProductRepository;
+import com.eshop.app.core.events.domain.CartChangedEvent;
 import com.eshop.app.inventory.shared.exception.InsufficientStockException;
 import com.eshop.app.cart.application.mapper.CartMapper;
 import com.eshop.app.core.exception.business.ResourceNotFoundException;
@@ -22,6 +23,7 @@ import com.eshop.app.user.domain.repository.UserRepository;
 
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -82,17 +84,38 @@ public class DefaultCartService implements CartService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final CartMapper cartMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     public DefaultCartService(CartRepository cartRepository,
             CartItemRepository cartItemRepository,
             ProductRepository productRepository,
             UserRepository userRepository,
-            CartMapper cartMapper) {
+            CartMapper cartMapper,
+            ApplicationEventPublisher eventPublisher) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.cartMapper = cartMapper;
+        this.eventPublisher = eventPublisher;
+    }
+
+    /**
+     * Publishes a cart-change event scoped to the cart's actual owning user
+     * — deliberately read from {@code cart.getUser()}, not from {@link
+     * SecurityUtils}/the security context. Several call paths in this class
+     * (the {@code cartCode}-based methods) can mutate a cart on behalf of an
+     * anonymous caller or a different security-context user than the cart's
+     * actual owner; the cart entity itself is the only reliable source of
+     * "whose cart is this." Anonymous carts have no user and are silently
+     * skipped — there is no device to sync to.
+     */
+    private void publishCartChanged(Cart cart, CartChangedEvent.Action action) {
+        User owner = cart.getUser();
+        if (owner == null) {
+            return;
+        }
+        eventPublisher.publishEvent(new CartChangedEvent(this, owner.getId(), action));
     }
 
     private Long getCurrentUserId() {
@@ -139,6 +162,7 @@ public class DefaultCartService implements CartService {
                 .findByCartIdAndProductId(cart.getId(), product.getId())
                 .orElse(null);
 
+        CartChangedEvent.Action action;
         if (existingItem != null) {
             int newQuantity = existingItem.getQuantity() + request.getQuantity();
             if (product.getStockQuantity() < newQuantity) {
@@ -146,6 +170,7 @@ public class DefaultCartService implements CartService {
             }
             existingItem.setQuantity(newQuantity);
             cartItemRepository.save(existingItem);
+            action = CartChangedEvent.Action.ITEM_UPDATED;
         } else {
             CartItem cartItem = CartItem.builder()
                     .cart(cart)
@@ -155,10 +180,12 @@ public class DefaultCartService implements CartService {
                     .build();
             cart.getItems().add(cartItem);
             cartItemRepository.save(cartItem);
+            action = CartChangedEvent.Action.ITEM_ADDED;
         }
 
         cart.calculateTotalAmount();
         cart = cartRepository.save(cart);
+        publishCartChanged(cart, action);
         return cartMapper.toCartResponse(cart);
     }
 
@@ -183,6 +210,7 @@ public class DefaultCartService implements CartService {
 
         cart.calculateTotalAmount();
         cart = cartRepository.save(cart);
+        publishCartChanged(cart, CartChangedEvent.Action.ITEM_UPDATED);
         return cartMapper.toCartResponse(cart);
     }
 
@@ -202,6 +230,7 @@ public class DefaultCartService implements CartService {
 
         cart.calculateTotalAmount();
         cart = cartRepository.save(cart);
+        publishCartChanged(cart, CartChangedEvent.Action.ITEM_REMOVED);
         return cartMapper.toCartResponse(cart);
     }
 
@@ -211,7 +240,8 @@ public class DefaultCartService implements CartService {
         cartItemRepository.deleteByCartId(cart.getId());
         cart.getItems().clear();
         cart.calculateTotalAmount();
-        cartRepository.save(cart);
+        cart = cartRepository.save(cart);
+        publishCartChanged(cart, CartChangedEvent.Action.CART_CLEARED);
     }
 
     // Anonymous Cart Methods
@@ -308,9 +338,10 @@ public class DefaultCartService implements CartService {
         
         cart.getItems().remove(itemToRemove);
         cartItemRepository.delete(itemToRemove);
-        
+
         cart.calculateTotalAmount();
         cart = cartRepository.save(cart);
+        publishCartChanged(cart, CartChangedEvent.Action.ITEM_REMOVED);
         return cartMapper.toCartResponse(cart);
     }
 

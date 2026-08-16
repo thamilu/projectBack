@@ -1,12 +1,9 @@
 package com.eshop.app.notification.application.service.impl;
 
 import com.eshop.app.catalog.domain.entity.Product;
-import com.eshop.app.order.domain.entity.Order;
 import com.eshop.app.notification.application.service.NotificationService;
 import com.eshop.app.notification.application.service.EmailService;
-
-
-
+import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,13 +43,13 @@ public class DefaultNotificationService implements NotificationService {
 
     @Override
     @Async("notificationExecutor")
-    public void sendOrderConfirmation(Order order) {
-        log.info("Sending order confirmation for order: {}", order.getOrderNumber());
-        String customerEmail = order.getCustomer().getEmail();
-        String subject = "Order Confirmation: " + order.getOrderNumber();
+    public void sendOrderConfirmation(
+            String orderNumber, String customerEmail, BigDecimal totalAmount, String orderStatus) {
+        log.info("Sending order confirmation for order: {}", orderNumber);
+        String subject = "Order Confirmation: " + orderNumber;
         String body = String.format("Thank you for your order!\nOrder Number: %s\nTotal Amount: %s\nStatus: %s",
-                order.getOrderNumber(), order.getTotalAmount(), order.getOrderStatus());
-        
+                orderNumber, totalAmount, orderStatus);
+
         emailService.sendEmail(customerEmail, subject, body);
     }
 }

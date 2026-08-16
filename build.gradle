@@ -64,6 +64,17 @@ dependencies {
 	implementation 'io.lettuce:lettuce-core'
 	implementation 'org.apache.commons:commons-pool2:2.12.0'
 
+	// ═══════════════════════════════════════════════════════════
+	// Real-time (WebSocket) — com.eshop.app.realtime module
+	// ═══════════════════════════════════════════════════════════
+	// Netty-based socket.io-protocol-compatible server, chosen over native
+	// Spring WebSocket/STOMP specifically to keep the frontend's existing
+	// socket.io-client usage and channel-naming scheme unchanged.
+	implementation 'com.corundumstudio.socketio:netty-socketio:2.0.13'
+	// Redis-backed store (RedissonStoreFactory) so a WS push published by
+	// one horizontally-scaled instance reaches clients connected to another.
+	implementation 'org.redisson:redisson:3.35.0'
+
 	// Testcontainers for integration tests
 	// NOTE: previously pinned to 1.17.6 (mid-2022) — its bundled docker-java client
 	// negotiates down to Docker API 1.32, which current Docker Desktop releases reject
@@ -140,7 +151,11 @@ dependencies {
 	
 	// HTTP client for REST API integrations
 	implementation 'org.apache.httpcomponents:httpclient:4.5.14'
-	implementation 'com.fasterxml.jackson.core:jackson-databind:2.16.0'
+	// No explicit version: let Spring Boot's dependency-management BOM own this, same as
+	// every other Jackson module. A hard-pinned version here previously overrode Boot's
+	// managed version DOWN to 2.16.0 (Nov 2023) and would silently stay stale across
+	// future Boot upgrades instead of tracking Boot's own tested-compatible release.
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	
 	// Image processing
 	implementation 'net.coobird:thumbnailator:0.4.19'

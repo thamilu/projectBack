@@ -1,4 +1,5 @@
 <#import "template.ftl" as layout>
+<#import "macros/svg-icons.ftl" as icons>
 <@layout.registrationLayout displayMessage=!(messagesPerField.existsError('username') || messagesPerField.existsError('password')) displayInfo=realm.password && realm.registrationAllowed && !registrationDisabled??; section>
     <#if section = "header">
         ${msg("loginAccountTitle")}
@@ -26,13 +27,15 @@
 
                     <div class="pf-c-form__group">
                         <label for="password" class="pf-c-form__label">${msg("password")}<span class="required">*</span></label>
-                        <div class="password-input-wrapper">
+                        <div class="kc-password-wrapper">
                             <input tabindex="2" id="password" class="pf-c-form-control" name="password" type="password" autocomplete="current-password" spellcheck="false"
                                    aria-required="true"
                                    aria-invalid="<#if messagesPerField.existsError('password')>true</#if>"
                                    aria-describedby="password-error" />
-                            <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
-                                <i class="fas fa-eye"></i>
+                            <button type="button" class="kc-password-toggle" data-action="toggle-password" data-target="password"
+                                    aria-label="${msg('showPassword')}" aria-pressed="false" aria-controls="password">
+                                <@icons.eyeIcon />
+                                <@icons.eyeOffIcon hidden=true />
                             </button>
                         </div>
                         <span id="password-error" class="pf-c-form__helper-text pf-m-error" role="alert" aria-live="assertive" aria-atomic="true" <#if !messagesPerField.existsError('password')>hidden</#if>>

@@ -99,20 +99,25 @@ services:
     restart: unless-stopped
     ports:
       - "8082:8082"
+      - "8090:8090"
     environment:
       # Spring Profile
       SPRING_PROFILES_ACTIVE: docker
-      
+
       # Database Configuration
       DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-eshop_db}
       DATABASE_USERNAME: ${DATABASE_USERNAME:-eshop}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-eshop}
-      
+
       # Redis Configuration
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      
+
+      # WebSocket (socket.io) server — see WsTicketService / SocketIOServerConfig
+      WS_PORT: 8090
+      WS_TICKET_SIGNING_KEY: ${WS_TICKET_SIGNING_KEY:?WS_TICKET_SIGNING_KEY must be set}
+
       # Keycloak Configuration
       KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/eshop
       KEYCLOAK_JWK_URI: http://keycloak:8080/realms/eshop/protocol/openid-connect/certs

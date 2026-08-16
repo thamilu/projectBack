@@ -5,12 +5,14 @@ import com.eshop.app.order.application.port.in.UpdateOrderUseCase;
 import com.eshop.app.order.domain.entity.Order;
 import com.eshop.app.order.domain.repository.OrderRepository;
 import com.eshop.app.order.application.mapper.OrderMapper;
+import com.eshop.app.core.events.domain.OrderStatusChangedEvent;
 import com.eshop.app.core.exception.business.ResourceNotFoundException;
 import com.eshop.app.user.domain.entity.User;
 import com.eshop.app.user.shared.domain.enums.UserRole;
 import com.eshop.app.user.domain.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ public class UpdateOrderUseCaseImpl implements UpdateOrderUseCase {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public OrderResponse updateOrderStatus(Long orderId, String status) {
@@ -29,7 +32,11 @@ public class UpdateOrderUseCaseImpl implements UpdateOrderUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
         Order.OrderStatus targetStatus = Order.OrderStatus.valueOf(status.toUpperCase());
-        
+        // Captured before the switch below mutates the aggregate in place —
+        // Order has no history/audit trail, so this is the only point this
+        // value is ever observable.
+        Order.OrderStatus previousStatus = order.getOrderStatus();
+
         switch (targetStatus) {
             case CONFIRMED -> order.confirm();
             case SHIPPED -> order.ship();
@@ -39,6 +46,19 @@ public class UpdateOrderUseCaseImpl implements UpdateOrderUseCase {
         }
 
         order = orderRepository.save(order);
+
+        if (order.getOrderStatus() != previousStatus) {
+            eventPublisher.publishEvent(new OrderStatusChangedEvent(
+                    this,
+                    order.getId(),
+                    order.getOrderNumber(),
+                    order.getCustomer().getId(),
+                    order.getCustomer().getEmail(),
+                    order.getTotalAmount(),
+                    previousStatus,
+                    order.getOrderStatus()));
+        }
+
         return orderMapper.toOrderResponse(order);
     }
 

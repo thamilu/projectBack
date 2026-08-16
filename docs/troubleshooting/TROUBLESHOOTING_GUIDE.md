@@ -604,3 +604,54 @@ Once Docker connectivity is genuinely fixed (either mode), confirm with:
 ```
 All three should report `BUILD SUCCESSFUL` with real Postgres/Redis containers starting (visible in the log as `Container postgres:16 started` / `Container redis:7 started`).
 
+
+# --- File: gradle-bootrun-silent-kill.md ---
+
+# App Silently Stops Mid-Request with `gradlew bootRun` (❌ NOT a code issue — process-lifetime/tooling)
+
+## Symptom
+The app stops with no warning while actively serving requests. `logs/eshop-dev-local.log` just ends — often mid log statement — with:
+- No `Exception`/stack trace
+- No `OutOfMemoryError`
+- No JVM crash dump (`hs_err_pid*.log` in the project root)
+- No Spring/Tomcat/Hikari shutdown logging at all (no "Shutting down ExecutorService", no "Pausing ProtocolHandler", no "HikariPool-1 - Shutdown initiated")
+
+Example, observed 2026-08-16: 4 separate `bootRun` sessions that day (07:21, 08:52, 10:25, 13:41) each ended this way — the last one cut off mid `GET /api/v1/products` request handling at 14:34:05 with zero shutdown-phase logging.
+
+## Root Cause
+This log signature — a live log stream simply stopping, no exception, no OOM, no crash dump, and **zero shutdown logging** — only occurs when the JVM is killed from outside via `TerminateProcess` (a hard kill), not when the app crashes or exits on its own. If it were a real crash, exception, or graceful stop, Spring would have logged *something* first (it logs shutdown phases at INFO, and DEBUG-level Hibernate SQL was already on, so there's no logging-level explanation for the silence either).
+
+`gradlew bootRun` runs the Spring Boot app as a **child process of the Gradle daemon/worker**, not as the terminal's own foreground process. On Windows, when the owning terminal/console is torn down — closing a terminal tab, closing/reloading the VS Code window that owns the integrated terminal, the machine going to sleep — Gradle force-terminates that child process tree instead of forwarding a signal the JVM can trap. The JVM shutdown hook (which is what makes Spring log its graceful-shutdown sequence) never runs, so the log just stops.
+
+**This is not application code.** No exception path, thread, or config in this repo caused it — it's how `bootRun`'s child-process model behaves on Windows when its parent terminal disappears.
+
+## How to confirm you're looking at this issue
+1. Check for `hs_err_pid*.log` in the project root — if present, it's a real JVM crash, not this issue.
+2. Search the log around the cutoff for `OutOfMemoryError`, `Fatal`, `SIGTERM` — if found, it's not this issue.
+3. Search the log for any shutdown-phase logging near the cutoff (`Shutting down ExecutorService`, `Pausing ProtocolHandler`, `HikariPool.*Shutdown`) — if present, the app *did* get a graceful stop signal and this is a different problem.
+4. If none of the above are present, this is it.
+
+## Fix / Prevention (environment change, not code)
+
+**1. Run the built jar directly instead of `bootRun`** — makes the JVM the console's own process, so `Ctrl+C` (or a real stop) reaches it directly and triggers a real graceful shutdown you can see in the log:
+```powershell
+.\gradlew.bat bootJar
+java -jar build\libs\eshop-app-*.jar --spring.profiles.active=dev
+```
+
+**2. Don't run long-lived dev sessions in VS Code's integrated terminal.** Closing that panel, reloading the VS Code window, or a VS Code crash kills every child process attached to it. Use a standalone PowerShell/Windows Terminal window instead.
+
+**3. If you need it to survive even that terminal closing, detach it fully:**
+```powershell
+Start-Process javaw -ArgumentList '-jar','build\libs\eshop-app-*.jar','--spring.profiles.active=dev' -WindowStyle Hidden
+```
+Add `server.shutdown=graceful` to `application-dev.properties` (already set in `application-prod.properties`) if you want a clean stop via the actuator shutdown endpoint or a non-forceful `taskkill`.
+
+**4. Rule out sleep as the trigger** if it dies while genuinely idle/unattended:
+```powershell
+powercfg /change standby-timeout-ac 0
+```
+
+## Verification
+After switching to running the jar directly, stop the app with `Ctrl+C` and confirm the log now shows a real shutdown sequence (Tomcat connector pause, Hikari pool shutdown, `ApplicationContext` closing) instead of just stopping mid-line. If a future silent stop happens again, check the log first per "How to confirm" above — don't assume it's this same cause without checking, since real crashes/OOMs still need the actual root cause investigated, not this doc's fix.
+

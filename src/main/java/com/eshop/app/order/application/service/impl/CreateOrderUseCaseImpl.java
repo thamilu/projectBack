@@ -6,6 +6,7 @@ import com.eshop.app.cart.domain.repository.CartRepository;
 import com.eshop.app.cart.shared.exception.EmptyCartException;
 import com.eshop.app.catalog.domain.entity.Product;
 
+import com.eshop.app.core.events.domain.CartChangedEvent;
 import com.eshop.app.core.util.SecurityUtils;
 import com.eshop.app.inventory.shared.exception.InsufficientStockException;
 import com.eshop.app.order.api.request.OrderCreateRequest;
@@ -21,6 +22,7 @@ import com.eshop.app.user.domain.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +42,7 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
     private final OrderNumberGenerator orderNumberGenerator;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${app.business.default-tax-rate:0.10}")
     private BigDecimal defaultTaxRate;
@@ -112,6 +115,9 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
         cart.getItems().clear();
         cart.calculateTotalAmount();
         cartRepository.save(cart);
+        // Required for multi-device sync — another device viewing this
+        // user's cart must see it emptied after order placement.
+        eventPublisher.publishEvent(new CartChangedEvent(this, userId, CartChangedEvent.Action.CART_CLEARED));
 
         return orderMapper.toOrderResponse(savedOrder);
     }

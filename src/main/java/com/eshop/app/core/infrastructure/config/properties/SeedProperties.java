@@ -22,6 +22,12 @@ public class SeedProperties {
     /** Enable/disable seeding (default: true for dev profile) */
     private boolean enabled = true;
 
+    /**
+     * When false (default), seeding is skipped if the database already has users
+     * from a prior run. Set to true to wipe and reseed on every startup.
+     */
+    private boolean forceReseed = false;
+
     private boolean usersEnabled = true;
     private boolean categoriesEnabled = true;
     private boolean brandsEnabled = true;

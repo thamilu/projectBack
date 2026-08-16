@@ -1,4 +1,5 @@
 <#import "template.ftl" as layout>
+<#import "macros/svg-icons.ftl" as icons>
 <@layout.registrationLayout displayMessage=true; section>
     <#if section = "header">
         ${msg("registerTitle")}
@@ -47,10 +48,12 @@
             <#if passwordRequired??>
                 <div class="pf-c-form__group">
                     <label for="password" class="pf-c-form__label">${msg("password")}<span class="required">*</span></label>
-                    <div class="password-input-wrapper">
+                    <div class="kc-password-wrapper">
                         <input type="password" id="password" class="pf-c-form-control" name="password" autocomplete="new-password" />
-                        <button type="button" class="password-toggle" onclick="togglePassword('password', this)">
-                            <i class="fas fa-eye"></i>
+                        <button type="button" class="kc-password-toggle" data-action="toggle-password" data-target="password"
+                                aria-label="${msg('showPassword')}" aria-pressed="false" aria-controls="password">
+                            <@icons.eyeIcon />
+                            <@icons.eyeOffIcon hidden=true />
                         </button>
                     </div>
                     <#if messagesPerField.existsError('password')>
@@ -62,10 +65,12 @@
 
                 <div class="pf-c-form__group">
                     <label for="password-confirm" class="pf-c-form__label">${msg("passwordConfirm")}<span class="required">*</span></label>
-                    <div class="password-input-wrapper">
+                    <div class="kc-password-wrapper">
                         <input type="password" id="password-confirm" class="pf-c-form-control" name="password-confirm" />
-                        <button type="button" class="password-toggle" onclick="togglePassword('password-confirm', this)">
-                            <i class="fas fa-eye"></i>
+                        <button type="button" class="kc-password-toggle" data-action="toggle-password" data-target="password-confirm"
+                                aria-label="${msg('showPassword')}" aria-pressed="false" aria-controls="password-confirm">
+                            <@icons.eyeIcon />
+                            <@icons.eyeOffIcon hidden=true />
                         </button>
                     </div>
                     <#if messagesPerField.existsError('password-confirm')>

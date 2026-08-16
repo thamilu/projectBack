@@ -225,6 +225,31 @@ public class AsyncConfiguration implements AsyncConfigurer {
     }
 
     /**
+     * Executor for WebSocket event fanout (order/cart/stock push
+     * notifications). Kept separate from {@code notificationExecutor} so a
+     * WebSocket push backlog (e.g. a slow/unresponsive Redis pub-sub during
+     * a fanout spike) can never starve email delivery, and vice versa.
+     */
+    @Bean(name = "websocketExecutor")
+    @ConditionalOnMissingBean(name = "websocketExecutor")
+    public Executor websocketExecutor() {
+        log.info("Configuring WebSocket event fanout executor");
+
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(20);
+        executor.setQueueCapacity(500);
+        executor.setThreadNamePrefix("ws-event-");
+        executor.setTaskDecorator(new MdcTaskDecorator());
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
+        executor.initialize();
+
+        return executor;
+    }
+
+    /**
      * Executor for audit logging (async to avoid blocking main operations).
      */
     @Bean(name = "auditExecutor")

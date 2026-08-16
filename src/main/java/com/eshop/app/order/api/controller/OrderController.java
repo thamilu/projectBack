@@ -51,8 +51,8 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize(IS_ANY_ROLE)
-    @Operation(summary = "Get order by ID", description = "Retrieve order details by order ID. Accessible by all authenticated roles.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @PreAuthorize(CAN_VIEW_ORDER)
+    @Operation(summary = "Get order by ID", description = "Retrieve order details by order ID. Accessible by the order's customer, a seller with an item on the order, or an admin.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(
             @Parameter(description = "Order ID") @PathVariable Long id) {
         OrderResponse response = getOrderUseCase.getOrderById(id);

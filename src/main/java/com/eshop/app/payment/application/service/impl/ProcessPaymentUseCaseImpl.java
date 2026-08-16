@@ -1,5 +1,6 @@
 package com.eshop.app.payment.application.service.impl;
 
+import com.eshop.app.core.events.domain.OrderStatusChangedEvent;
 import com.eshop.app.order.domain.entity.Order;
 import com.eshop.app.order.domain.repository.OrderRepository;
 import com.eshop.app.payment.api.request.PaymentRequest;
@@ -23,6 +24,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +52,7 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
     private final PaymentGatewayService paymentGatewayService;
     private final PaymentSignatureVerifier signatureVerifier;
     private final ObjectMapper objectMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${payment.payu.salt:}")
     private String payuSalt;
@@ -96,9 +99,23 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
             PaymentGatewayResult result = paymentGatewayService.processPayment(request, payment);
 
             if (result.isSuccess()) {
+                Order.OrderStatus previousStatus = order.getOrderStatus();
                 payment.markAsProcessed(PaymentStatus.COMPLETED, result.getGatewayTransactionId());
                 order.markAsPaid();
-                orderRepository.save(order);
+                order = orderRepository.save(order);
+
+                if (order.getOrderStatus() != previousStatus) {
+                    eventPublisher.publishEvent(new OrderStatusChangedEvent(
+                            this,
+                            order.getId(),
+                            order.getOrderNumber(),
+                            order.getCustomer().getId(),
+                            order.getCustomer().getEmail(),
+                            order.getTotalAmount(),
+                            previousStatus,
+                            order.getOrderStatus()));
+                }
+
                 log.info("Payment processed successfully: {}", payment.getTransactionId());
             } else {
                 payment.markAsProcessed(PaymentStatus.FAILED, result.getGatewayTransactionId());

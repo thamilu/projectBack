@@ -29,6 +29,7 @@ import com.eshop.app.catalog.infrastructure.config.ProductProperties;
 import com.eshop.app.core.kernel.ApiConstants;
 import com.eshop.app.core.events.domain.LowStockEvent;
 import com.eshop.app.core.events.domain.ProductCreatedEvent;
+import com.eshop.app.core.events.domain.StockChangedEvent;
 import com.eshop.app.inventory.api.request.StockUpdateRequest;
 import com.eshop.app.inventory.shared.exception.InsufficientStockException;
 import com.eshop.app.order.domain.entity.OrderItem;
@@ -799,6 +800,13 @@ public class DefaultProductService implements ProductUseCase {
         product.setStockQuantity(newStock);
         Product saved = productRepository.save(product);
 
+        // StockChangedEvent already existed with a listener (writes the
+        // stock_movements audit row, now also pushes a WebSocket update) but
+        // was never actually published anywhere in the codebase — wiring it
+        // here restores the audit trail as a byproduct of adding the push.
+        eventPublisher.publishEvent(
+                new StockChangedEvent(this, id, oldStock, newStock, newStock - oldStock, "Manual stock update"));
+
         // Publish event for low stock alert
         if (newStock < productProperties.getLowStockThreshold()) {
             eventPublisher.publishEvent(new LowStockEvent(this, saved));
@@ -820,13 +828,16 @@ public class DefaultProductService implements ProductUseCase {
         Product product = productRepository.findByIdForUpdate(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
 
-        int newStock = product.getStockQuantity() + quantity;
+        int oldStock = product.getStockQuantity();
+        int newStock = oldStock + quantity;
         if (newStock < 0) {
             throw new InsufficientStockException("Insufficient stock for product: " + product.getName());
         }
 
         product.setStockQuantity(newStock);
         productRepository.save(product);
+        eventPublisher.publishEvent(
+                new StockChangedEvent(this, productId, oldStock, newStock, quantity, "Stock update"));
     }
 
     /**

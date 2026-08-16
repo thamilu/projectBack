@@ -6,6 +6,7 @@ import com.eshop.app.analytics.application.service.ReportService;
 import com.eshop.app.inventory.domain.repository.StockMovementRepository;
 import com.eshop.app.catalog.domain.repository.ProductRepository;
 import com.eshop.app.inventory.domain.entity.StockMovement;
+import com.eshop.app.realtime.infrastructure.socket.WsPushService;
 
 import com.eshop.app.core.events.domain.LowStockEvent;
 import com.eshop.app.core.events.domain.ProductCreatedEvent;
@@ -41,6 +42,7 @@ public class ProductEventListener {
     private final StockMovementRepository stockMovementRepository;
     private final ReportService reportService;
     private final ProductRepository productRepository;
+    private final WsPushService wsPushService;
 
     /**
      * On product creation: trigger search indexing and notifications.
@@ -73,7 +75,21 @@ public class ProductEventListener {
         productRepository.findById(event.getProductId()).ifPresent(product -> {
             stockMovementRepository.save(new StockMovement(event, product));
         });
+
+        wsPushService.push(
+                "product:" + event.getProductId(),
+                "stock_changed",
+                new StockChangedPushPayload(
+                        event.getProductId(),
+                        event.getPreviousStock(),
+                        event.getNewStock(),
+                        event.getDelta(),
+                        event.getEventTimestamp().toString()));
     }
+
+    /** Shape pushed to WebSocket subscribers — intentionally distinct from any REST DTO. */
+    public record StockChangedPushPayload(
+            Long productId, Integer previousStock, Integer newStock, Integer delta, String occurredAt) {}
 
     /**
      * On low stock: send seller and admin alerts.

@@ -397,9 +397,11 @@
     {
       "clientId": "eshop-client",
       "name": "E-Shop Frontend Application",
-      "description": "Public client for customer-facing frontend SPA",
+      "description": "Confidential client for the Next.js frontend (server-side token exchange via Auth.js)",
       "enabled": true,
-      "publicClient": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "eshop-client-secret",
       "redirectUris": [
         "http://localhost:3000/*",
         "https://oauth.pstmn.io/v1/callback"
@@ -463,6 +465,16 @@
             "access.token.claim": "true",
             "userinfo.token.claim": "true",
             "jsonType.label": "String"
+          }
+        },
+        {
+          "name": "subject-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "consentRequired": false,
+          "config": {
+            "access.token.claim": "true",
+            "id.token.claim": "true"
           }
         },
         {

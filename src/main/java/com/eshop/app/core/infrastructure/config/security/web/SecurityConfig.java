@@ -258,6 +258,19 @@ public class SecurityConfig {
     }
 
     private Long syncUserIdentity(String keycloakId, Jwt jwt, Set<String> roles) {
+        // Caffeine's cache throws NPE on a null key (ConcurrentHashMap.get rejects it) rather
+        // than treating it as "not present" — a JWT with no 'sub' claim (malformed token,
+        // non-compliant IdP response, or upstream misconfiguration) previously crashed the
+        // entire request with a 500 instead of degrading gracefully. 'sub' is normally
+        // mandatory for an OIDC access token, so this should not happen in a healthy
+        // deployment, but a single anomalous token must not take down the whole endpoint.
+        if (keycloakId == null || keycloakId.isBlank()) {
+            log.error(
+                    "[SECURITY][CRITICAL] JWT has no 'sub' claim — cannot resolve local user identity. "
+                            + "Proceeding without identity sync (principal id will be -1).");
+            return null;
+        }
+
         Long cached = identitySyncCache.getIfPresent(keycloakId);
         if (cached != null) {
             return cached;

@@ -2,6 +2,7 @@ package com.eshop.app.seed.core;
 
 import com.eshop.app.core.infrastructure.config.properties.SeedProperties;
 import com.eshop.app.seed.validation.SeedPropertiesValidator;
+import com.eshop.app.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
@@ -28,6 +29,7 @@ public class SeedOrchestrator {
     private final SeedPropertiesValidator validator;
     private final SeedProperties seedProperties;
     private final com.eshop.app.seed.provider.UserDataProvider userDataProvider;
+    private final UserRepository userRepository;
 
     /**
      * Execute all seeders in order within a single transaction.
@@ -49,6 +51,19 @@ public class SeedOrchestrator {
         // Individual seeders will check their own 'enabled' flags.
         if (!seedProperties.isEnabled()) {
             log.info("Seeding globally disabled via app.seed.enabled=false");
+            return SeedingResult.builder()
+                    .skipped(true)
+                    .durationMs(0)
+                    .build();
+        }
+
+        // Skip wipe-and-reseed on restart once data already exists. Users are the
+        // first seeder to run (order 1), so their presence is a reliable marker
+        // that a prior run already completed. Set app.seed.force-reseed=true to
+        // wipe and reseed anyway (e.g. after changing seed data).
+        if (!seedProperties.isForceReseed() && userRepository.count() > 0) {
+            log.info("Database already seeded ({} users found) - skipping. " +
+                    "Set app.seed.force-reseed=true to wipe and reseed.", userRepository.count());
             return SeedingResult.builder()
                     .skipped(true)
                     .durationMs(0)
