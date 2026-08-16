@@ -1,0 +1,16 @@
+{
+  "name": "eshop-keycloak-theme",
+  "version": "1.0.0",
+  "description": "E-Shop Keycloak Login Theme assets builder",
+  "scripts": {
+    "build": "node scripts/build.js"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.19",
+    "cssnano": "^7.0.2",
+    "esbuild": "^0.21.5",
+    "postcss": "^8.4.38",
+    "postcss-cli": "^11.0.0",
+    "postcss-import": "^16.1.0"
+  }
+}

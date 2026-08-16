@@ -66,23 +66,23 @@ public class CredentialValidator {
     private String jwtSecret;
 
     // Stripe (optional)
-    @Value("${stripe.enabled:false}")
+    @Value("${payment.stripe.enabled:false}")
     private boolean stripeEnabled;
 
-    @Value("${stripe.secret-key:}")
+    @Value("${payment.stripe.api-key:}")
     private String stripeSecretKey;
 
-    @Value("${stripe.public-key:}")
+    @Value("${payment.stripe.public-key:}")
     private String stripePublicKey;
 
     // Razorpay (optional)
-    @Value("${razorpay.enabled:false}")
+    @Value("${payment.razorpay.enabled:false}")
     private boolean razorpayEnabled;
 
-    @Value("${razorpay.key-id:}")
+    @Value("${payment.razorpay.key-id:}")
     private String razorpayKeyId;
 
-    @Value("${razorpay.key-secret:}")
+    @Value("${payment.razorpay.key-secret:}")
     private String razorpayKeySecret;
 
     // Keycloak (optional)

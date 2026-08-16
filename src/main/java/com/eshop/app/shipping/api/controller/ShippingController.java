@@ -10,6 +10,7 @@ import com.eshop.app.shipping.application.port.in.ShippingUseCase;
 import com.eshop.app.shipping.domain.model.ShippingCarrier;
 import com.eshop.app.shipping.domain.model.ShippingMethod;
 import com.eshop.app.shipping.domain.model.ShippingStatus;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -49,7 +50,7 @@ public class ShippingController {
     // ==================== Create Shipping ====================
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Operation(summary = "Create shipping for order", description = "Create shipping record with tracking information (SELLER and ADMIN only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<ShippingResponse>> createShipping(
             @Valid @RequestBody ShippingRequest request) {
@@ -62,7 +63,7 @@ public class ShippingController {
     // ==================== Get Shipping Information ====================
 
     @GetMapping("/order/{orderId}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'SELLER', 'DELIVERY_AGENT', 'ADMIN')")
+    @PreAuthorize(IS_ANY_ROLE)
     @Operation(summary = "Get shipping by order ID", description = "Retrieve shipping information for specific order", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<ShippingResponse>> getShippingByOrderId(
             @Parameter(description = "Order ID") @PathVariable Long orderId) {
@@ -79,7 +80,7 @@ public class ShippingController {
     }
 
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELF_BY_USER_ID)
     @Operation(summary = "Get user's shipping history", description = "Retrieve all shippings for a specific user (paginated)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<PageResponse<ShippingResponse>>> getUserShippings(
             @Parameter(description = "User ID") @PathVariable Long userId,
@@ -93,7 +94,7 @@ public class ShippingController {
     // ==================== Filter Shippings ====================
 
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyRole('SELLER', 'DELIVERY_AGENT', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER_OR_DELIVERY_AGENT)
     @Operation(summary = "Get shippings by status", description = "Filter shippings by delivery status (SELLER, DELIVERY_AGENT, ADMIN only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<PageResponse<ShippingResponse>>> getShippingsByStatus(
             @Parameter(description = "Shipping Status", example = "IN_TRANSIT") @PathVariable ShippingStatus status,
@@ -105,7 +106,7 @@ public class ShippingController {
     }
 
     @GetMapping("/carrier/{carrier}")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Operation(summary = "Get shippings by carrier", description = "Filter shippings by shipping carrier (SELLER and ADMIN only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<PageResponse<ShippingResponse>>> getShippingsByCarrier(
             @Parameter(description = "Shipping Carrier", example = "FEDEX") @PathVariable ShippingCarrier carrier,
@@ -117,7 +118,7 @@ public class ShippingController {
     }
 
     @GetMapping("/in-transit")
-    @PreAuthorize("hasAnyRole('DELIVERY_AGENT', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_DELIVERY_AGENT)
     @Operation(summary = "Get all in-transit shipments", description = "Retrieve all packages currently in transit (DELIVERY_AGENT and ADMIN only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<PageResponse<ShippingResponse>>> getInTransitShippings(
             @RequestParam(defaultValue = "0") int page,
@@ -128,7 +129,7 @@ public class ShippingController {
     }
 
     @GetMapping("/overdue")
-    @PreAuthorize("hasAnyRole('ADMIN', 'DELIVERY_AGENT')")
+    @PreAuthorize(IS_ADMIN_OR_DELIVERY_AGENT)
     @Operation(summary = "Get overdue deliveries", description = "Get list of deliveries that are past their estimated delivery date", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<List<ShippingResponse>>> getOverdueDeliveries() {
         List<ShippingResponse> response = shippingService.getOverdueDeliveries();
@@ -138,7 +139,7 @@ public class ShippingController {
     // ==================== Update Shipping ====================
 
     @PutMapping("/tracking")
-    @PreAuthorize("hasAnyRole('DELIVERY_AGENT', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_DELIVERY_AGENT)
     @Operation(summary = "Update tracking information", description = "Update shipping status and location (DELIVERY_AGENT and ADMIN only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<ShippingResponse>> updateTracking(
             @Valid @RequestBody TrackingUpdateRequest request) {
@@ -147,7 +148,7 @@ public class ShippingController {
     }
 
     @PutMapping("/{shippingId}/mark-shipped")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Operation(summary = "Mark order as shipped", description = "Update shipping status to SHIPPED with tracking number (SELLER and ADMIN only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<ShippingResponse>> markAsShipped(
             @Parameter(description = "Shipping ID") @PathVariable Long shippingId,
@@ -157,7 +158,7 @@ public class ShippingController {
     }
 
     @PutMapping("/{shippingId}/mark-delivered")
-    @PreAuthorize("hasAnyRole('DELIVERY_AGENT', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_DELIVERY_AGENT)
     @Operation(summary = "Mark order as delivered", description = "Update shipping status to DELIVERED (DELIVERY_AGENT and ADMIN only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<ShippingResponse>> markAsDelivered(
             @Parameter(description = "Shipping ID") @PathVariable Long shippingId,
@@ -167,7 +168,7 @@ public class ShippingController {
     }
 
     @PutMapping("/{shippingId}/address")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     @Operation(summary = "Update shipping address", description = "Update shipping address before package is shipped (CUSTOMER and ADMIN only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<ShippingResponse>> updateShippingAddress(
             @Parameter(description = "Shipping ID") @PathVariable Long shippingId,
@@ -177,7 +178,7 @@ public class ShippingController {
     }
 
     @PutMapping("/{shippingId}/cancel")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER_OR_CUSTOMER)
     @Operation(summary = "Cancel shipping", description = "Cancel shipping before package is shipped (CUSTOMER, SELLER, ADMIN only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<ShippingResponse>> cancelShipping(
             @Parameter(description = "Shipping ID") @PathVariable Long shippingId,
@@ -219,7 +220,7 @@ public class ShippingController {
     // ==================== Analytics & Statistics ====================
 
     @GetMapping("/statistics")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Operation(summary = "Get delivery statistics", description = "Get delivery performance statistics for date range (ADMIN only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<Object>> getDeliveryStatistics(
             @Parameter(description = "Start date", example = "2025-01-01T00:00:00") @RequestParam LocalDateTime startDate,

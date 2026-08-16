@@ -49,5 +49,15 @@ compile_log.txt
 test_log.txt
 # Code Citations.md
 
+### Node.js (keycloak-themes/eshop asset builder) ###
+# node_modules was never committed here, but nothing was preventing it — a `git add .`
+# would have pulled in the entire dependency tree, including platform-specific binaries
+# (e.g. @esbuild/win32-x64/esbuild.exe). The theme's compiled output (login.css,
+# login.min.css, login.min.js) is intentionally NOT ignored — Keycloak serves those files
+# directly from the theme directory, there is no build step at deploy time.
+node_modules/
+npm-debug.log*
+.npm/
+
 # Large Data Seeds
 src/main/resources/seed/postal_codes.json

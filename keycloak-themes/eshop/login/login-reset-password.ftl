@@ -6,7 +6,14 @@
         <form id="kc-reset-password-form" action="${url.loginAction}" method="post">
             <div class="pf-c-form__group">
                 <label for="username" class="pf-c-form__label"><#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if></label>
-                <input type="text" id="username" name="username" class="pf-c-form-control" autofocus value="${(auth.attemptedUsername!'')}" aria-invalid="<#if messagesPerField.existsError('username')>true</#if>"/>
+                <input type="text" id="username" name="username" class="pf-c-form-control" autofocus value="${(auth.attemptedUsername!'')}" aria-invalid="<#if messagesPerField.existsError('username')>true</#if>" aria-describedby="username-error"/>
+                <#-- The macro invocation above suppresses the generic top-level error banner
+                     whenever this field has an error (displayMessage=!messagesPerField.existsError
+                     ('username')), but nothing previously replaced it inline — an unknown
+                     username/email produced zero visible feedback. -->
+                <span id="username-error" class="pf-c-form__helper-text pf-m-error" role="alert" aria-live="assertive" aria-atomic="true" <#if !messagesPerField.existsError('username')>hidden</#if>>
+                    <span class="kc-error-message__text"><#if messagesPerField.existsError('username')>${kcSanitize(messagesPerField.get('username'))?no_esc}</#if></span>
+                </span>
             </div>
 
             <div class="pf-c-form__group">

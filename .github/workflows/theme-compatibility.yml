@@ -1,0 +1,34 @@
+# .github/workflows/theme-compatibility.yml
+name: Theme Compatibility Check
+
+on:
+  pull_request:
+    paths:
+      - 'keycloak-themes/eshop/**'
+      - '.github/workflows/theme-compatibility.yml'
+
+jobs:
+  visual-regression:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        keycloak-version: ['23.0.7', '24.0.3', '25.0.0', '26.1.0']
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Start Keycloak ${{ matrix.keycloak-version }}
+        run: |
+          docker run -d \
+            --name keycloak-${{ matrix.keycloak-version }} \
+            -p 8080:8080 \
+            -e KEYCLOAK_ADMIN=admin \
+            -e KEYCLOAK_ADMIN_PASSWORD=admin \
+            -v ./keycloak-themes/eshop:/opt/keycloak/themes/eshop \
+            quay.io/keycloak/keycloak:${{ matrix.keycloak-version }} start-dev
+
+      - name: Check Status & Logs
+        run: |
+          sleep 10
+          docker ps
+          docker logs keycloak-${{ matrix.keycloak-version }}

@@ -1,6 +1,6 @@
 package com.eshop.app.user.api.request;
 
-import com.eshop.app.user.domain.entity.Role;
+import com.eshop.app.user.shared.domain.enums.UserRole;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
@@ -46,5 +46,5 @@ public class SimpleRegisterRequest {
 
     @NotNull(message = "Role is required")
     @Schema(description = "User role", example = "CUSTOMER")
-    private Role role;
+    private UserRole role;
 }

@@ -7,7 +7,7 @@ import com.eshop.app.order.domain.repository.OrderRepository;
 import com.eshop.app.core.api.response.HomeResponse;
 import com.eshop.app.store.domain.repository.StoreRepository;
 import com.eshop.app.user.domain.entity.User;
-import com.eshop.app.user.domain.entity.Role;
+import com.eshop.app.user.shared.domain.enums.UserRole;
 import com.eshop.app.user.domain.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -61,7 +61,7 @@ public class HomeUseCaseImpl implements HomeUseCase {
             return HomeResponse.forGuest();
         }
 
-        Role role = user.getRole();
+        UserRole role = user.getRole();
         String userName = user.getUserProfile() != null
                 ? user.getUserProfile().getFirstName() + " " + user.getUserProfile().getLastName()
                 : user.getEmail();

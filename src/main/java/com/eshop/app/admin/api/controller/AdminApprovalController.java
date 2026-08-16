@@ -1,10 +1,12 @@
 package com.eshop.app.admin.api.controller;
 
 
-import com.eshop.app.seller.application.port.in.SellerAdminUseCase;
+import com.eshop.app.seller.application.port.in.SellerApprovalUseCase;
 import com.eshop.app.shipping.application.port.in.DeliveryAgentUseCase;
 import com.eshop.app.user.api.response.DeliveryAgentProfileResponse;
 import com.eshop.app.user.api.response.SellerProfileResponse;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
+import org.springframework.data.domain.PageRequest;
 
 
 
@@ -25,10 +27,10 @@ import java.util.List;
 @RequiredArgsConstructor
 @io.swagger.v3.oas.annotations.tags.Tag(name = "Admin Approvals", description = "Admin endpoints for approving sellers and delivery agents")
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize(IS_ADMIN)
 public class AdminApprovalController {
 
-    private final SellerAdminUseCase sellerAdminService;
+    private final SellerApprovalUseCase sellerAdminService;
     private final DeliveryAgentUseCase deliveryAgentService;
 
     // --- Sellers ---
@@ -36,7 +38,7 @@ public class AdminApprovalController {
     @GetMapping("/sellers")
     @Operation(summary = "List all pending seller applications")
     public ResponseEntity<List<SellerProfileResponse>> getPendingSellers() {
-        return ResponseEntity.ok(sellerAdminService.getPendingSellers());
+        return ResponseEntity.ok(sellerAdminService.getPendingSellers(PageRequest.of(0, 100)).getContent());
     }
 
     @PostMapping("/sellers/{id}/{action}")

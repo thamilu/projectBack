@@ -1,0 +1,14 @@
+{
+  "attributes": {
+    "realm_client": "false",
+    "oidc.ciba.grant.enabled": "false",
+    "client.secret.creation.time": "0",
+    "backchannel.logout.session.required": "true",
+    "frontchannel.logout.session.required": "true",
+    "post.logout.redirect.uris": "http://localhost:3000/*##http://localhost:4200/*##http://localhost:5173/*##http://localhost:8082/*##https://shop.yourdomain.com/*",
+    "display.on.consent.screen": "false",
+    "oauth2.device.authorization.grant.enabled": "false",
+    "backchannel.logout.revoke.offline.tokens": "false",
+    "pkce.code.challenge.method": ""
+  }
+}

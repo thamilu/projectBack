@@ -14,6 +14,7 @@ import com.eshop.app.core.api.response.ApiResponse;
 import com.eshop.app.core.api.response.BatchOperationResult;
 import com.eshop.app.core.api.response.PageResponse;
 import com.eshop.app.core.api.BaseController;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 import com.eshop.app.core.util.ETagGenerator;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
@@ -136,7 +137,7 @@ public class ProductController extends BaseController {
     }
 
     @PostMapping("/with-category")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Operation(summary = "Create product with auto category", description = "Creates a product. If categoryId is not provided, will create a new category with newCategoryName.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ResponseStatus(HttpStatus.CREATED)
     @RateLimiter(name = "productCreate")
@@ -184,7 +185,7 @@ public class ProductController extends BaseController {
     // ==================== UPDATE OPERATIONS ====================
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('SELLER') and @productSecurityService.isOwner(#id, principal))")
+    @PreAuthorize(CAN_MANAGE_PRODUCT)
     @Operation(summary = "Update product", description = "Update existing product. Supports conditional updates with If-Match header for optimistic locking.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @Caching(evict = {
             @CacheEvict(key = "#id"),
@@ -219,7 +220,7 @@ public class ProductController extends BaseController {
     }
 
     @PatchMapping("/{id}/stock")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Operation(summary = "Update product stock", description = "Atomically update product stock quantity with operation type (SET, INCREMENT, DECREMENT). Single database operation returns updated product.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @CacheEvict(key = "#id")
     public ResponseEntity<ApiResponse<ProductResponse>> updateStock(
@@ -237,7 +238,7 @@ public class ProductController extends BaseController {
     // ==================== DELETE OPERATIONS ====================
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('SELLER') and @productSecurityService.isOwner(#id, principal))")
+    @PreAuthorize(CAN_MANAGE_PRODUCT)
     @Operation(summary = "Delete product", description = "Soft delete product by ID. Sellers can only delete their own products.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @CacheEvict(key = "#id")
@@ -396,6 +397,19 @@ public class ProductController extends BaseController {
             @ParameterObject Pageable pageable) {
         PageResponse<ProductResponse> response = productService.fullTextSearch(query, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/clone/{id}")
+    @PreAuthorize("hasAnyRole(@appProperties.security.roles.seller, @appProperties.security.roles.admin)")
+    @Operation(summary = "Clone master product to seller store", description = "Clone a product from the master catalog into the authenticated seller's store as a draft.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    public ResponseEntity<ApiResponse<ProductResponse>> cloneProduct(
+            @PathVariable @Positive Long id,
+            @AuthenticationPrincipal Jwt jwt) {
+        String userId = extractUserId(jwt);
+        log.info("Cloning master product ID {} for user {}", id, userId);
+        ProductResponse response = productService.cloneProductToSellerStore(id, userId);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Product cloned successfully", response));
     }
 
     @GetMapping("/test")

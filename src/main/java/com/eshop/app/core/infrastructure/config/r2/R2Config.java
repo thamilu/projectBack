@@ -25,6 +25,19 @@ public class R2Config {
     public S3AsyncClient s3AsyncClient() {
         AppProperties.Storage.R2 r2 = appProperties.getStorage().getR2();
         
+        if (r2 == null || r2.getAccessKeyId() == null || r2.getAccessKeyId().isBlank()
+                || r2.getSecretAccessKey() == null || r2.getSecretAccessKey().isBlank()
+                || r2.getAccountId() == null || r2.getAccountId().isBlank()) {
+            return S3AsyncClient.builder()
+                    .endpointOverride(URI.create("https://mock.r2.cloudflarestorage.com"))
+                    .region(Region.US_EAST_1)
+                    .credentialsProvider(StaticCredentialsProvider.create(
+                            AwsBasicCredentials.create("mock-key", "mock-secret")
+                    ))
+                    .forcePathStyle(true)
+                    .build();
+        }
+
         String endpoint = String.format("https://%s.r2.cloudflarestorage.com", r2.getAccountId());
         
         return S3AsyncClient.builder()

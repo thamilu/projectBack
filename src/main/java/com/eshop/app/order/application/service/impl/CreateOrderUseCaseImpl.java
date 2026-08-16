@@ -25,8 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -41,6 +39,7 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
     private final com.eshop.app.inventory.application.port.in.UpdateInventoryUseCase updateInventoryUseCase;
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
+    private final OrderNumberGenerator orderNumberGenerator;
 
     @Value("${app.business.default-tax-rate:0.10}")
     private BigDecimal defaultTaxRate;
@@ -92,7 +91,7 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
         BigDecimal totalAmount = subtotal.add(shippingAmount).add(taxAmount);
 
         Order order = Order.builder()
-                .orderNumber(generateOrderNumber())
+                .orderNumber(orderNumberGenerator.generateOrderNumber())
                 .customer(customer)
                 .shippingAddress(request.getShippingAddress())
                 .billingAddress(request.getBillingAddress() != null ? request.getBillingAddress() : request.getShippingAddress())
@@ -115,13 +114,6 @@ public class CreateOrderUseCaseImpl implements CreateOrderUseCase {
         cartRepository.save(cart);
 
         return orderMapper.toOrderResponse(savedOrder);
-    }
-
-
-
-    private String generateOrderNumber() {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        return "ORD-" + timestamp + "-" + (int) (Math.random() * 1000);
     }
 }
 

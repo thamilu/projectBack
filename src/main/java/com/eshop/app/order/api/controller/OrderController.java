@@ -12,6 +12,7 @@ import com.eshop.app.order.application.port.in.GetOrderUseCase;
 import com.eshop.app.order.application.port.in.UpdateOrderUseCase;
 import com.eshop.app.core.api.response.ApiResponse;
 import com.eshop.app.core.api.response.PageResponse;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -41,7 +42,7 @@ public class OrderController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     @Operation(summary = "Create new order", description = "Create a new order from cart items. Available for CUSTOMER and ADMIN roles.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<OrderResponse>> createOrder(
             @Valid @RequestBody OrderCreateRequest request) {
@@ -50,7 +51,7 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'SELLER', 'DELIVERY_AGENT', 'ADMIN')")
+    @PreAuthorize(IS_ANY_ROLE)
     @Operation(summary = "Get order by ID", description = "Retrieve order details by order ID. Accessible by all authenticated roles.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(
             @Parameter(description = "Order ID") @PathVariable Long id) {
@@ -59,7 +60,7 @@ public class OrderController {
     }
 
     @GetMapping("/number/{orderNumber}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'SELLER', 'DELIVERY_AGENT', 'ADMIN')")
+    @PreAuthorize(IS_ANY_ROLE)
     @Operation(summary = "Get order by order number", description = "Retrieve order details by order number (e.g., ORD-20251202-001).", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderByOrderNumber(
             @Parameter(description = "Order Number") @PathVariable String orderNumber) {
@@ -68,7 +69,7 @@ public class OrderController {
     }
 
     @GetMapping("/my-orders")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getMyOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -78,7 +79,7 @@ public class OrderController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getAllOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -88,7 +89,7 @@ public class OrderController {
     }
 
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getOrdersByStatus(
             @PathVariable String status,
             @RequestParam(defaultValue = "0") int page,
@@ -99,7 +100,7 @@ public class OrderController {
     }
 
     @GetMapping("/store/{storeId}")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getOrdersByStore(
             @PathVariable Long storeId,
             @RequestParam(defaultValue = "0") int page,
@@ -110,7 +111,7 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/status")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
             @PathVariable Long orderId,
             @RequestParam String status) {
@@ -119,7 +120,7 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/payment-status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<ApiResponse<OrderResponse>> updatePaymentStatus(
             @PathVariable Long orderId,
             @RequestParam String status) {
@@ -128,7 +129,7 @@ public class OrderController {
     }
 
     @PutMapping("/{orderId}/assign-delivery-agent")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<ApiResponse<OrderResponse>> assignDeliveryAgent(
             @PathVariable Long orderId,
             @RequestParam Long agentId) {
@@ -137,7 +138,7 @@ public class OrderController {
     }
 
     @GetMapping("/delivery/my-deliveries")
-    @PreAuthorize("hasAnyRole('DELIVERY_AGENT', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_DELIVERY_AGENT)
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getDeliveryAgentOrders(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -147,7 +148,7 @@ public class OrderController {
     }
 
     @GetMapping("/seller")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Operation(summary = "Get seller orders", description = "Retrieve all orders containing items from the authenticated seller's stores.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getSellerOrders(
             @RequestParam(defaultValue = "0") int page,

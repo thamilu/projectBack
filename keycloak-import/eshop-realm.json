@@ -81,11 +81,18 @@
     "user": "${env.SMTP_USER:}",
     "password": "${env.SMTP_PASSWORD:}"
   },
-  "defaultRoles": [
-    "offline_access",
-    "uma_authorization",
-    "CUSTOMER"
-  ],
+  "defaultRole": {
+    "name": "default-roles-eshop",
+    "description": "${role_default-roles}",
+    "composite": true,
+    "composites": {
+      "realm": [
+        "offline_access",
+        "uma_authorization",
+        "CUSTOMER"
+      ]
+    }
+  },
   "roles": {
     "realm": [
       {
@@ -630,24 +637,6 @@
           "view-events"
         ]
       }
-    },
-    {
-      "username": "admin",
-      "enabled": true,
-      "email": "admin@eshop.com",
-      "emailVerified": true,
-      "firstName": "Marketplace",
-      "lastName": "Admin",
-      "credentials": [
-        {
-          "type": "password",
-          "value": "Admin@@Secret123",
-          "temporary": false
-        }
-      ],
-      "realmRoles": [
-        "default-roles-eshop"
-      ]
     }
   ],
   "identityProviders": [

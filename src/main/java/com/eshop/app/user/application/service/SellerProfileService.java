@@ -12,7 +12,7 @@ import org.springframework.security.core.Authentication;
  * Enterprise-grade service for Seller Profile management.
  * Handles core profile retrieval and updates.
  */
-public interface SellerProfileService {
+public interface SellerProfileService extends com.eshop.app.user.application.port.in.SellerProfileUseCase {
     SellerProfileResponse getSellerProfile(Long userId);
     SellerProfileResponse getSellerProfile(Authentication authentication);
     SellerProfileResponse updateSellerProfile(Long userId, SellerProfileUpdateRequest request);

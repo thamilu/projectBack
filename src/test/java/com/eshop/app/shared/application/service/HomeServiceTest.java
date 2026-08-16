@@ -6,7 +6,7 @@ import com.eshop.app.user.domain.entity.SellerProfile;
 import com.eshop.app.store.domain.entity.Store;
 import com.eshop.app.user.domain.entity.User;
 import com.eshop.app.user.domain.entity.UserProfile;
-import com.eshop.app.user.domain.entity.Role;
+import com.eshop.app.user.shared.domain.enums.UserRole;
 import com.eshop.app.user.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,14 +36,14 @@ class HomeServiceTest {
         // Admin User
         adminUser = User.builder()
                 .keycloakId("admin-uuid")
-                .role(Role.ADMIN)
+                .role(UserRole.ADMIN)
                 .build();
         adminUser.setUserProfile(UserProfile.builder().firstName("Admin").lastName("User").user(adminUser).build());
 
         // Seller User
         sellerUser = User.builder()
                 .keycloakId("seller-uuid")
-                .role(Role.SELLER)
+                .role(UserRole.SELLER)
                 .build();
         sellerUser.setUserProfile(UserProfile.builder().firstName("Seller").lastName("User").user(sellerUser).build());
 
@@ -61,7 +61,7 @@ class HomeServiceTest {
         // Customer User
         customerUser = User.builder()
                 .keycloakId("customer-uuid")
-                .role(Role.CUSTOMER)
+                .role(UserRole.CUSTOMER)
                 .build();
         customerUser.setUserProfile(
                 UserProfile.builder().firstName("Customer").lastName("User").user(customerUser).build());
@@ -69,7 +69,7 @@ class HomeServiceTest {
         // Delivery Agent User
         deliveryAgentUser = User.builder()
                 .keycloakId("delivery-uuid")
-                .role(Role.DELIVERY_AGENT)
+                .role(UserRole.DELIVERY_AGENT)
                 .build();
         deliveryAgentUser.setUserProfile(
                 UserProfile.builder().firstName("Delivery").lastName("Agent").user(deliveryAgentUser).build());

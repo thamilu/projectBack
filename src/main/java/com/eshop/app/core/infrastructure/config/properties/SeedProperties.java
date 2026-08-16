@@ -1,7 +1,5 @@
 package com.eshop.app.core.infrastructure.config.properties;
 
-import com.eshop.app.core.infrastructure.config.properties.SeedProperties;
-
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;

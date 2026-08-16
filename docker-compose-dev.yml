@@ -72,7 +72,7 @@ services:
   # Keycloak - Authentication Server
   # ══════════════════════════════════════════════════════════════
   keycloak:
-    image: quay.io/keycloak/keycloak:26.5.2
+    image: quay.io/keycloak/keycloak:26.7.1
     container_name: eshop-keycloak-dev
     restart: unless-stopped
     environment:
@@ -92,9 +92,8 @@ services:
       KC_DB_PASSWORD: "thamilu*884*"
 
       # ── Server Configuration ──
-      KC_HOSTNAME: localhost
+      KC_HOSTNAME_URL: "http://localhost:8080"
       KC_HTTP_ENABLED: "true"
-      KC_PROXY_HEADERS: xforwarded
       KC_HEALTH_ENABLED: "true"
 
       # ── Realm Import Variables (used in JSON files) ──

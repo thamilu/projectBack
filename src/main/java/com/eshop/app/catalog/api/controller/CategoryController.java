@@ -14,6 +14,7 @@ import com.eshop.app.core.api.response.ApiResponse;
 import com.eshop.app.core.api.response.PageResponse;
 import com.eshop.app.core.exception.business.InvalidParameterException;
 import com.eshop.app.core.infrastructure.config.security.oauth.PrincipalDetails;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,7 +54,7 @@ public class CategoryController {
     // ==================== ADMIN OPERATIONS ====================
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Timed(value = "category.create", description = "Time to create category")
     @Operation(summary = "Create new category (Admin only)", description = "Create a new product category with optional parent category for hierarchy.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Category created successfully")
@@ -75,7 +76,7 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Timed(value = "category.update", description = "Time to update category")
     @Operation(summary = "Update category (Admin only)", description = "Update an existing category. Cannot create circular parent-child relationships.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<CategoryResponse>> updateCategory(
@@ -93,7 +94,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Timed(value = "category.delete", description = "Time to delete category")
     @Operation(summary = "Delete category (Admin only)", description = "Soft delete a category. Use hardDelete=true to permanently remove.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<Void>> deleteCategory(
@@ -116,7 +117,7 @@ public class CategoryController {
     }
 
     @PostMapping("/{id}/restore")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Operation(summary = "Restore soft-deleted category (Admin only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<CategoryResponse>> restoreCategory(
             @PathVariable @Positive Long id,
@@ -129,7 +130,7 @@ public class CategoryController {
     }
 
     @PostMapping("/bulk")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Operation(summary = "Create multiple categories (Admin only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> createCategories(
             @Valid @RequestBody @Size(min = 1, max = 50, message = "Must provide 1-50 categories") List<CategoryRequest> requests,

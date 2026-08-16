@@ -1,0 +1,93 @@
+/* ==========================================================================
+   E-Shop Global Keyframe Animations
+   ========================================================================== */
+
+/* ── Functional Animations ───────────────────────────────────────── */
+
+@keyframes kc-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes kc-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes kc-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ── Motion-Safe Transition Animations ───────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+    @keyframes cardEnter {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes meshOrbit1 {
+        0% {
+            transform: translate3d(0, 0, 0) scale(1);
+        }
+        33% {
+            transform: translate3d(80px, -60px, 0) scale(1.15);
+        }
+        66% {
+            transform: translate3d(-40px, 40px, 0) scale(0.9);
+        }
+        100% {
+            transform: translate3d(0, 0, 0) scale(1);
+        }
+    }
+
+    @keyframes meshOrbit2 {
+        0% {
+            transform: translate3d(0, 0, 0) scale(1);
+        }
+        50% {
+            transform: translate3d(-100px, 50px, 0) scale(1.2);
+        }
+        100% {
+            transform: translate3d(0, 0, 0) scale(1);
+        }
+    }
+
+    @keyframes elasticEnter {
+        0% {
+            transform: scale3d(0.9, 0.9, 1) translateY(8px);
+            opacity: 0;
+        }
+        55% {
+            transform: scale3d(1.025, 1.025, 1) translateY(-1px);
+            opacity: 0.9;
+        }
+        80% {
+            transform: scale3d(0.985, 0.985, 1) translateY(1px);
+            opacity: 0.95;
+        }
+        100% {
+            transform: scale3d(1, 1, 1) translateY(0);
+            opacity: 1;
+        }
+    }
+}

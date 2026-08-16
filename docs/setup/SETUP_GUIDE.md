@@ -291,37 +291,6 @@ Available on port `5432` with two distinct databases:
     *   **General**: Name it `E-Shop Local`.
     *   **Connection**:
         *   **Host name/address**: `postgres` (if using Docker network) or `localhost` (from your PC).
-        *   **Port**: `5432`
-        *   **Username**: `postgres`
-        *   **Password**: `thamilu*884*`
-    *   Click **Save**.
-
-#### Method B: Using External Tools (DBeaver, IntelliJ, etc.)
-Use these settings for any external database manager:
-*   **Host**: `localhost`
-*   **Port**: `5432`
-*   **User**: `postgres`
-*   **Pass**: `thamilu*884*`
-*   **Database Names**: `eshop_db` (App) or `eshop_keycloak` (Auth).
-
-### 3. Keycloak (Authentication)
-*   **Admin Console**: [http://localhost:8080](http://localhost:8080)
-*   **Admin User**: `admin`
-*   **Admin Password**: `Admin@@Secret123`
-*   **Realms**:
-    *   `eshop`: Marketplace users (Sellers, Customers)
-    *   `eshop-admin`: Administration (Approvals)
-
-### 4. MailHog (Email Testing)
-Captures every email sent by the system (e.g., OTPs, order confirmations).
-*   **Web UI**: [http://localhost:8025](http://localhost:8025)
-
-### 5. Redis Commander (Cache Management)
-*   **Web UI**: [http://localhost:8081](http://localhost:8081)
-
----
-
-## ≡ƒôƒ Environment Variables (.env)
 Your `.env` file is the master configuration. Key variables include:
 *   `KEYCLOAK_AUTH_SERVER`: Base URL for authentication.
 *   `DB_URL`: JDBC connection string for the backend.

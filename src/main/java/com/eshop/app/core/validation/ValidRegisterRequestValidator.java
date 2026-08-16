@@ -1,7 +1,7 @@
 package com.eshop.app.core.validation;
 
 import com.eshop.app.user.api.request.RegisterRequest;
-import com.eshop.app.user.domain.entity.Role;
+import com.eshop.app.user.shared.domain.enums.UserRole;
 
 
 
@@ -19,19 +19,19 @@ public class ValidRegisterRequestValidator implements ConstraintValidator<ValidR
         // Only add custom validations for role-specific logic
         
         // Determine effective role
-        Role effectiveRole = getEffectiveRole(request);
-        
+        UserRole effectiveRole = getEffectiveRole(request);
+
         // Only perform role-specific validation, don't interfere with basic field validation
         boolean valid = true;
 
         // Role-specific checks (only if we have a valid role)
-        if (effectiveRole == Role.DELIVERY_AGENT) {
+        if (effectiveRole == UserRole.DELIVERY_AGENT) {
             if (isBlank(request.getVehicleType())) {
                 context.buildConstraintViolationWithTemplate("vehicleType is required for delivery agents")
                         .addPropertyNode("vehicleType").addConstraintViolation();
                 valid = false;
             }
-        } else if (effectiveRole == Role.SELLER) {
+        } else if (effectiveRole == UserRole.SELLER) {
             String sellerType = request.getSellerType();
             if (isBlank(sellerType)) {
                 context.buildConstraintViolationWithTemplate("sellerType is required when role is SELLER")
@@ -56,20 +56,20 @@ public class ValidRegisterRequestValidator implements ConstraintValidator<ValidR
         return valid;
     }
 
-    private Role getEffectiveRole(RegisterRequest request) {
-        Role role = request.getRole();
+    private UserRole getEffectiveRole(RegisterRequest request) {
+        UserRole role = request.getRole();
         String roleName = request.getRoleName();
-        
+
         if (role != null) {
             return role;
         } else if (roleName != null && !roleName.isBlank()) {
             try {
-                return Role.valueOf(roleName.trim().toUpperCase());
+                return UserRole.valueOf(roleName.trim().toUpperCase());
             } catch (IllegalArgumentException e) {
                 // tolerate some common aliases
                 String rn = roleName.trim().toUpperCase();
-                if (rn.equals("DELIVERY")) return Role.DELIVERY_AGENT;
-                else if (rn.equals("SELLER")) return Role.SELLER;
+                if (rn.equals("DELIVERY")) return UserRole.DELIVERY_AGENT;
+                else if (rn.equals("SELLER")) return UserRole.SELLER;
             }
         }
         

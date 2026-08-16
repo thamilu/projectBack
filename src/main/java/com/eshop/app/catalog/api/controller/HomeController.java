@@ -70,7 +70,6 @@ public class HomeController {
                 .description(ApiConstants.API_DESCRIPTION)
                 .features(ApiConstants.FEATURES)
                 .endpoints(ApiConstants.ENDPOINTS)
-                .timestamp(Instant.now())
                 .build();
 
         return responseBuilder.buildETaggedResponse(ApiResponse.success(info), INFO_CACHE_SECONDS, etag);
@@ -111,8 +110,19 @@ public class HomeController {
         }
     }
 
+    /**
+     * ETag for the {@code /info} response, covering every field that response actually
+     * contains (not just the version) so a change to any of them correctly invalidates
+     * cached/{@code 304}'d copies.
+     */
     private String generateETag() {
-        return "\"" + ApiConstants.API_VERSION.hashCode() + "\"";
+        int hash = java.util.Objects.hash(
+                ApiConstants.API_NAME,
+                ApiConstants.API_VERSION,
+                ApiConstants.API_DESCRIPTION,
+                ApiConstants.FEATURES,
+                ApiConstants.ENDPOINTS);
+        return "\"" + hash + "\"";
     }
 }
 

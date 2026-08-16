@@ -132,7 +132,10 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
 
     private String sanitize(String input) {
         if (input == null) return null;
-        return input.replaceAll("(?i)(password|token|secret|key|apikey|authorization)=[^&]*", "$1=***")
-                .replaceAll("(?i)\"(password|token|secret|key|apikey)\"\\s*:\\s*\"[^\"]*\"", "\"$1\":\"***\"");
+        // Matches field-name variants too (accessToken, refreshToken, clientSecret, ...), not just
+        // the exact word — a strict exact-match regex here previously let real secrets through
+        // whenever a DTO field was named e.g. "accessToken" rather than literally "token".
+        return input.replaceAll("(?i)([\\w-]*(?:password|token|secret|key|apikey|authorization)[\\w-]*)=[^&]*", "$1=***")
+                .replaceAll("(?i)\"([\\w-]*(?:password|token|secret|key|apikey|authorization)[\\w-]*)\"\\s*:\\s*\"[^\"]*\"", "\"$1\":\"***\"");
     }
 }

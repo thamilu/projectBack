@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -64,7 +65,7 @@ public class ProductLocationController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid search parameters (e.g., radius > 500km)"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized - Bearer token required")
     })
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER_OR_CUSTOMER)
     public ResponseEntity<Page<ProductLocationResponse>> searchByLocation(
             @Valid @RequestBody ProductLocationSearchRequest request) {
 
@@ -99,7 +100,7 @@ public class ProductLocationController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Products found successfully"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Missing required parameters (latitude, longitude)")
     })
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER_OR_CUSTOMER)
     public ResponseEntity<Page<ProductLocationResponse>> searchByLocationGet(
             @Parameter(description = "User's latitude", required = true, example = "37.7749") @RequestParam Double latitude,
 
@@ -191,7 +192,7 @@ public class ProductLocationController {
             - Show distance to each store
             - Allow users to filter products by selected store
             """, security = @SecurityRequirement(name = "bearer-jwt"))
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER_OR_CUSTOMER)
     public ResponseEntity<Page<ProductLocationResponse>> findNearbyStores(
             @Parameter(description = "User's latitude", required = true) @RequestParam Double latitude,
 

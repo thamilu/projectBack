@@ -24,8 +24,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -41,6 +39,7 @@ public class CheckoutUseCaseImpl implements CheckoutUseCase {
     private final com.eshop.app.inventory.application.port.in.UpdateInventoryUseCase updateInventoryUseCase;
     private final UserRepository userRepository;
     private final OrderMapper orderMapper;
+    private final OrderNumberGenerator orderNumberGenerator;
 
     @Override
     public OrderResponse checkoutAnonymousCart(String cartCode, CheckoutRequest request) {
@@ -106,7 +105,7 @@ public class CheckoutUseCaseImpl implements CheckoutUseCase {
         BigDecimal totalAmount = subtotal.add(shippingAmount).add(taxAmount);
 
         Order.OrderBuilder orderBuilder = Order.builder()
-                .orderNumber(generateOrderNumber())
+                .orderNumber(orderNumberGenerator.generateOrderNumber())
                 .totalAmount(totalAmount)
                 .taxAmount(taxAmount)
                 .shippingAmount(shippingAmount)
@@ -132,11 +131,6 @@ public class CheckoutUseCaseImpl implements CheckoutUseCase {
         cartRepository.save(cart);
 
         return orderMapper.toOrderResponse(savedOrder);
-    }
-
-    private String generateOrderNumber() {
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        return "ORD-" + timestamp + "-" + (int) (Math.random() * 1000);
     }
 }
 

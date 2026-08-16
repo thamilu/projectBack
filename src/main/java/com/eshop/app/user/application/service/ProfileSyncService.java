@@ -10,16 +10,26 @@ import com.eshop.app.user.domain.entity.User;
  * Seller Registration).
  */
 public interface ProfileSyncService {
+
     /**
      * Synchronizes address information from a SellerProfile to the User's primary
      * UserAddress.
+     *
+     * @param user    the target user; silently no-ops if {@code null}
+     * @param profile the seller profile providing address data; silently no-ops if {@code null}
      */
     void syncSellerAddressToUser(User user, SellerProfile profile);
 
     /**
-     * Ensures a User has a valid UserProfile and populates basic info.
+     * Ensures a User has a valid UserProfile and applies non-null fields from the
+     * provided {@link ProfileSyncCommand}.
+     *
+     * <p>Only fields present (non-null) in the command are applied — existing values
+     * are not overwritten by null command fields.
+     *
+     * @param user    the target user; must not be null
+     * @param command the profile fields to apply; must not be null
      */
-    void ensureProfileExists(User user, String firstName, String lastName, String phone,
-            String alternatePhone, String gender, String preferredLanguage,
-            java.time.LocalDate dateOfBirth);
+    void ensureProfileExists(User user, ProfileSyncCommand command);
 }
+

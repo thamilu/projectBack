@@ -1,6 +1,7 @@
 package com.eshop.app.shipping.api.controller;
 
 import com.eshop.app.core.util.SecurityUtils;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.IS_ADMIN_OR_CUSTOMER_OR_DELIVERY_AGENT;
 
 
 import com.eshop.app.shipping.api.request.DeliveryAgentRegisterRequest;
@@ -29,7 +30,7 @@ public class DeliveryController {
     private final DeliveryAgentUseCase deliveryAgentService;
 
     @PostMapping("/register")
-    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('CUSTOMER', 'DELIVERY_AGENT', 'ADMIN')")
+    @org.springframework.security.access.prepost.PreAuthorize(IS_ADMIN_OR_CUSTOMER_OR_DELIVERY_AGENT)
     @Operation(summary = "Register as a Delivery Agent")
     public ResponseEntity<DeliveryAgentProfileResponse> register(
             @Valid @RequestBody DeliveryAgentRegisterRequest request,

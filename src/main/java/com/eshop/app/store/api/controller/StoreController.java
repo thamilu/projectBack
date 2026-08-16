@@ -6,6 +6,7 @@ import com.eshop.app.core.api.response.PageResponse;
 import com.eshop.app.store.api.request.StoreCreateRequest;
 import com.eshop.app.store.api.response.StoreResponse;
 import com.eshop.app.store.application.port.in.StoreUseCase;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,7 +33,7 @@ public class StoreController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Operation(summary = "Create new store", description = "Create a new store. Available for SELLER and ADMIN roles.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<StoreResponse>> createStore(
             @Valid @RequestBody StoreCreateRequest request) {
@@ -43,7 +44,7 @@ public class StoreController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Operation(summary = "Update store", description = "Update store information. Sellers can update their own store, admins can update any store.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<StoreResponse>> updateStore(
             @Parameter(description = "Store ID") @PathVariable Long id,
@@ -53,7 +54,7 @@ public class StoreController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Operation(summary = "Delete store (Admin only)", description = "Delete a store. All products in this store will also be removed.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<Void>> deleteStore(
             @Parameter(description = "Store ID") @PathVariable Long id) {
@@ -68,7 +69,7 @@ public class StoreController {
     }
 
     @GetMapping("/my-store")
-    @PreAuthorize("hasRole('SELLER')")
+    @PreAuthorize(IS_SELLER)
     public ResponseEntity<ApiResponse<StoreResponse>> getMyStore() {
         StoreResponse response = storeService.getMyStore();
         return ResponseEntity.ok(ApiResponse.success(response));

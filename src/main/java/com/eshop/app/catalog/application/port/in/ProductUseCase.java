@@ -184,6 +184,10 @@ public interface ProductUseCase {
      * @return paginated product responses
      */
     PageResponse<ProductResponse> fullTextSearch(String query, org.springframework.data.domain.Pageable pageable);
+
+    ProductResponse cloneProductToSellerStore(Long masterProductId, String userId);
+
+    ProductResponse toggleProductStatus(Long id);
 }
 
 

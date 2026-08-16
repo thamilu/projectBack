@@ -18,7 +18,7 @@ public class ReserveStockUseCaseImpl implements ReserveStockUseCase {
 
     @Override
     public boolean reserveStock(Long productId, int quantity) {
-        Inventory inventory = inventoryRepository.findByProductId(productId)
+        Inventory inventory = inventoryRepository.findByProductIdForUpdate(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory not found for product: " + productId));
         boolean success = inventory.reserveStock(quantity);
         if (success) {

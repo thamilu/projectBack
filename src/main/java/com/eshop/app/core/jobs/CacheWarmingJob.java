@@ -4,6 +4,7 @@ import com.eshop.app.catalog.application.port.in.ProductUseCase;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +47,7 @@ public class CacheWarmingJob {
      * Uses system auth to bypass @PreAuthorize restrictions.
      */
     @Scheduled(fixedDelay = 10, timeUnit = TimeUnit.MINUTES, initialDelay = 2)
+    @SchedulerLock(name = "CacheWarmingJob_warmFeaturedProducts", lockAtMostFor = "PT5M", lockAtLeastFor = "PT30S")
     public void warmFeaturedProducts() {
         log.debug("Warming featured products cache...");
         try {
@@ -54,7 +56,7 @@ public class CacheWarmingJob {
                 productUseCase.getFeaturedProducts(PageRequest.of(0, 20));
                 return null;
             });
-            log.info("âœ“ Featured products cache warmed in {}ms", System.currentTimeMillis() - start);
+            log.info("Featured products cache warmed in {}ms", System.currentTimeMillis() - start);
         } catch (Exception e) {
             log.error("Failed to warm featured products cache: {}", e.getMessage(), e);
         }
@@ -64,6 +66,7 @@ public class CacheWarmingJob {
      * Warm top-selling products cache every 15 minutes.
      */
     @Scheduled(fixedDelay = 15, timeUnit = TimeUnit.MINUTES, initialDelay = 3)
+    @SchedulerLock(name = "CacheWarmingJob_warmTopSellingProducts", lockAtMostFor = "PT5M", lockAtLeastFor = "PT30S")
     public void warmTopSellingProducts() {
         log.debug("Warming top-selling products cache...");
         try {
@@ -72,7 +75,7 @@ public class CacheWarmingJob {
                 productUseCase.getTopSellingProducts(10);
                 return null;
             });
-            log.info("âœ“ Top-selling products cache warmed in {}ms", System.currentTimeMillis() - start);
+            log.info("Top-selling products cache warmed in {}ms", System.currentTimeMillis() - start);
         } catch (Exception e) {
             log.error("Failed to warm top-selling products cache: {}", e.getMessage(), e);
         }
@@ -82,6 +85,7 @@ public class CacheWarmingJob {
      * Clear stale cache entries daily at 3 AM to prevent memory bloat.
      */
     @Scheduled(cron = "0 0 3 * * ?")
+    @SchedulerLock(name = "CacheWarmingJob_clearStaleCache", lockAtMostFor = "PT10M", lockAtLeastFor = "PT1M")
     public void clearStaleCache() {
         log.info("Clearing stale cache entries...");
         try {
@@ -92,7 +96,7 @@ public class CacheWarmingJob {
                     log.debug("Cleared cache: {}", cacheName);
                 }
             });
-            log.info("âœ“ All caches cleared successfully");
+            log.info("All caches cleared successfully");
         } catch (Exception e) {
             log.error("Failed to clear stale caches: {}", e.getMessage(), e);
         }
@@ -103,7 +107,7 @@ public class CacheWarmingJob {
      */
     @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.HOURS)
     public void logCacheStatistics() {
-        log.info("ðŸ“Š Cache Statistics:");
+        log.info("Cache Statistics:");
         cacheManager.getCacheNames().forEach(cacheName -> {
             var cache = cacheManager.getCache(cacheName);
             if (cache != null) {

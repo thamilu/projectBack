@@ -30,12 +30,21 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * API Documentation and Information Controller
- * 
+ *
  * Provides welcome page, API information, and documentation redirects.
  * All URLs are dynamically generated based on the request context.
+ *
+ * SECURITY NOTE: Base URL construction honors X-Forwarded-* headers for
+ * reverse-proxy deployments. These headers are attacker-controllable unless
+ * a trusted-proxy filter (e.g. Spring's ForwardedHeaderFilter with a
+ * configured trusted proxy list, or Tomcat's RemoteIpValve) is enforced at
+ * the infrastructure layer. This controller applies defense-in-depth
+ * validation (scheme whitelist, hostname format check, port range check)
+ * but does NOT replace proper trusted-proxy configuration.
  */
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -52,6 +61,13 @@ public class ApiDocumentationController {
     // Cache settings
     private static final int WELCOME_CACHE_SECONDS = 300; // 5 minutes
     private static final int STATUS_CACHE_SECONDS = 30; // 30 seconds
+
+    // Forwarded-header handling (defense-in-depth validation)
+    private static final String FORWARDED_PROTO_HEADER = "X-Forwarded-Proto";
+    private static final String FORWARDED_HOST_HEADER = "X-Forwarded-Host";
+    private static final String FORWARDED_PORT_HEADER = "X-Forwarded-Port";
+    private static final int MAX_HOST_HEADER_LENGTH = 253; // RFC 1035 max hostname length
+    private static final Pattern SAFE_HOST_PATTERN = Pattern.compile("^[a-zA-Z0-9.-]+$");
 
     private final Optional<BuildProperties> buildProperties;
     private final Environment environment;
@@ -76,25 +92,29 @@ public class ApiDocumentationController {
 
         log.debug("Welcome endpoint accessed from: {}", request.getRemoteAddr());
 
-        String etag = generateWelcomeETag();
+        String baseUrl = buildBaseUrl(request);
+        String etag = generateWelcomeETag(baseUrl);
 
-        // Support conditional requests (304 Not Modified)
+        // Support conditional requests (304 Not Modified).
+        // checkNotModified() already writes status/headers to the underlying
+        // HttpServletResponse; returning null here follows Spring's documented
+        // contract and avoids double/duplicate status handling.
         if (webRequest.checkNotModified(etag)) {
             log.debug("Returning 304 Not Modified for welcome endpoint");
-            return ResponseEntity.status(304).build();
+            return null;
         }
 
-        String baseUrl = buildBaseUrl(request);
         WelcomeResponse response = buildWelcomeResponse(baseUrl);
 
         return ResponseEntity.ok()
                 .eTag(etag)
+                .varyBy(FORWARDED_HOST_HEADER, FORWARDED_PROTO_HEADER, FORWARDED_PORT_HEADER)
                 .cacheControl(CacheControl.maxAge(WELCOME_CACHE_SECONDS, TimeUnit.SECONDS).cachePublic())
                 .body(response);
     }
 
     @GetMapping("/status")
-    @Operation(summary = "API Status", description = "Detailed API status including uptime and health information")
+    @Operation(summary = "API Status", description = "Lightweight API liveness status including uptime; for comprehensive dependency health checks use /actuator/health")
     public ResponseEntity<ApiStatusResponse> getStatus(HttpServletRequest request) {
         log.debug("Status endpoint accessed");
 
@@ -150,6 +170,7 @@ public class ApiDocumentationController {
         }
 
         return ResponseEntity.ok()
+                .varyBy(FORWARDED_HOST_HEADER, FORWARDED_PROTO_HEADER, FORWARDED_PORT_HEADER)
                 .cacheControl(CacheControl.maxAge(WELCOME_CACHE_SECONDS, TimeUnit.SECONDS).cachePublic())
                 .body(info);
     }
@@ -173,6 +194,7 @@ public class ApiDocumentationController {
     public RedirectView redirectToApiDocs() {
         RedirectView redirect = new RedirectView(OPENAPI_SPEC_PATH);
         redirect.setContextRelative(true);
+        redirect.setExposeModelAttributes(false);
         return redirect;
     }
 
@@ -203,20 +225,30 @@ public class ApiDocumentationController {
         return links;
     }
 
+    /**
+     * Builds the externally-visible base URL for this request.
+     * <p>
+     * Forwarded headers (X-Forwarded-Proto/Host/Port) are validated with a
+     * strict allow-list before use, to reduce the risk of host-header
+     * injection / cache poisoning when this application sits behind an
+     * untrusted or misconfigured proxy. This is defense-in-depth only —
+     * infrastructure-level trusted-proxy enforcement is still required
+     * (see class-level Javadoc).
+     */
     private String buildBaseUrl(HttpServletRequest request) {
         StringBuilder url = new StringBuilder();
 
-        // Check for reverse proxy headers first
-        String forwardedProto = request.getHeader("X-Forwarded-Proto");
-        String forwardedHost = request.getHeader("X-Forwarded-Host");
-        String forwardedPort = request.getHeader("X-Forwarded-Port");
+        String forwardedProto = sanitizeScheme(request.getHeader(FORWARDED_PROTO_HEADER));
+        String forwardedHost = sanitizeHost(request.getHeader(FORWARDED_HOST_HEADER));
+        Integer forwardedPort = sanitizePort(request.getHeader(FORWARDED_PORT_HEADER));
 
         if (forwardedHost != null) {
             // Behind reverse proxy
             String scheme = forwardedProto != null ? forwardedProto : "https";
             url.append(scheme).append("://").append(forwardedHost);
 
-            if (forwardedPort != null && !isDefaultPort(scheme, Integer.parseInt(forwardedPort))) {
+            boolean hostIncludesPort = forwardedHost.indexOf(':') > -1;
+            if (!hostIncludesPort && forwardedPort != null && !isDefaultPort(scheme, forwardedPort)) {
                 url.append(":").append(forwardedPort);
             }
         } else {
@@ -236,6 +268,70 @@ public class ApiDocumentationController {
         return url.toString();
     }
 
+    /**
+     * Whitelists the forwarded scheme to http/https only, preventing
+     * arbitrary scheme injection into generated documentation links.
+     */
+    private String sanitizeScheme(String scheme) {
+        if (scheme == null) {
+            return null;
+        }
+        String normalized = scheme.trim().toLowerCase();
+        return ("http".equals(normalized) || "https".equals(normalized)) ? normalized : null;
+    }
+
+    /**
+     * Validates the forwarded host against a strict allow-list pattern.
+     * Rejects malformed/oversized values instead of reflecting them
+     * unchecked into cacheable response bodies.
+     * <p>
+     * Known limitation: IPv6 literal hosts (e.g. "[::1]") are not matched
+     * by this pattern and will safely fall back to the direct request
+     * values; this is an accepted trade-off favoring strict validation.
+     */
+    private String sanitizeHost(String host) {
+        if (host == null || host.isBlank() || host.length() > MAX_HOST_HEADER_LENGTH) {
+            return null;
+        }
+
+        String hostPart = host;
+        String portPart = null;
+        int colonIndex = host.lastIndexOf(':');
+        if (colonIndex > -1) {
+            hostPart = host.substring(0, colonIndex);
+            portPart = host.substring(colonIndex + 1);
+        }
+
+        if (!SAFE_HOST_PATTERN.matcher(hostPart).matches()) {
+            log.warn("Rejected X-Forwarded-Host header due to invalid format");
+            return null;
+        }
+
+        if (portPart != null && sanitizePort(portPart) == null) {
+            log.warn("Rejected X-Forwarded-Host header due to invalid embedded port");
+            return null;
+        }
+
+        return host;
+    }
+
+    /**
+     * Safely parses a forwarded port value, never throwing on malformed
+     * input. Valid TCP port range is 1-65535.
+     */
+    private Integer sanitizePort(String port) {
+        if (port == null || port.isBlank()) {
+            return null;
+        }
+        try {
+            int value = Integer.parseInt(port.trim());
+            return (value >= 1 && value <= 65535) ? value : null;
+        } catch (NumberFormatException ex) {
+            log.warn("Rejected non-numeric forwarded port header value");
+            return null;
+        }
+    }
+
     private boolean isDefaultPort(String scheme, int port) {
         return ("http".equals(scheme) && port == 80) ||
                 ("https".equals(scheme) && port == 443);
@@ -247,10 +343,16 @@ public class ApiDocumentationController {
                 .orElse("development");
     }
 
-    private String generateWelcomeETag() {
+    /**
+     * ETag now incorporates the resolved base URL, since the welcome
+     * response content (documentation links) varies by host/scheme/port,
+     * not just by application version and profile.
+     */
+    private String generateWelcomeETag(String baseUrl) {
         String version = getVersion();
         String profile = getActiveProfile();
-        return "\"welcome-" + (version + profile).hashCode() + "\"";
+        int hash = (version + profile + baseUrl).hashCode();
+        return "\"welcome-" + hash + "\"";
     }
 
     private String getActiveProfile() {
@@ -287,4 +389,3 @@ public class ApiDocumentationController {
         }
     }
 }
-

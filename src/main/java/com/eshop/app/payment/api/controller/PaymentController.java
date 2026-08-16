@@ -3,10 +3,10 @@ package com.eshop.app.payment.api.controller;
 import com.eshop.app.core.kernel.ApiConstants;
 import com.eshop.app.payment.api.request.PaymentRequest;
 import com.eshop.app.payment.api.response.PaymentResponse;
-import com.eshop.app.payment.domain.model.PaymentGateway;
 import com.eshop.app.payment.domain.model.PaymentStatus;
 import com.eshop.app.payment.api.request.RefundRequest;
 import com.eshop.app.core.api.response.PageResponse;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -49,7 +49,7 @@ public class PaymentController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Payment processed successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid payment request")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "402", description = "Payment failed")
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     public ResponseEntity<PaymentResponse> processPayment(@Valid @RequestBody PaymentRequest request) {
         PaymentResponse response = processPaymentUseCase.processPayment(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -59,7 +59,7 @@ public class PaymentController {
     @Operation(summary = "Process Refund", description = "Process full or partial refund for a payment")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Refund processed successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid refund request")
-    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     public ResponseEntity<PaymentResponse> processRefund(@Valid @RequestBody RefundRequest request) {
         PaymentResponse response = refundPaymentUseCase.processRefund(request);
         return ResponseEntity.ok(response);
@@ -67,7 +67,7 @@ public class PaymentController {
 
     @GetMapping("/transaction/{transactionId}")
     @Operation(summary = "Get Payment by Transaction ID", description = "Retrieve payment details using transaction ID")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole(@appProperties.security.roles.customer) or hasRole(@appProperties.security.roles.admin)")
     public ResponseEntity<PaymentResponse> getPaymentByTransactionId(
             @Parameter(description = "Transaction ID") @PathVariable String transactionId) {
         PaymentResponse response = getPaymentUseCase.getPaymentByTransactionId(transactionId);
@@ -76,7 +76,7 @@ public class PaymentController {
 
     @GetMapping("/order/{orderId}")
     @Operation(summary = "Get Payments by Order", description = "Retrieve all payments for a specific order")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole(@appProperties.security.roles.customer) or hasRole(@appProperties.security.roles.admin)")
     public ResponseEntity<List<PaymentResponse>> getPaymentsByOrderId(
             @Parameter(description = "Order ID") @PathVariable Long orderId) {
         List<PaymentResponse> payments = getPaymentUseCase.getPaymentsByOrderId(orderId);
@@ -85,7 +85,7 @@ public class PaymentController {
 
     @GetMapping("/user/{userId}")
     @Operation(summary = "Get User Payment History", description = "Retrieve paginated payment history for a user")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole(@appProperties.security.roles.customer) or hasRole(@appProperties.security.roles.admin)")
     public ResponseEntity<PageResponse<PaymentResponse>> getUserPayments(
             @Parameter(description = "User ID") @PathVariable Long userId,
             @PageableDefault(size = 20) Pageable pageable) {
@@ -95,7 +95,7 @@ public class PaymentController {
 
     @GetMapping("/status/{status}")
     @Operation(summary = "Get Payments by Status", description = "Retrieve payments filtered by status (admin only)")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<PageResponse<PaymentResponse>> getPaymentsByStatus(
             @Parameter(description = "Payment status") @PathVariable PaymentStatus status,
             @PageableDefault(size = 20) Pageable pageable) {
@@ -105,7 +105,7 @@ public class PaymentController {
 
     @PostMapping("/verify/{transactionId}")
     @Operation(summary = "Verify Payment", description = "Verify payment status with gateway")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SELLER')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     public ResponseEntity<PaymentResponse> verifyPayment(
             @Parameter(description = "Transaction ID") @PathVariable String transactionId) {
         PaymentResponse response = processPaymentUseCase.verifyPayment(transactionId);
@@ -114,7 +114,7 @@ public class PaymentController {
 
     @PostMapping("/retry/{paymentId}")
     @Operation(summary = "Retry Failed Payment", description = "Retry a failed payment transaction")
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     public ResponseEntity<PaymentResponse> retryPayment(
             @Parameter(description = "Payment ID") @PathVariable Long paymentId) {
         PaymentResponse response = processPaymentUseCase.retryPayment(paymentId);
@@ -123,7 +123,7 @@ public class PaymentController {
 
     @GetMapping("/failed/retry")
     @Operation(summary = "Get Failed Payments for Retry", description = "Get list of failed payments that can be retried")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<List<PaymentResponse>> getFailedPaymentsForRetry() {
         List<PaymentResponse> payments = getPaymentUseCase.getFailedPaymentsForRetry();
         return ResponseEntity.ok(payments);
@@ -131,7 +131,7 @@ public class PaymentController {
 
     @GetMapping("/statistics")
     @Operation(summary = "Get Payment Statistics", description = "Get payment statistics for admin dashboard")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<Object> getPaymentStatistics(
             @Parameter(description = "Start date (ISO format)") @RequestParam(required = false) LocalDateTime startDate,
             @Parameter(description = "End date (ISO format)") @RequestParam(required = false) LocalDateTime endDate) {
@@ -140,20 +140,9 @@ public class PaymentController {
     }
 
 
-    @PostMapping("/webhook/{gateway}")
-    @Operation(summary = "Payment Webhook Handler", description = "Handle payment webhooks from gateways")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Webhook processed successfully")
-    public ResponseEntity<Void> handlePaymentWebhook(
-            @Parameter(description = "Payment gateway") @PathVariable PaymentGateway gateway,
-            @RequestBody String payload,
-            @RequestHeader(value = "X-Signature", required = false) String signature) {
-        processPaymentUseCase.handlePaymentWebhook(payload, signature, gateway);
-        return ResponseEntity.ok().build();
-    }
-
     @PutMapping("/{paymentId}/status")
     @Operation(summary = "Update Payment Status", description = "Update payment status (admin only)")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<PaymentResponse> updatePaymentStatus(
             @Parameter(description = "Payment ID") @PathVariable Long paymentId,
             @Parameter(description = "New status") @RequestParam PaymentStatus status,

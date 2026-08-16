@@ -5,7 +5,7 @@ import com.eshop.app.user.domain.repository.UserRepository;
 import com.eshop.app.user.domain.repository.UserProfileRepository;
 import com.eshop.app.user.domain.repository.SellerProfileRepository;
 import com.eshop.app.admin.application.service.KeycloakAdminService;
-import com.eshop.app.user.domain.entity.Role;
+import com.eshop.app.user.shared.domain.enums.UserRole;
 
 import com.eshop.app.core.infrastructure.config.properties.SeedProperties;
 import com.eshop.app.user.api.request.RegisterRequest;
@@ -189,15 +189,15 @@ public class UserSeeder extends BaseSeeder<User, SeederContext> {
     /**
      * Parse role with fallback to CUSTOMER if invalid.
      */
-    private Role parseRole(String role) {
+    private UserRole parseRole(String role) {
         if (role == null || role.isBlank()) {
-            return Role.CUSTOMER;
+            return UserRole.CUSTOMER;
         }
         try {
-            return Role.valueOf(role.toUpperCase());
+            return UserRole.valueOf(role.toUpperCase());
         } catch (IllegalArgumentException e) {
             log.warn("Invalid role '{}', defaulting to CUSTOMER", role);
-            return Role.CUSTOMER;
+            return UserRole.CUSTOMER;
         }
     }
 

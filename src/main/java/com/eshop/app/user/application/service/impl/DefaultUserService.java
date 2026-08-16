@@ -12,7 +12,6 @@ import com.eshop.app.user.api.request.UserUpdateRequest;
 import com.eshop.app.user.api.response.UserResponse;
 import com.eshop.app.user.application.mapper.UserMapper;
 import com.eshop.app.user.application.service.UserService;
-import com.eshop.app.user.domain.entity.Role;
 import com.eshop.app.user.domain.entity.SellerProfile;
 import com.eshop.app.user.domain.entity.User;
 import com.eshop.app.user.domain.repository.UserRepository;
@@ -40,6 +39,14 @@ public class DefaultUserService implements UserService, ManageUserUseCase, GetUs
     private final KeycloakService keycloakService;
     private final com.eshop.app.core.util.ExportService exportService;
     private final com.eshop.app.user.application.service.ProfileSyncService profileSyncService;
+
+    // Import alias for readability
+    private com.eshop.app.user.application.service.ProfileSyncCommand cmd(
+            String firstName, String lastName, String phone, String alternatePhone,
+            String gender, String preferredLanguage, java.time.LocalDate dateOfBirth) {
+        return new com.eshop.app.user.application.service.ProfileSyncCommand(
+                firstName, lastName, phone, alternatePhone, gender, preferredLanguage, dateOfBirth);
+    }
 
     public DefaultUserService(UserRepository userRepository, UserMapper userMapper,
             KeycloakService keycloakService, com.eshop.app.core.util.ExportService exportService,
@@ -112,9 +119,9 @@ public class DefaultUserService implements UserService, ManageUserUseCase, GetUs
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
         // Use reusable service to ensure profile exists and sync personal info
-        profileSyncService.ensureProfileExists(user, request.getFirstName(), request.getLastName(), request.getPhone(),
+        profileSyncService.ensureProfileExists(user, cmd(request.getFirstName(), request.getLastName(), request.getPhone(),
                 request.getAlternatePhone(), request.getGender(), request.getPreferredLanguage(),
-                request.getDateOfBirth());
+                request.getDateOfBirth()));
 
         // Handle Address Sync if provided
         if (hasAddressInfo(request)) {
@@ -213,7 +220,7 @@ public class DefaultUserService implements UserService, ManageUserUseCase, GetUs
         // Map API enum to entity enum
         try {
             UserRole entityRole = UserRole.valueOf(newRole.name());
-            user.setRole(Role.valueOf(entityRole.name()));
+            user.setRole(entityRole);
         } catch (IllegalArgumentException e) {
             throw new ResourceNotFoundException("Invalid role: " + newRole);
         }
@@ -391,6 +398,19 @@ public class DefaultUserService implements UserService, ManageUserUseCase, GetUs
 
     @Override
     @Transactional
+    public Long syncUserFromKeycloak(com.eshop.app.user.application.command.UserSyncCommand command) {
+        return syncUserFromKeycloak(
+                command.getKeycloakId(),
+                command.getEmail(),
+                command.getFirstName(),
+                command.getLastName(),
+                command.getPhone(),
+                command.isEmailVerified()
+        );
+    }
+
+    @Override
+    @Transactional
     public Long syncUserFromKeycloak(String keycloakId, String email, String firstName,
             String lastName, String phoneNumber, Boolean emailVerified) {
 
@@ -453,10 +473,10 @@ public class DefaultUserService implements UserService, ManageUserUseCase, GetUs
 
             log.debug("Updating user profile for user ID: {}", user.getId());
             profileSyncService.ensureProfileExists(user,
-                    truncate(firstName, 100),
+                    cmd(truncate(firstName, 100),
                     truncate(lastName, 100),
                     truncate(phoneNumber, 20),
-                    null, null, null, null);
+                    null, null, null, null));
         } else {
             // Create new user
             log.info("Creating new local user record for Keycloak ID: {} (email: {})", resolvedKeycloakId, email);
@@ -465,15 +485,15 @@ public class DefaultUserService implements UserService, ManageUserUseCase, GetUs
                     .keycloakId(resolvedKeycloakId)
                     .email(truncate(email, 150))
                     .emailVerified(emailVerified != null ? emailVerified : false)
-                    .role(Role.CUSTOMER)
+                    .role(UserRole.CUSTOMER)
                     .build();
 
             log.debug("Creating associated profile for new user...");
             profileSyncService.ensureProfileExists(user,
-                    truncate(firstName, 100),
+                    cmd(truncate(firstName, 100),
                     truncate(lastName, 100),
                     truncate(phoneNumber, 20),
-                    null, null, null, null);
+                    null, null, null, null));
         }
 
         try {
@@ -538,7 +558,7 @@ public class DefaultUserService implements UserService, ManageUserUseCase, GetUs
             UserRole bestRole = determineBestRole(keycloakRoles);
             if (!user.getRole().name().equals(bestRole.name())) {
                 log.info("Syncing role for user ID {}: {} -> {}", user.getId(), user.getRole(), bestRole);
-                user.setRole(Role.valueOf(bestRole.name()));
+                user.setRole(bestRole);
                 userRepository.save(user);
             }
         });

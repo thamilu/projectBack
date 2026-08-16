@@ -64,7 +64,11 @@ services:
       # Keycloak
       KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI:-http://keycloak:8080/realms/eshop}
       KEYCLOAK_JWK_URI: ${KEYCLOAK_JWK_URI:-http://keycloak:8080/realms/eshop/protocol/openid-connect/certs}
-      ADMIN_ISSUER_URI: ${KEYCLOAK_AUTH_SERVER:-http://keycloak:8080}/realms/${ADMIN_REALM_NAME:-master}
+      # ADMIN_REALM_NAME must default to "eshop-admin" (the dedicated admin realm — see
+      # keycloak-import/eshop-admin-realm.json), NOT "master": "master" is Keycloak's own
+      # operator/superadmin realm, a completely different security domain from this
+      # application's admin role, and must never be the fallback for app authentication.
+      ADMIN_ISSUER_URI: ${KEYCLOAK_AUTH_SERVER_URL:-http://keycloak:8080}/realms/${ADMIN_REALM_NAME:-eshop-admin}
       
       # Security
       JWT_SECRET: ${JWT_SECRET}
@@ -166,9 +170,45 @@ services:
       KC_HEALTH_ENABLED: "true"
       # JVM Tuning for 2GB VPS
       JAVA_OPTS: "-Xms256m -Xmx512m -XX:+UseG1GC -XX:+UseContainerSupport"
+
+      # ── Realm Import Variables ──
+      # Substituted into keycloak-import/eshop-realm.json and eshop-admin-realm.json at
+      # --import-realm time. Missing any of these causes the realm import to either fail
+      # or (worse) succeed with a literal, publicly-known "${VAR_NAME}" placeholder value
+      # persisted as the actual secret/password — see keycloak-import/ADMIN_REALM_README.md
+      # "Required Variables". All values must come from the deployment's real .env file,
+      # never hardcoded here.
+      ESHOP_BACKEND_CLIENT_SECRET: ${ESHOP_BACKEND_CLIENT_SECRET}
+      ESHOP_ADMIN_BACKEND_SECRET: ${ESHOP_ADMIN_BACKEND_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD}
+      # eshop-client's redirectUris/webOrigins in eshop-realm.json default to
+      # http://localhost:3000 when unset — MUST be set to the real production frontend
+      # origin (no trailing slash, no path) before going live, or OAuth2 login redirects
+      # will be rejected by Keycloak for every production user.
+      FRONTEND_URL: ${FRONTEND_URL:?FRONTEND_URL must be set to the production frontend origin, e.g. https://shop.yourdomain.com}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID:-}
+      FACEBOOK_CLIENT_SECRET: ${FACEBOOK_CLIENT_SECRET:-}
+      KC_VERIFY_EMAIL: ${KC_VERIFY_EMAIL:-false}
+      KC_VERIFY_EMAIL_ADMIN: ${KC_VERIFY_EMAIL_ADMIN:-false}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-}
+      SMTP_REPLY_TO: ${SMTP_REPLY_TO:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_AUTH: ${SMTP_AUTH:-false}
+      SMTP_SSL: ${SMTP_SSL:-false}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
     volumes:
       - ./keycloak/themes:/opt/keycloak/themes
-      - ./keycloak/import:/opt/keycloak/data/import
+      # Must match where the realm files actually live (keycloak-import/, not keycloak/import/)
+      # — the previous path pointed at a directory that doesn't exist in this repo, so
+      # --import-realm silently found nothing to import and Keycloak started with neither
+      # realm configured.
+      - ./keycloak-import:/opt/keycloak/data/import
     networks:
       - eshop-network
     depends_on:

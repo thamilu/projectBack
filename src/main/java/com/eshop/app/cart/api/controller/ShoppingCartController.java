@@ -10,6 +10,7 @@ import com.eshop.app.order.api.response.OrderResponse;
 import com.eshop.app.order.application.port.in.CheckoutUseCase;
 import com.eshop.app.order.api.request.CheckoutRequest;
 import com.eshop.app.core.api.response.ApiResponse;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -147,7 +148,7 @@ public class ShoppingCartController {
     }
 
     @PostMapping("/auth/cart/{code}/checkout")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     @Operation(summary = "Checkout authenticated cart", description = "Convert authenticated user's cart to order", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<OrderResponse>> checkoutAuthenticatedCart(
             @Parameter(description = "Cart code") @PathVariable String code,
@@ -161,7 +162,7 @@ public class ShoppingCartController {
     // Authenticated Cart Operations
 
     @PostMapping("/customers/{id}/cart")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Operation(summary = "Create customer cart (Admin)", description = "Create a cart for a specific customer (Admin only)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<CartResponse>> createCustomerCart(
             @Parameter(description = "Customer ID") @PathVariable Long id) {
@@ -172,7 +173,7 @@ public class ShoppingCartController {
     }
 
     @GetMapping("/auth/customer/{id}/cart")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN') and (@userSecurity.isCurrentUser(#id) or hasRole('ADMIN'))")
+    @PreAuthorize(IS_ADMIN_OR_SELF_CUSTOMER)
     @Operation(summary = "Get customer cart", description = "Get cart for authenticated customer", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<CartResponse>> getCustomerCart(
             @Parameter(description = "Customer ID") @PathVariable Long id) {

@@ -28,4 +28,9 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
     @Query("SELECT oi FROM OrderItem oi WHERE oi.product.store.id = :storeId")
     List<OrderItem> findByStoreId(@Param("storeId") Long storeId);
+
+    /** Whether the given seller has at least one item in the given order — drives order/shipping ownership checks. */
+    @Query("SELECT CASE WHEN COUNT(oi) > 0 THEN true ELSE false END FROM OrderItem oi "
+            + "WHERE oi.order.id = :orderId AND oi.product.store.sellerProfile.user.id = :sellerId")
+    boolean existsByOrderIdAndSellerId(@Param("orderId") Long orderId, @Param("sellerId") Long sellerId);
 }

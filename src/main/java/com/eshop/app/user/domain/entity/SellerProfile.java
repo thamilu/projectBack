@@ -197,5 +197,21 @@ public class SellerProfile extends BaseEntity {
 
     @Column(name = "approved_at")
     private java.time.LocalDateTime approvedAt;
+
+    // ─── Behavior-driven methods ───────────────────────────────
+
+    public void approveSeller(Long approverId, String approvedBy) {
+        this.status = com.eshop.app.seller.shared.domain.enums.SellerStatus.ACTIVE;
+        this.approvedBy = approvedBy;
+        this.approvedAt = java.time.LocalDateTime.now();
+        this.rejectionReason = null;
+    }
+
+    public void rejectSeller(String rejectionReason, Long rejectorId, String rejectedBy) {
+        this.status = com.eshop.app.seller.shared.domain.enums.SellerStatus.REJECTED;
+        this.rejectionReason = rejectionReason;
+        this.approvedBy = rejectedBy;
+        this.approvedAt = java.time.LocalDateTime.now();
+    }
 }
 

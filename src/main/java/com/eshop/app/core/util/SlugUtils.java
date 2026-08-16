@@ -1,7 +1,5 @@
 package com.eshop.app.core.util;
 
-import com.eshop.app.core.util.SlugUtils;
-
 import java.text.Normalizer;
 import java.util.Locale;
 import java.util.function.Predicate;

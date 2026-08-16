@@ -4,6 +4,7 @@ import com.eshop.app.core.outbox.entity.OutboxEvent;
 import com.eshop.app.core.outbox.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,14 @@ public class OutboxEventProcessor {
     private final OutboxEventRepository outboxEventRepository;
     private final ApplicationEventPublisher eventPublisher;
 
+    /**
+     * Distributed lock is required here: without it, every horizontally-scaled instance runs this
+     * on its own schedule and would each fetch and publish the same pending events, causing
+     * duplicate side effects (e.g. duplicate emails) until whichever instance saves {@code
+     * processed=true} first.
+     */
     @Scheduled(fixedDelayString = "${app.outbox.processor.delay-ms:5000}")
+    @SchedulerLock(name = "OutboxEventProcessor", lockAtMostFor = "PT2M", lockAtLeastFor = "PT5S")
     @Transactional
     public void processPendingEvents() {
         List<OutboxEvent> pendingEvents = outboxEventRepository.findByProcessedFalseOrderByCreatedAtAsc();

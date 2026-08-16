@@ -30,7 +30,7 @@ public class AdminCategoryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(category);
     }
 
-    @GetMapping("/requests/pendmng")
+    @GetMapping({"/requests/pending", "/requests/pendmng"})
     public ResponseEntity<?> getPendingRequests() {
         return ResponseEntity.ok(requestService.getPendingRequests());
     }

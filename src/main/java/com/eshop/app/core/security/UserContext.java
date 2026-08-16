@@ -12,8 +12,11 @@ public record UserContext(
         String userId,
         String email,
         Set<String> roles) {
+
+    public static final String ANONYMOUS_USER_ID = "anonymous";
+
     public static UserContext anonymous() {
-        return new UserContext("anonymous", null, Set.of());
+        return new UserContext(ANONYMOUS_USER_ID, null, Set.of());
     }
 
     public boolean hasRole(String role) {

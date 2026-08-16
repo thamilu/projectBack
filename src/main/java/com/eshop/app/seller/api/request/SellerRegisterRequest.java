@@ -33,8 +33,8 @@ public class SellerRegisterRequest {
     @NotEmpty(message = "At least one business type is required")
     private Set<SellerBusinessType> businessTypes;
 
-    @NotBlank(message = "Shop name is required")
-    @Size(min = 2, max = 200, message = "Shop name must be between 2 and 200 characters")
+    @NotBlank(message = "Shop name is required", groups = {com.eshop.app.seller.api.request.validation.ValidationGroups.Step1Basic.class})
+    @Size(min = 2, max = 200, message = "Shop name must be between 2 and 200 characters", groups = {com.eshop.app.seller.api.request.validation.ValidationGroups.Step1Basic.class})
     private String shopName;
 
     @Size(min = 2, max = 200, message = "Business name must be between 2 and 200 characters")
@@ -71,18 +71,19 @@ public class SellerRegisterRequest {
     @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     private String description;
 
-    @AssertTrue(message = "Terms must be accepted")
+    @AssertTrue(message = "Terms must be accepted", groups = {com.eshop.app.seller.api.request.validation.ValidationGroups.Step1Basic.class})
     private boolean acceptedTerms;
 
     // ─── Step 2: KYC ────────────────────────────────────────────
 
-    @Size(max = 20, message = "PAN number must not exceed 20 characters")
+    @NotBlank(message = "PAN number is required", groups = {com.eshop.app.seller.api.request.validation.ValidationGroups.Step2Kyc.class})
+    @Pattern(regexp = "^[A-Z]{5}[0-9]{4}[A-Z]{1}$", message = "Invalid PAN number format", groups = {com.eshop.app.seller.api.request.validation.ValidationGroups.Step2Kyc.class})
     private String panNumber;
 
     @Size(max = 150, message = "PAN name must not exceed 150 characters")
     private String panName;
 
-    @Pattern(regexp = "^([0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1})?$", message = "Invalid GSTIN format")
+    @Pattern(regexp = "^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$", message = "Invalid GSTIN format", groups = {com.eshop.app.seller.api.request.validation.ValidationGroups.Step2Kyc.class})
     private String gstin;
 
     private Boolean gstRegistered;
@@ -91,12 +92,15 @@ public class SellerRegisterRequest {
 
     // ─── Step 2b: Documents ─────────────────────────────────────
 
+    @Pattern(regexp = "^[2-9][0-9]{11}$", message = "Invalid Aadhar number format", groups = {com.eshop.app.seller.api.request.validation.ValidationGroups.Step2Kyc.class})
     private String aadhar;
     private String registrationProof;
 
     // ─── Step 3: Bank Details ───────────────────────────────────
 
     private String accountHolderName;
+    @NotBlank(message = "Account number is required", groups = {com.eshop.app.seller.api.request.validation.ValidationGroups.Step3Bank.class})
+    @Pattern(regexp = "^[0-9]{9,18}$", message = "Invalid account number format", groups = {com.eshop.app.seller.api.request.validation.ValidationGroups.Step3Bank.class})
     private String accountNumber;
     private String ifscCode;
     private String bankName;

@@ -155,8 +155,16 @@ public class DefaultWishlistService implements WishlistService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Object> getUsersInterestedInStore(Long storeId) {
-        return wishlistRepository.findUsersWhoWishlistedFromStore(storeId);
+    public List<com.eshop.app.customer.api.response.StoreInterestedUsersResponse> getUsersInterestedInStore(Long storeId) {
+        List<Object> users = wishlistRepository.findUsersWhoWishlistedFromStore(storeId);
+        return users.stream()
+                .map(com.eshop.app.user.domain.entity.User.class::cast)
+                .map(u -> com.eshop.app.customer.api.response.StoreInterestedUsersResponse.builder()
+                        .userId(u.getId())
+                        .username(u.getEmail())
+                        .email(u.getEmail())
+                        .build())
+                .toList();
     }
 
     @Override

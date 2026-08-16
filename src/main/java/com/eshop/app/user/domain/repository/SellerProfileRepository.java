@@ -3,6 +3,8 @@ package com.eshop.app.user.domain.repository;
 import com.eshop.app.seller.shared.domain.enums.SellerIdentityType;
 import com.eshop.app.user.domain.entity.SellerProfile;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -10,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface SellerProfileRepository extends JpaRepository<SellerProfile, Long> {
@@ -55,5 +58,9 @@ public interface SellerProfileRepository extends JpaRepository<SellerProfile, Lo
 
        @EntityGraph(value = "SellerProfile.full")
        @Query("SELECT sp FROM SellerProfile sp WHERE sp.status = 'PENDING'")
-       java.util.List<SellerProfile> findAllPendingWithDetails();
+       List<SellerProfile> findAllPendingWithDetails();
+
+       @EntityGraph(value = "SellerProfile.full")
+       @Query("SELECT sp FROM SellerProfile sp WHERE sp.status = 'PENDING'")
+       Page<SellerProfile> findAllPendingWithDetails(Pageable pageable);
 }

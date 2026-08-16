@@ -8,17 +8,17 @@ import com.eshop.app.seller.application.port.in.SellerAggregationUseCase;
 import com.eshop.app.store.application.port.in.StoreUseCase;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class SellerAggregationUseCaseImpl implements SellerAggregationUseCase {
-    private static final Logger log = LoggerFactory.getLogger(SellerAggregationUseCaseImpl.class);
+    private static final String STORE_STATUS_ACTIVE = "Active";
 
     private final ProductUseCase productService;
     private final OrderAnalyticsUseCase orderAnalyticsUseCase;
@@ -27,55 +27,42 @@ public class SellerAggregationUseCaseImpl implements SellerAggregationUseCase {
 
     @Override
     public SellerDashboardResponse.StoreOverview buildStoreOverview(Long sellerId) {
-        try {
-            return SellerDashboardResponse.StoreOverview.builder()
-                    .storeName(storeService.getStoreNameBySellerId(sellerId))
-                    .storeStatus("Active")
-                    .totalProducts(productService.getProductCountBySellerId(sellerId))
-                    .activeProducts(productService.getActiveProductCountBySellerId(sellerId))
-                    .outOfStockProducts(productService.getOutOfStockCountBySellerId(sellerId))
-                    .storeRating(storeService.getStoreRatingBySellerId(sellerId))
-                    .build();
-        } catch (Exception e) {
-            log.error("Failed to build store overview for {}: {}", sellerId, e.getMessage(), e);
-            return SellerDashboardResponse.StoreOverview.builder().build();
-        }
+        return SellerDashboardResponse.StoreOverview.builder()
+                .storeName(storeService.getStoreNameBySellerId(sellerId))
+                .storeStatus(STORE_STATUS_ACTIVE)
+                .totalProducts(productService.getProductCountBySellerId(sellerId))
+                .activeProducts(productService.getActiveProductCountBySellerId(sellerId))
+                .outOfStockProducts(productService.getOutOfStockCountBySellerId(sellerId))
+                .storeRating(storeService.getStoreRatingBySellerId(sellerId))
+                .build();
     }
 
     @Override
     public SellerDashboardResponse.SalesMetrics buildSalesMetrics(Long sellerId,
             SellerAggregationMetricsDTO metrics) {
-        try {
-            if (metrics == null)
-                metrics = orderAnalyticsUseCase.getSellerAggregationMetrics(sellerId);
-            return SellerDashboardResponse.SalesMetrics.builder()
-                    .todaySales(metrics.getTodaySales())
-                    .weeklySales(metrics.getWeeklySales())
-                    .monthlySales(metrics.getMonthlySales())
-                    .totalSales(metrics.getTotalSales())
-                    .build();
-        } catch (Exception e) {
-            log.error("Failed to build sales metrics for {}: {}", sellerId, e.getMessage(), e);
-            return SellerDashboardResponse.SalesMetrics.builder().build();
+        if (metrics == null) {
+            metrics = orderAnalyticsUseCase.getSellerAggregationMetrics(sellerId);
         }
+        return SellerDashboardResponse.SalesMetrics.builder()
+                .todaySales(metrics.getTodaySales())
+                .weeklySales(metrics.getWeeklySales())
+                .monthlySales(metrics.getMonthlySales())
+                .totalSales(metrics.getTotalSales())
+                .build();
     }
 
     @Override
     public SellerDashboardResponse.OrderManagement buildOrderManagement(Long sellerId,
             SellerAggregationMetricsDTO metrics) {
-        try {
-            if (metrics == null)
-                metrics = orderAnalyticsUseCase.getSellerAggregationMetrics(sellerId);
-            return SellerDashboardResponse.OrderManagement.builder()
-                    .newOrders(metrics.getNewOrders())
-                    .processingOrders(metrics.getProcessingOrders())
-                    .shippedOrders(metrics.getShippedOrders())
-                    .completedOrders(metrics.getCompletedOrders())
-                    .build();
-        } catch (Exception e) {
-            log.error("Failed to build order management for {}: {}", sellerId, e.getMessage(), e);
-            return SellerDashboardResponse.OrderManagement.builder().build();
+        if (metrics == null) {
+            metrics = orderAnalyticsUseCase.getSellerAggregationMetrics(sellerId);
         }
+        return SellerDashboardResponse.OrderManagement.builder()
+                .newOrders(metrics.getNewOrders())
+                .processingOrders(metrics.getProcessingOrders())
+                .shippedOrders(metrics.getShippedOrders())
+                .completedOrders(metrics.getCompletedOrders())
+                .build();
     }
 
     @Override

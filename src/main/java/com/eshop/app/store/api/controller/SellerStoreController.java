@@ -8,6 +8,7 @@ import com.eshop.app.store.api.response.StoreResponse;
 import com.eshop.app.store.application.port.in.StoreUseCase;
 import com.eshop.app.user.api.response.SellerProfileResponse;
 import com.eshop.app.user.application.service.SellerProfileService;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
@@ -30,7 +31,7 @@ import java.util.Map;
 @RestController
 @RequestMapping(ApiConstants.BASE_PATH + "/seller/store")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('SELLER')")
+@PreAuthorize(IS_SELLER)
 @Slf4j
 public class SellerStoreController {
 

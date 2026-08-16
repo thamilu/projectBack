@@ -1,6 +1,9 @@
 package com.eshop.app.shipping.application.service.impl;
 
+import com.eshop.app.core.exception.security.UnauthorizedException;
+import com.eshop.app.core.util.SecurityUtils;
 import com.eshop.app.order.domain.entity.Order;
+import com.eshop.app.order.domain.repository.OrderItemRepository;
 import com.eshop.app.order.domain.repository.OrderRepository;
 import com.eshop.app.shipping.api.request.ShippingRequest;
 import com.eshop.app.shipping.api.request.TrackingUpdateRequest;
@@ -29,10 +32,36 @@ public class ShippingUseCaseImpl implements ShippingUseCase {
 
     private final ShippingRepository shippingRepository;
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
 
-    public ShippingUseCaseImpl(ShippingRepository shippingRepository, OrderRepository orderRepository) {
+    public ShippingUseCaseImpl(ShippingRepository shippingRepository, OrderRepository orderRepository,
+            OrderItemRepository orderItemRepository) {
         this.shippingRepository = shippingRepository;
         this.orderRepository = orderRepository;
+        this.orderItemRepository = orderItemRepository;
+    }
+
+    /**
+     * Verifies the current principal owns the shipment (is the order's customer, a seller with an
+     * item in the order, or an admin) before allowing a mutating operation. {@code @PreAuthorize}
+     * on the controller only checks role, not resource ownership — without this, any CUSTOMER
+     * could address-hijack or cancel any other customer's shipment by guessing {@code shippingId}.
+     */
+    private void verifyShippingAccess(Shipping shipping) {
+        if (SecurityUtils.hasRole("ADMIN")) {
+            return;
+        }
+        Long currentUserId = SecurityUtils.getAuthenticatedUserId();
+        Order order = shipping.getOrder();
+        if (currentUserId != null && order != null && order.getCustomer() != null
+                && order.getCustomer().getId().equals(currentUserId)) {
+            return;
+        }
+        if (currentUserId != null && order != null
+                && orderItemRepository.existsByOrderIdAndSellerId(order.getId(), currentUserId)) {
+            return;
+        }
+        throw new UnauthorizedException("You do not have permission to access this shipment");
     }
 
     @Override
@@ -93,6 +122,7 @@ public class ShippingUseCaseImpl implements ShippingUseCase {
     public ShippingResponse cancelShipping(Long shippingId, String reason) {
         Shipping shipping = shippingRepository.findById(shippingId)
                 .orElseThrow(() -> new IllegalArgumentException("Shipping not found: " + shippingId));
+        verifyShippingAccess(shipping);
         if (shipping.isInTransit()) {
             throw new IllegalStateException("Cannot cancel shipping once in transit");
         }
@@ -182,6 +212,10 @@ public class ShippingUseCaseImpl implements ShippingUseCase {
     public ShippingResponse updateShippingAddress(Long shippingId, com.eshop.app.shipping.api.request.ShippingRequest.Address newAddress) {
         Shipping shipping = shippingRepository.findById(shippingId)
                 .orElseThrow(() -> new IllegalArgumentException("Shipping not found: " + shippingId));
+        verifyShippingAccess(shipping);
+        if (shipping.getStatus() != null && shipping.getStatus() != ShippingStatus.PENDING) {
+            throw new IllegalStateException("Shipping address can only be updated before the package ships");
+        }
         shipping.setShippingAddress(mapAddress(newAddress));
         shippingRepository.save(shipping);
         return toResponse(shipping);

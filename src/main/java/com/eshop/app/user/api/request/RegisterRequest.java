@@ -1,6 +1,6 @@
 package com.eshop.app.user.api.request;
 
-import com.eshop.app.user.domain.entity.Role;
+import com.eshop.app.user.shared.domain.enums.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -56,7 +56,7 @@ public class RegisterRequest {
 
     @NotNull(message = "Role is required")
     @Schema(description = "The role of the user in the system. Either `role` (enum) or `roleName` (string) may be provided.")
-    private Role role;
+    private UserRole role;
 
     @Size(max = 50)
     @Schema(description = "Alternate role name (string) accepted from legacy JSON, e.g. 'SELLER' or 'ADMIN'")

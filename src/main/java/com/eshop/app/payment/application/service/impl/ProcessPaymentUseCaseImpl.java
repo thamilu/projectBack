@@ -6,11 +6,14 @@ import com.eshop.app.payment.api.request.PaymentRequest;
 import com.eshop.app.payment.api.response.PaymentResponse;
 import com.eshop.app.payment.application.mapper.PaymentMapper;
 import com.eshop.app.payment.application.port.in.ProcessPaymentUseCase;
+import com.eshop.app.payment.application.service.PaymentGatewayResult;
 import com.eshop.app.payment.application.service.PaymentGatewayService;
 import com.eshop.app.payment.domain.entity.Payment;
 import com.eshop.app.payment.domain.repository.PaymentRepository;
 import com.eshop.app.payment.domain.model.PaymentGateway;
 import com.eshop.app.payment.domain.model.PaymentStatus;
+import com.eshop.app.payment.infrastructure.config.PaymentProperties;
+import com.eshop.app.payment.infrastructure.security.PaymentSignatureVerifier;
 import com.eshop.app.payment.shared.exception.PaymentException;
 import com.eshop.app.core.exception.business.ResourceNotFoundException;
 import com.eshop.app.core.infrastructure.config.properties.AppProperties;
@@ -23,14 +26,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -42,20 +46,22 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
     private final OrderRepository orderRepository;
     private final PaymentMapper paymentMapper;
     private final AppProperties appProperties;
-    private final Optional<PaymentGatewayService> paymentGatewayService;
+    private final PaymentProperties paymentProperties;
+    private final PaymentGatewayService paymentGatewayService;
+    private final PaymentSignatureVerifier signatureVerifier;
     private final ObjectMapper objectMapper;
 
-    @Value("${payment.webhook.stripe.secret:}")
-    private String stripeWebhookSecret;
+    @Value("${payment.payu.salt:}")
+    private String payuSalt;
 
-    @Value("${payment.webhook.razorpay.secret:}")
-    private String razorpayWebhookSecret;
+    @Value("${payment.payu.key:}")
+    private String payuKey;
 
-    @Value("${payment.webhook.payu.secret:}")
-    private String payuWebhookSecret;
-
-    @Value("${payment.webhook.cashfree.secret:}")
+    @Value("${payment.cashfree.webhook-secret:}")
     private String cashfreeWebhookSecret;
+
+    @Value("${payment.upi.webhook-secret:}")
+    private String upiWebhookSecret;
 
     @Override
     @CircuitBreaker(name = "paymentGateway", fallbackMethod = "processPaymentFallback")
@@ -87,14 +93,7 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
         payment = paymentRepository.save(payment);
 
         try {
-            PaymentGatewayService.PaymentGatewayResult result;
-            if (paymentGatewayService.isPresent()) {
-                result = paymentGatewayService.get().processPayment(request, payment);
-            } else {
-                result = PaymentGatewayService.PaymentGatewayResult.success(
-                        "GTW_" + UUID.randomUUID().toString(),
-                        "Mock payment processed");
-            }
+            PaymentGatewayResult result = paymentGatewayService.processPayment(request, payment);
 
             if (result.isSuccess()) {
                 payment.markAsProcessed(PaymentStatus.COMPLETED, result.getGatewayTransactionId());
@@ -102,8 +101,9 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
                 orderRepository.save(order);
                 log.info("Payment processed successfully: {}", payment.getTransactionId());
             } else {
-                payment.markAsProcessed(PaymentStatus.FAILED, null);
+                payment.markAsProcessed(PaymentStatus.FAILED, result.getGatewayTransactionId());
                 payment.setFailureReason(result.getMessage());
+                payment.setResponseCode(result.getErrorCode());
                 log.warn("Payment failed: {}, reason: {}", payment.getTransactionId(), result.getMessage());
             }
         } catch (Exception e) {
@@ -144,11 +144,6 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
     }
 
     @Override
-    public void handlePaymentWebhook(String payload, String signature, PaymentGateway gateway) {
-        log.info("Handling webhook for gateway: {}", gateway);
-    }
-
-    @Override
     public PaymentResponse updatePaymentStatus(Long paymentId, PaymentStatus status, String reason) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found: " + paymentId));
@@ -164,12 +159,13 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
     @Override
     @SuppressWarnings("unchecked")
     public void handleStripeWebhook(String payload, String signature) {
-        try {
-            if (!verifyStripeSignature(payload, signature)) {
-                log.warn("Invalid Stripe webhook signature");
-                throw new PaymentException("Invalid signature");
-            }
+        String stripeWebhookSecret = paymentProperties.getStripe().getWebhookSecret();
+        if (!signatureVerifier.verifyStripeStyleSignature(payload, signature, stripeWebhookSecret)) {
+            log.warn("Invalid Stripe webhook signature");
+            throw new PaymentException("Invalid signature");
+        }
 
+        try {
             Map<String, Object> event = objectMapper.readValue(payload, Map.class);
             String eventType = (String) event.get("type");
             Map<String, Object> eventData = (Map<String, Object>) event.get("data");
@@ -194,12 +190,13 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
     @Override
     @SuppressWarnings("unchecked")
     public void handleRazorpayWebhook(String payload, String signature) {
-        try {
-            if (!verifyRazorpaySignature(payload, signature)) {
-                log.warn("Invalid Razorpay webhook signature");
-                throw new PaymentException("Invalid signature");
-            }
+        String razorpayWebhookSecret = paymentProperties.getRazorpay().getWebhookSecret();
+        if (!signatureVerifier.verifyHmacSha256Hex(payload, signature, razorpayWebhookSecret)) {
+            log.warn("Invalid Razorpay webhook signature");
+            throw new PaymentException("Invalid signature");
+        }
 
+        try {
             Map<String, Object> event = objectMapper.readValue(payload, Map.class);
             String eventType = (String) event.get("event");
             Map<String, Object> payload_data = (Map<String, Object>) event.get("payload");
@@ -225,6 +222,12 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
     public void handlePayUWebhook(String payload) {
         try {
             Map<String, String> params = parseFormData(payload);
+
+            if (!verifyPayUHash(params)) {
+                log.warn("Invalid PayU webhook hash for transaction {}", params.get("txnid"));
+                throw new PaymentException("Invalid signature");
+            }
+
             String status = params.get("status");
             String transactionId = params.get("txnid");
 
@@ -236,6 +239,8 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
                 case "pending" -> handlePaymentPending(transactionId, "PAYU", convertToMap(params));
                 default -> log.info("Unhandled PayU status: {}", status);
             }
+        } catch (PaymentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error processing PayU webhook", e);
             throw new PaymentException("Error processing webhook: " + e.getMessage());
@@ -245,12 +250,12 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
     @Override
     @SuppressWarnings("unchecked")
     public void handleCashfreeWebhook(String payload, String signature) {
-        try {
-            if (!verifyCashfreeSignature(payload, signature)) {
-                log.warn("Invalid Cashfree webhook signature");
-                throw new PaymentException("Invalid signature");
-            }
+        if (!signatureVerifier.verifyHmacSha256Hex(payload, signature, cashfreeWebhookSecret)) {
+            log.warn("Invalid Cashfree webhook signature");
+            throw new PaymentException("Invalid signature");
+        }
 
+        try {
             Map<String, Object> event = objectMapper.readValue(payload, Map.class);
             String eventType = (String) event.get("type");
             Map<String, Object> data = (Map<String, Object>) event.get("data");
@@ -272,7 +277,12 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void handleUpiWebhook(String payload) {
+    public void handleUpiWebhook(String payload, String signature) {
+        if (!signatureVerifier.verifyHmacSha256Hex(payload, signature, upiWebhookSecret)) {
+            log.warn("Invalid UPI webhook signature");
+            throw new PaymentException("Invalid signature");
+        }
+
         try {
             Map<String, Object> event = objectMapper.readValue(payload, Map.class);
             String transactionId = (String) event.get("transactionId");
@@ -308,6 +318,8 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
 
             paymentRepository.save(payment);
             log.info("Payment {} marked as completed", payment.getId());
+        } else {
+            log.warn("Webhook success event for unknown payment reference: {} ({})", paymentRef, gateway);
         }
     }
 
@@ -420,16 +432,13 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
         switch (gateway) {
             case "STRIPE" -> {
                 Map<String, Object> charges = (Map<String, Object>) data.get("charges");
-                if (charges != null && charges.get("data") instanceof List) {
-                    List<Map<String, Object>> chargesList = (List<Map<String, Object>>) charges.get("data");
-                    if (!chargesList.isEmpty()) {
-                        Map<String, Object> charge = chargesList.get(0);
-                        Map<String, Object> paymentMethod = (Map<String, Object>) charge.get("payment_method_details");
-                        if (paymentMethod != null && paymentMethod.get("card") != null) {
-                            Map<String, Object> card = (Map<String, Object>) paymentMethod.get("card");
-                            payment.setCardLastFour((String) card.get("last4"));
-                            payment.setCardBrand((String) card.get("brand"));
-                        }
+                if (charges != null && charges.get("data") instanceof List<?> chargesList && !chargesList.isEmpty()) {
+                    Map<String, Object> charge = (Map<String, Object>) chargesList.get(0);
+                    Map<String, Object> paymentMethod = (Map<String, Object>) charge.get("payment_method_details");
+                    if (paymentMethod != null && paymentMethod.get("card") != null) {
+                        Map<String, Object> card = (Map<String, Object>) paymentMethod.get("card");
+                        payment.setCardLastFour((String) card.get("last4"));
+                        payment.setCardBrand((String) card.get("brand"));
                     }
                 }
             }
@@ -441,82 +450,39 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
                     payment.setCardBrand((String) card.get("network"));
                 }
             }
+            default -> { /* no gateway-specific card details to extract */ }
         }
     }
 
-    // Cryptographic & Parse Helpers
-
-    private boolean verifyStripeSignature(String payload, String signature) {
-        if (stripeWebhookSecret.isEmpty())
-            return true;
-
-        try {
-            String[] signatureParts = signature.split(",");
-            String timestamp = null;
-            String v1Signature = null;
-
-            for (String part : signatureParts) {
-                if (part.startsWith("t=")) {
-                    timestamp = part.substring(2);
-                } else if (part.startsWith("v1=")) {
-                    v1Signature = part.substring(3);
-                }
-            }
-
-            String signedPayload = timestamp + "." + payload;
-            String expectedSignature = coinputeHmacSha256(signedPayload, stripeWebhookSecret);
-
-            return expectedSignature.equals(v1Signature);
-        } catch (Exception e) {
-            log.error("Error verifying Stripe signature", e);
-            return false;
+    // PayU reverse-hash (response/webhook) verification.
+    //
+    // PayU's documented scheme: sha512(salt|status|||||udf5|udf4|udf3|udf2|udf1|email|firstname|
+    // productinfo|amount|txnid|key). Unused udf slots are empty strings regardless of how many
+    // the merchant account actually uses. If this integration's PayU account is configured with a
+    // non-standard field set, this must be updated to match the exact sequence in the PayU
+    // merchant dashboard — a mismatch here fails ALL PayU webhooks closed (safe), never open.
+    private boolean verifyPayUHash(Map<String, String> params) {
+        String hash = params.get("hash");
+        String key = params.getOrDefault("key", payuKey);
+        StringBuilder sequence = new StringBuilder();
+        sequence.append(payuSalt).append('|');
+        sequence.append(params.getOrDefault("status", "")).append('|');
+        sequence.append("|||||"); // reserved fields
+        for (int i = 5; i >= 1; i--) {
+            sequence.append(params.getOrDefault("udf" + i, "")).append('|');
         }
-    }
+        sequence.append(params.getOrDefault("email", "")).append('|');
+        sequence.append(params.getOrDefault("firstname", "")).append('|');
+        sequence.append(params.getOrDefault("productinfo", "")).append('|');
+        sequence.append(params.getOrDefault("amount", "")).append('|');
+        sequence.append(params.getOrDefault("txnid", "")).append('|');
+        sequence.append(key);
 
-    private boolean verifyRazorpaySignature(String payload, String signature) {
-        if (razorpayWebhookSecret.isEmpty())
-            return true;
-
-        try {
-            String expectedSignature = coinputeHmacSha256(payload, razorpayWebhookSecret);
-            return expectedSignature.equals(signature);
-        } catch (Exception e) {
-            log.error("Error verifying Razorpay signature", e);
-            return false;
-        }
-    }
-
-    private boolean verifyCashfreeSignature(String payload, String signature) {
-        if (cashfreeWebhookSecret.isEmpty())
-            return true;
-
-        try {
-            String expectedSignature = coinputeHmacSha256(payload, cashfreeWebhookSecret);
-            return expectedSignature.equals(signature);
-        } catch (Exception e) {
-            log.error("Error verifying Cashfree signature", e);
-            return false;
-        }
-    }
-
-    private String coinputeHmacSha256(String data, String secret) throws NoSuchAlgorithmException, InvalidKeyException {
-        Mac mac = Mac.getInstance("HmacSHA256");
-        SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        mac.init(secretKeySpec);
-        byte[] hash = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-        return bytesToHex(hash);
-    }
-
-    private String bytesToHex(byte[] bytes) {
-        StringBuilder result = new StringBuilder();
-        for (byte b : bytes) {
-            result.append(String.format("%02x", b));
-        }
-        return result.toString();
+        return signatureVerifier.verifySha512Hex(sequence.toString(), hash, payuSalt);
     }
 
     private Map<String, String> parseFormData(String formData) {
-        Map<String, String> params = new HashMap<>();
+        Map<String, String> params = new LinkedHashMap<>();
         String[] pairs = formData.split("&");
         for (String pair : pairs) {
             String[] keyValue = pair.split("=", 2);
@@ -541,7 +507,7 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
         AppProperties.Business business = appProperties.getBusiness();
         BigDecimal minAmount = BigDecimal.valueOf(business.getMinPaymentAmount());
         BigDecimal maxAmount = BigDecimal.valueOf(business.getMaxPaymentAmount());
-        Set<String> allowedGateways = Set.copyOf(Arrays.asList(business.getAllowedGateways().toUpperCase().split(",")));
+        Set<String> allowedGateways = Set.copyOf(java.util.Arrays.asList(business.getAllowedGateways().toUpperCase().split(",")));
 
         if (request.getAmount() == null || request.getAmount().compareTo(minAmount) < 0
                 || request.getAmount().compareTo(maxAmount) > 0) {
@@ -563,4 +529,3 @@ public class ProcessPaymentUseCaseImpl implements ProcessPaymentUseCase {
         return "TXN_" + UUID.randomUUID().toString().replace("-", "").toUpperCase();
     }
 }
-

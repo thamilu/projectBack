@@ -3,45 +3,39 @@ package com.eshop.app;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * Main Spring Boot Application Entry Point.
- * 
+ *
  * <p><b>Enterprise Features Enabled:</b>
  * <ul>
- *   <li>@EnableCaching - Multi-layer caching with Caffeine</li>
- *   <li>@EnableRetry - Retry mechanism for transient failures</li>
- *   <li>@EnableAsync - Event-driven architecture with async processing</li>
- *   <li>@EnableConfigurationProperties - Externalized configuration with type-safe properties</li>
+ *   <li>{@link EnableCaching} — Multi-layer caching with Caffeine (L1) and Redis (L2)</li>
+ *   <li>{@link EnableRetry} — Retry mechanism for transient failures (e.g. Keycloak, external APIs)</li>
+ *   <li>{@link EnableAsync} — Async processing for event-driven architecture</li>
+ *   <li>{@link ConfigurationPropertiesScan} — Package-scanned binding for {@code @ConfigurationProperties} classes</li>
  * </ul>
- * 
- * <p><b>Spring Boot 4.0 Compatibility:</b>
+ *
+ * <p><b>Repository Configuration:</b> JPA and Redis repository scanning is delegated to dedicated
+ * {@code @Configuration} classes to avoid bootstrap ordering conflicts:
  * <ul>
- *   <li>AppProperties - Type-safe binding for all app.* properties</li>
- *   <li>Configuration Processor - Generates metadata for IDE autocomplete</li>
- *   <li>Virtual Threads - Java 21 virtual threads support enabled</li>
- *   <li>Repository Configuration - Moved to dedicated @Configuration classes (JpaRepositoryConfig, RedisRepositoryConfig)</li>
+ *   <li>{@link com.eshop.app.config.JpaRepositoryConfig} — JPA repositories</li>
+ *   <li>{@link com.eshop.app.config.RedisRepositoryConfig} — Redis repositories (conditional)</li>
  * </ul>
- * 
- * <p><b>CRITICAL-001 FIX:</b> Removed @EnableJpaRepositories from main class.
- * Repository scanning is now handled by:
- * <ul>
- *   <li>{@link com.eshop.app.config.JpaRepositoryConfig} - JPA repositories</li>
- *   <li>{@link com.eshop.app.config.RedisRepositoryConfig} - Redis repositories (conditional)</li>
- * </ul>
- * 
- * @author EShop Team
- * @version 2.0
- * @since 1.0
+ *
  * @see com.eshop.app.config.JpaRepositoryConfig
  * @see com.eshop.app.config.RedisRepositoryConfig
  */
 @SpringBootApplication
 @ConfigurationPropertiesScan
+@EnableCaching
+@EnableRetry
+@EnableAsync
 public class EshopApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(EshopApplication.class, args);
     }
-
-}
+}

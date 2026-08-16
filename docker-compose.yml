@@ -58,19 +58,19 @@ services:
   # Keycloak - Authentication Server
   # ══════════════════════════════════════════════════════════════
   keycloak:
-    image: quay.io/keycloak/keycloak:26.5.2
+    image: quay.io/keycloak/keycloak:26.7.1
     container_name: eshop-keycloak
     restart: unless-stopped
     environment:
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-eshop_db}
       KC_DB_USERNAME: ${DATABASE_USERNAME:-eshop}
       KC_DB_PASSWORD: ${DATABASE_PASSWORD:-eshop}
-      KC_HOSTNAME: localhost
+      KC_HOSTNAME_URL: "http://localhost:8080"
       KC_HTTP_ENABLED: true
-      KC_PROXY: edge
+      KC_HEALTH_ENABLED: true
     ports:
       - "8080:8080"
     command:

@@ -1,0 +1,147 @@
+@charset "UTF-8";
+
+/**
+ * E-Shop Design Tokens
+ * 
+ * Single source of truth for all visual decisions.
+ * Reference ONLY these variables across other stylesheets.
+ */
+:root {
+  /* ── Color Palette ─────────────────────────────────────── */
+  --kc-color-primary:          #10b981;
+  --kc-color-primary-hover:    #059669;
+  --kc-color-primary-active:   #047857;
+  --kc-color-primary-subtle:   rgba(16, 185, 129, 0.1);
+
+  --kc-color-danger:           #ef4444;
+  --kc-color-danger-subtle:    rgba(239, 68, 68, 0.1);
+  --kc-color-danger-border:    rgba(239, 68, 68, 0.2);
+
+  --kc-color-warning:          #f59e0b;
+  --kc-color-warning-subtle:   rgba(245, 158, 11, 0.1);
+
+  --kc-color-success:          #10b981;
+  --kc-color-success-subtle:   rgba(16, 185, 129, 0.1);
+
+  --kc-color-neutral-50:       #f8fafc;
+  --kc-color-neutral-100:      #f1f5f9;
+  --kc-color-neutral-200:      #e2e8f0;
+  --kc-color-neutral-300:      #cbd5e1;
+  --kc-color-neutral-400:      #94a3b8;
+  --kc-color-neutral-500:      #64748b;
+  --kc-color-neutral-600:      #475569;
+  --kc-color-neutral-700:      #334155;
+  --kc-color-neutral-800:      #1e293b;
+  --kc-color-neutral-900:      #0f172a;
+  --kc-color-neutral-950:      #020617;
+
+  --kc-color-white:            #ffffff;
+  --kc-color-black:            #000000;
+
+  /* ── Semantic Color Aliases (Default to dark/glassmorphic theme) ── */
+  --kc-color-text-primary:     var(--kc-color-neutral-50);
+  --kc-color-text-secondary:   var(--kc-color-neutral-300);
+  --kc-color-text-muted:       var(--kc-color-neutral-400);
+  --kc-color-text-inverse:     var(--kc-color-neutral-950);
+  --kc-color-text-error:       var(--kc-color-danger);
+
+  --kc-color-bg-page:          var(--kc-color-neutral-950);
+  --kc-color-bg-card:          rgba(15, 23, 42, 0.65);
+  --kc-color-bg-input:         rgba(0, 0, 0, 0.25);
+
+  --kc-color-border:           rgba(255, 255, 255, 0.08);
+  --kc-color-border-bright:    rgba(255, 255, 255, 0.25);
+  --kc-color-border-focus:     var(--kc-color-primary);
+  --kc-color-border-error:     var(--kc-color-danger);
+
+  /* ── Typography ────────────────────────────────────────── */
+  --kc-font-family-base:       'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont,
+                                'Segoe UI', Roboto, sans-serif;
+  --kc-font-family-mono:       'JetBrains Mono', 'Fira Code', monospace;
+
+  --kc-font-size-xs:           0.75rem;    /* 12px */
+  --kc-font-size-sm:           0.875rem;   /* 14px */
+  --kc-font-size-base:         1rem;       /* 16px */
+  --kc-font-size-lg:           1.125rem;   /* 18px */
+  --kc-font-size-xl:           1.25rem;    /* 20px */
+  --kc-font-size-2xl:          1.5rem;     /* 24px */
+  --kc-font-size-3xl:          1.875rem;   /* 30px */
+
+  --kc-font-weight-normal:     400;
+  --kc-font-weight-medium:     500;
+  --kc-font-weight-semibold:   600;
+  --kc-font-weight-bold:       700;
+
+  --kc-line-height-tight:      1.25;
+  --kc-line-height-base:       1.5;
+  --kc-line-height-relaxed:    1.75;
+
+  /* ── Spacing Scale ─────────────────────────────────────── */
+  --kc-spacing-1:              0.25rem;   /* 4px  */
+  --kc-spacing-2:              0.5rem;    /* 8px  */
+  --kc-spacing-3:              0.75rem;   /* 12px */
+  --kc-spacing-4:              1rem;      /* 16px */
+  --kc-spacing-5:              1.25rem;   /* 20px */
+  --kc-spacing-6:              1.5rem;    /* 24px */
+  --kc-spacing-8:              2rem;      /* 32px */
+  --kc-spacing-10:             2.5rem;    /* 40px */
+  --kc-spacing-12:             3rem;      /* 48px */
+  --kc-spacing-16:             4rem;      /* 64px */
+
+  /* ── Border Radius Scale (Enterprise-Grade) ────────────── */
+  --kc-radius-sm:              4px;
+  --kc-radius-md:              6px;
+  --kc-radius-lg:              8px;
+  --kc-radius-xl:              12px;
+  --kc-radius-2xl:             16px;
+  --kc-radius-full:            9999px;
+
+  /* ── Elevation Scale Shadows (Standard-only) ───────────── */
+  --kc-shadow-xs:              0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --kc-shadow-sm:              0 2px 4px 0 rgba(0, 0, 0, 0.1);
+  --kc-shadow-md:              0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --kc-shadow-lg:              0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --kc-shadow-xl:              0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  --kc-shadow-2xl:             0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* ── Transition Curves & Scales ────────────────────────── */
+  --kc-duration-fast:          150ms;
+  --kc-duration-base:          200ms;
+  --kc-duration-slow:          300ms;
+
+  --kc-ease-in:                cubic-bezier(0.4, 0, 1, 1);
+  --kc-ease-out:               cubic-bezier(0, 0, 0.2, 1);
+  --kc-ease-in-out:            cubic-bezier(0.4, 0, 0.2, 1);
+  --kc-ease-bounce:            cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* ── Motion & Animation System ── */
+  --kc-duration-spin:          1s;
+  --kc-duration-pulse:         2s;
+
+
+  /* ── Opacity Scale ─────────────────────────────────────── */
+  --kc-opacity-0:              0;
+  --kc-opacity-10:             0.1;
+  --kc-opacity-25:             0.25;
+  --kc-opacity-50:             0.5;
+  --kc-opacity-75:             0.75;
+  --kc-opacity-100:            1;
+
+  /* ── Breakpoint Scale ──────────────────────────────────── */
+  --kc-breakpoint-sm:          640px;
+  --kc-breakpoint-md:          768px;
+  --kc-breakpoint-lg:          1024px;
+  --kc-breakpoint-xl:          1280px;
+
+  /* ── Z-Index Scale (No Gaps) ───────────────────────────── */
+  --kc-z-base:                 0;
+  --kc-z-above:                10;
+  --kc-z-dropdown:             100;
+  --kc-z-sticky:               200;
+  --kc-z-fab:                  300;
+  --kc-z-drawer:               400;
+  --kc-z-modal:                1000;
+  --kc-z-toast:                2000;
+  --kc-z-tooltip:              3000;
+  --kc-z-skip-link:            9999;
+}

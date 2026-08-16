@@ -1,0 +1,508 @@
+/* ==========================================================================
+   E-Shop Form Group & Input Styling
+   ========================================================================== */
+
+/* Compact headers */
+.pf-c-login__main-header {
+    text-align: left !important;
+    margin-bottom: 1.5rem !important; /* Solved size - reduced */
+    border-bottom: none !important;
+}
+
+#kc-page-title {
+    font-size: 2.25rem !important; /* Solved size - increased to 2.25rem for typography hierarchy */
+    font-weight: 800 !important;
+    letter-spacing: -0.04em !important;
+    color: var(--kc-color-text-primary) !important;
+    margin: 0 !important;
+    line-height: 1.15 !important;
+}
+
+.kc-login-subtitle {
+    display: block;
+    font-size: var(--kc-font-size-sm, 0.875rem);
+    color: var(--kc-color-text-secondary);
+    margin-top: var(--kc-spacing-2, 0.5rem);
+    font-weight: var(--kc-font-weight-medium, 500);
+    letter-spacing: 0.01em;
+    opacity: 0.95;
+}
+
+.pf-c-form__group {
+    margin-bottom: 1.125rem !important; /* Solved size - reduced spacing */
+}
+
+/* Registration name grid side-by-side */
+@media (min-width: 480px) {
+    .name-grid {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 1rem !important;
+    }
+    .name-grid .pf-c-form__group {
+        margin-bottom: 0 !important;
+    }
+}
+
+.pf-c-form__label {
+    display: block !important;
+    font-size: 0.75rem !important; /* 12px standard label size */
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: var(--kc-color-text-secondary) !important;
+    margin-bottom: 0.375rem !important;
+}
+
+.pf-c-form-control {
+    width: 100% !important;
+    background: var(--kc-color-bg-input, rgba(0, 0, 0, 0.25)) !important;
+    border: 1px solid var(--kc-color-border, rgba(255, 255, 255, 0.08)) !important;
+    border-radius: var(--kc-radius-xl, 12px) !important;
+    padding: 0.75rem 1rem !important; /* Solved size - compact inputs */
+    color: var(--kc-color-text-primary, #ffffff) !important;
+    font-family: var(--kc-font-family-base) !important;
+    font-size: 0.9375rem !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+}
+
+.pf-c-form-control:hover {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.pf-c-form-control:focus {
+    border-color: var(--kc-color-primary) !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5), 0 0 10px rgba(16, 185, 129, 0.3) !important;
+    outline: none !important;
+}
+
+/* Validation Errors */
+.pf-c-form__helper-text.pf-m-error {
+    color: var(--kc-color-danger, #ef4444) !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    margin-top: 0.375rem !important;
+    display: block !important;
+    animation: cardEnter 0.3s ease-out;
+}
+.pf-c-form__helper-text.pf-m-error[hidden] {
+    display: none !important;
+}
+
+.pf-c-alert {
+    padding: 1rem !important;
+    border-radius: var(--kc-radius-md, 6px) !important;
+    margin-bottom: 1.5rem !important;
+    font-size: 0.875rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+}
+.pf-c-alert.pf-m-danger {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    color: #fca5a5 !important;
+}
+.pf-c-alert.pf-m-warning {
+    background: rgba(245, 158, 11, 0.15) !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+    color: #fde047 !important;
+}
+.pf-c-alert.pf-m-success {
+    background: rgba(16, 185, 129, 0.15) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3) !important;
+    color: #a7f3d0 !important;
+}
+
+.pf-c-alert__icon {
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem !important;
+}
+
+/* Footer & Links */
+.pf-c-login__main-footer-links {
+    margin-top: 1.25rem !important;
+    padding-top: 1.25rem !important;
+    border-top: 1px solid var(--kc-color-border) !important;
+}
+
+/* Hardened Navigation Footer (Zenith Version) */
+.login-info-section, 
+#kc-info, 
+#kc-info-wrapper, 
+.pf-c-login__main-footer, 
+.pf-c-login__main-footer-band {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: block !important;
+}
+
+.login-info-section {
+    margin-top: 1.5rem !important; /* Solved size - reduced */
+    width: 100% !important;
+}
+
+#kc-form-options a, 
+#kc-registration a, 
+#kc-info-wrapper a {
+    color: var(--kc-color-primary) !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    display: block !important;
+    width: 100% !important;
+    padding: 0.875rem 1rem !important; /* Solved size - made compact */
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: var(--kc-radius-md, 16px) !important;
+    text-align: center !important;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    font-size: 0.9375rem !important;
+}
+
+#kc-form-options a:hover, 
+#kc-registration a:hover, 
+#kc-info-wrapper a:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: var(--kc-color-primary) !important;
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 10px 20px rgba(16, 185, 129, 0.08) !important;
+}
+
+/* Hide PatternFly leftovers */
+.login-pf-page-header, 
+.login-pf-settings,
+.pf-c-login__main-footer-band {
+    display: none !important;
+}
+
+/* Terms & Conditions Hardening */
+#kc-terms-text {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-radius: 20px !important;
+    padding: 1.5rem 2rem !important; /* Solved size - reduced padding */
+    margin-bottom: 1.5rem !important;
+    max-height: 30vh; /* Solved size - reduced max-height */
+    overflow-y: auto;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--kc-color-text-secondary);
+    scrollbar-width: thin;
+    scrollbar-color: var(--kc-color-primary) transparent;
+    box-shadow: inset 0 20px 40px rgba(0,0,0,0.2);
+}
+
+#kc-terms-text::-webkit-scrollbar {
+    width: 4px;
+}
+
+#kc-terms-text::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#kc-terms-text::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, var(--kc-color-primary), #3b82f6);
+    border-radius: 10px;
+}
+
+.terms-buttons {
+    display: flex !important;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+#kc-accept {
+    order: 1;
+}
+
+#kc-decline {
+    order: 2;
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    transition: all 0.3s ease !important;
+}
+
+#kc-decline:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(-2px);
+}
+
+/* Required Field Indicator */
+.pf-c-form__label-required {
+    color: var(--kc-color-danger, #ef4444) !important;
+    margin-left: 4px;
+    font-weight: 800;
+}
+
+/* ── Webkit Autofill Override ─────────────────────────────────── */
+.pf-c-form-control:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px rgba(15, 23, 42, 0.95) inset !important;
+    -webkit-text-fill-color: var(--kc-color-text-primary, #ffffff) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ── Server/Client validation error class ──────────────────────── */
+.pf-c-form-control.pf-m-error {
+    border-color: var(--kc-color-danger, #ef4444) !important;
+}
+
+/* ── Error Icon Styling ───────────────────────────────────────── */
+.kc-error-icon {
+    flex-shrink: 0;
+    margin-right: var(--kc-spacing-2, 0.5rem);
+    vertical-align: middle;
+    color: var(--kc-color-danger, #ef4444);
+}
+
+/* ── Print Media Style Overrides ───────────────────────────────── */
+@media print {
+    .kc-password-toggle,
+    .kc-strength-meter,
+    .kc-requirements,
+    .kc-btn__spinner,
+    .skip-link {
+        display: none !important;
+    }
+}
+
+/* ─── Enterprise-Grade Custom Layout Classes ──────────────────── */
+.kc-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.kc-fieldset {
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.kc-fieldset legend,
+.kc-fieldset__legend {
+    padding: 0 0 0.5rem 0 !important;
+    font-weight: 700 !important;
+    font-size: 1.125rem !important;
+    color: var(--kc-color-neutral-100, #f1f5f9) !important;
+    border-bottom: 1px solid var(--kc-color-border, rgba(255, 255, 255, 0.08)) !important;
+    width: 100% !important;
+    margin-bottom: 1.25rem !important;
+    letter-spacing: 0.025em !important;
+}
+
+.kc-form-group {
+    margin-bottom: 1.125rem !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.kc-label {
+    display: block !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: var(--kc-color-text-secondary) !important;
+    margin-bottom: 0.375rem !important;
+}
+
+.kc-required {
+    color: var(--kc-color-danger, #ef4444) !important;
+    margin-left: 4px;
+    font-weight: 800;
+}
+
+.kc-input {
+    width: 100% !important;
+    background: var(--kc-color-bg-input, rgba(0, 0, 0, 0.25)) !important;
+    border: 1px solid var(--kc-color-border, rgba(255, 255, 255, 0.08)) !important;
+    border-radius: var(--kc-radius-xl, 12px) !important;
+    padding: 0.75rem 1rem !important;
+    color: var(--kc-color-text-primary, #ffffff) !important;
+    font-family: var(--kc-font-family-base) !important;
+    font-size: 0.9375rem !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+}
+
+.kc-input:hover {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.kc-input:focus {
+    border-color: var(--kc-color-primary) !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5), 0 0 10px rgba(16, 185, 129, 0.3) !important;
+    outline: none !important;
+}
+
+.kc-input.kc-input--error {
+    border-color: var(--kc-color-danger, #ef4444) !important;
+}
+
+.kc-error-message {
+    color: var(--kc-color-danger, #ef4444) !important;
+    font-size: 0.75rem !important;
+    font-weight: 500 !important;
+    margin-top: 0.375rem !important;
+    display: flex !important;
+    align-items: center !important;
+    animation: cardEnter 0.3s ease-out;
+}
+
+.kc-form-actions {
+    margin-top: var(--kc-spacing-6, 24px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--kc-spacing-4, 16px);
+}
+
+.kc-form-options--centered {
+    margin-top: var(--kc-spacing-6, 24px);
+    justify-content: center;
+    display: flex;
+}
+
+.kc-info-panel {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--kc-spacing-3, 12px);
+    padding: var(--kc-spacing-4, 16px);
+    background: var(--kc-color-primary-subtle, rgba(16, 185, 129, 0.1)) !important;
+    border: 1px solid var(--kc-color-border, rgba(255, 255, 255, 0.08)) !important;
+    border-radius: var(--kc-radius-md, 6px);
+    color: var(--kc-color-text-secondary, #94a3b8);
+    font-size: var(--kc-font-size-sm, 0.875rem);
+    line-height: var(--kc-line-height-relaxed, 1.75);
+}
+
+.kc-info-panel__icon {
+    flex-shrink: 0;
+    color: var(--kc-color-primary, #10b981);
+    margin-top: 2px;
+}
+
+.kc-info-panel__text {
+    margin: 0;
+    color: var(--kc-color-text-secondary, #94a3b8) !important;
+}
+
+.kc-honeypot {
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Required Fields Helper Styles */
+.kc-required-fields-helper {
+    font-size: var(--kc-font-size-xs, 0.75rem);
+    color: var(--kc-color-text-muted);
+    margin-bottom: var(--kc-spacing-4, 16px);
+}
+
+/* Checkbox Accessibility & Contrast */
+.pf-c-check {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.pf-c-check__input {
+    width: 18px !important;
+    height: 18px !important;
+    accent-color: var(--kc-color-primary) !important;
+    cursor: pointer;
+}
+.pf-c-check__label {
+    color: var(--kc-color-text-secondary) !important;
+    font-weight: 500 !important;
+    cursor: pointer;
+    font-size: 0.875rem !important;
+}
+
+/* Interactive Element Focus States */
+.pf-c-form-control:focus-visible,
+.pf-c-button:focus-visible,
+.pf-c-check__input:focus-visible,
+#kc-form-options a:focus-visible,
+#kc-registration a:focus-visible {
+    outline: 3px solid var(--kc-color-primary) !important;
+    outline-offset: 2px !important;
+}
+
+/* Global Hidden Attribute Override */
+[hidden],
+.pf-c-form__helper-text.pf-m-error[hidden],
+.kc-error-message[hidden] {
+    display: none !important;
+}
+
+/* Registration prompt brightness */
+.kc-registration-text__prompt,
+.kc-form-footer__text {
+    color: var(--kc-color-neutral-200, #e2e8f0) !important;
+    font-weight: 500 !important;
+}
+/* Forgot Password size and contrast */
+.kc-forgot-password {
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    color: var(--kc-color-primary) !important;
+    text-decoration: none !important;
+    transition: color 0.2s ease !important;
+}
+.kc-forgot-password:hover {
+    color: var(--kc-color-primary-hover) !important;
+    text-decoration: underline !important;
+}
+
+/* Terms & Conditions Consent Layout */
+.kc-consent-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem !important;
+}
+
+.kc-consent-row {
+    align-items: flex-start !important; /* Make checkbox align to top for multi-line labels */
+}
+
+.kc-consent-row .pf-c-check__input {
+    margin-top: 0.15rem; /* Tiny offset to align checkbox perfectly with font baseline */
+}
+
+.kc-legal-link {
+    color: var(--kc-color-primary) !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    transition: all var(--kc-duration-fast, 150ms) ease;
+}
+
+.kc-legal-link:hover {
+    color: var(--kc-color-primary-hover) !important;
+    text-decoration: underline !important;
+}
+
+.kc-terms-metadata {
+    font-size: 0.75rem;
+    color: var(--kc-color-text-muted, #64748b);
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    font-weight: 500;
+    border-bottom: 1px solid var(--kc-color-border, rgba(255, 255, 255, 0.08));
+    padding-bottom: 0.5rem;
+}

@@ -1,10 +1,20 @@
 package com.eshop.app.arch;
 
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
+import org.springframework.security.access.prepost.PreAuthorize;
 
+import java.util.regex.Pattern;
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.methods;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 /**
@@ -44,5 +54,49 @@ public class ArchitectureTest {
     static final ArchRule entities_should_not_be_exposed_in_controllers = noClasses()
             .that().resideInAPackage("..controller..")
             .should().dependOnClassesThat().resideInAPackage("..entity..");
+
+    /**
+     * A hardcoded role-name literal in {@code @PreAuthorize} (e.g. {@code hasRole('ADMIN')},
+     * {@code hasAnyRole('SELLER','ADMIN')}) can silently typo into a role nothing ever holds —
+     * this is exactly how {@code hasRole('USER')} (meant to be {@code CUSTOMER}) and
+     * {@code hasRole('MANAGER')} (not a real role at all) went undetected in this codebase. It
+     * also duplicates role-name configuration that {@code AppProperties.Security.Roles} already
+     * centralizes. Reference a named constant from {@code SecurityExpressions} (routes through
+     * {@code @userSecurity}, honoring the configurable role prefix) or, at minimum, the
+     * {@code @appProperties.security.roles.*} property instead of a literal string.
+     */
+    private static final Pattern HARDCODED_ROLE_LITERAL =
+            Pattern.compile("has(Role|AnyRole|Authority|AnyAuthority)\\(\\s*['\"]");
+
+    @ArchTest
+    static final ArchRule preauthorize_methods_should_not_hardcode_role_literals = methods()
+            .that().areAnnotatedWith(PreAuthorize.class)
+            .should(new ArchCondition<JavaMethod>("not hardcode a role-name literal in @PreAuthorize") {
+                @Override
+                public void check(JavaMethod method, ConditionEvents events) {
+                    checkExpression(method.getAnnotationOfType(PreAuthorize.class).value(), method.getFullName(), method,
+                            events);
+                }
+            });
+
+    @ArchTest
+    static final ArchRule preauthorize_classes_should_not_hardcode_role_literals = classes()
+            .that().areAnnotatedWith(PreAuthorize.class)
+            .should(new ArchCondition<JavaClass>("not hardcode a role-name literal in @PreAuthorize") {
+                @Override
+                public void check(JavaClass clazz, ConditionEvents events) {
+                    checkExpression(clazz.getAnnotationOfType(PreAuthorize.class).value(), clazz.getFullName(), clazz,
+                            events);
+                }
+            });
+
+    private static void checkExpression(String expression, String location, Object correspondingObject,
+            ConditionEvents events) {
+        if (HARDCODED_ROLE_LITERAL.matcher(expression).find()) {
+            events.add(SimpleConditionEvent.violated(correspondingObject,
+                    location + " uses a hardcoded role-name literal in @PreAuthorize(\"" + expression + "\")"
+                            + " — use a SecurityExpressions constant or @appProperties.security.roles.* instead"));
+        }
+    }
 
 }

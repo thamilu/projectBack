@@ -5,6 +5,7 @@ import com.eshop.app.catalog.api.response.ProductImageResponse;
 import com.eshop.app.catalog.application.port.in.ProductImageUseCase;
 import com.eshop.app.core.kernel.ApiConstants;
 import com.eshop.app.core.api.response.ApiResponse;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -29,7 +30,7 @@ public class ProductImageController {
     
     
     @PostMapping
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Operation(
         summary = "Add product image",
         description = "Upload a new image for a product (SELLER and ADMIN only)",
@@ -44,7 +45,7 @@ public class ProductImageController {
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     public ResponseEntity<ApiResponse<ProductImageResponse>> uploadImage(
             @RequestParam("productId") Long productId,
             @RequestParam("file") MultipartFile file,
@@ -56,7 +57,7 @@ public class ProductImageController {
     }
     
     @PutMapping("/{imageId}")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Operation(
         summary = "Update product image",
         description = "Update an existing product image (SELLER and ADMIN only)",
@@ -70,7 +71,7 @@ public class ProductImageController {
     }
     
     @DeleteMapping("/{imageId}")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Operation(
         summary = "Delete product image",
         description = "Delete a product image (SELLER and ADMIN only)",
@@ -105,7 +106,7 @@ public class ProductImageController {
     }
     
     @PutMapping("/product/{productId}/primary/{imageId}")
-    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Operation(
         summary = "Set primary image",
         description = "Set an image as the primary image for a product (SELLER and ADMIN only)",

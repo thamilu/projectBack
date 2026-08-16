@@ -5,7 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
+
+import java.time.Duration;
 
 /**
  * Immutable Keycloak configuration bound from properties (constructor binding).
@@ -31,6 +34,12 @@ public class KeycloakConfig {
     private final String clientSecret; // no public getter
 
     private final Admin admin; // no public getters for admin credentials
+    private final java.util.List<String> allowedRoles;
+
+    /** Timeout applied to every outbound Keycloak WebClient call (token, userinfo,
+     *  introspect, admin API, etc.) — externalized so it can be tuned per-environment
+     *  against real observed Keycloak latency without a code change. */
+    private final Duration timeout;
 
     // cached endpoints
     private String tokenEndpoint;
@@ -47,12 +56,16 @@ public class KeycloakConfig {
                           String realm,
                           String clientId,
                           String clientSecret,
-                          Admin admin) {
+                          Admin admin,
+                          java.util.List<String> allowedRoles,
+                          @DefaultValue("8s") Duration timeout) {
         this.authServerUrl = normalizeUrl(authServerUrl);
         this.realm = realm;
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.admin = admin;
+        this.allowedRoles = allowedRoles != null ? allowedRoles : java.util.List.of("ADMIN", "CUSTOMER", "SELLER", "DELIVERY_AGENT");
+        this.timeout = timeout != null ? timeout : Duration.ofSeconds(8);
     }
 
     @PostConstruct
@@ -94,6 +107,8 @@ public class KeycloakConfig {
     public String getAuthServerUrl() { return authServerUrl; }
     public String getRealm() { return realm; }
     public String getClientId() { return clientId; }
+    public java.util.List<String> getAllowedRoles() { return allowedRoles; }
+    public Duration getTimeout() { return timeout; }
 
     // Endpoint getters (O(1), cached)
     public String getTokenEndpoint() { return tokenEndpoint; }

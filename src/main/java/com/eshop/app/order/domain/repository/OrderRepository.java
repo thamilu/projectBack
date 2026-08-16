@@ -62,6 +62,26 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         @Query("SELECT CASE WHEN COUNT(o) > 0 THEN true ELSE false END FROM Order o JOIN o.items oi WHERE o.customer.id = :userId AND oi.product.id = :productId AND o.orderStatus = 'DELIVERED'")
         boolean existsByUserIdAndOrderItemsProductId(@Param("userId") Long userId, @Param("productId") Long productId);
 
+        /**
+         * Ownership check used by {@code UserSecurityExpression.ownsOrder} — avoids
+         * loading the full {@code Order} entity plus its (LAZY) {@code customer}
+         * association just to answer a boolean ownership question outside a transaction
+         * (as {@code @PreAuthorize} on a controller method typically is).
+         */
+        boolean existsByIdAndCustomerId(Long id, Long customerId);
+
+        /**
+         * Checks whether {@code userId} owns (via their store's seller profile) any
+         * product referenced by an item on the given order — used by
+         * {@code UserSecurityExpression.isOrderStoreOwner}. Replaces a full order-graph
+         * load plus a 4-level lazy-association traversal
+         * (items -> product -> store -> sellerProfile -> user) with a single indexed
+         * EXISTS query, matching this repository's existing pattern above.
+         */
+        @Query("SELECT CASE WHEN COUNT(oi) > 0 THEN true ELSE false END FROM OrderItem oi " +
+                        "WHERE oi.order.id = :orderId AND oi.product.store.sellerProfile.user.id = :userId")
+        boolean existsOrderItemByOrderIdAndSellerUserId(@Param("orderId") Long orderId, @Param("userId") Long userId);
+
         // Dashboard Analytics Methods
         java.util.List<Order> findByDeliveryAgentIdOrderByCreatedAtDesc(Long agentId, Pageable pageable);
 

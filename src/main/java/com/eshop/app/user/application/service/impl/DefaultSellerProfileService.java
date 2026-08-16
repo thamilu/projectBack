@@ -74,13 +74,14 @@ public class DefaultSellerProfileService implements SellerProfileService {
         // 1. Update UserProfile info via reusable service
         profileSyncService.ensureProfileExists(
                 profile.getUser(),
-                request.getFirstName(),
-                request.getLastName(),
-                request.getPhone(), // Pass phone if provided
-                request.getAlternatePhone(),
-                request.getGender(),
-                request.getPreferredLanguage(),
-                request.getDateOfBirth());
+                new com.eshop.app.user.application.service.ProfileSyncCommand(
+                        request.getFirstName(),
+                        request.getLastName(),
+                        request.getPhone(),
+                        request.getAlternatePhone(),
+                        request.getGender(),
+                        request.getPreferredLanguage(),
+                        request.getDateOfBirth()));
 
         // 2. Update core seller profile fields via MapStruot
         sellerMapper.updateProfileFromUpdateRequest(request, profile);

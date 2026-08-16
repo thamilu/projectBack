@@ -41,8 +41,6 @@ public class AppProperties {
     private Features features = new Features();
     private Product product = new Product();
     private Cache cache = new Cache();
-    private Openapi openapi = new Openapi();
-    private Swagger swagger = new Swagger();
 
     /**
      * Security configuration
@@ -59,6 +57,13 @@ public class AppProperties {
 
         private List<String> allowedRedirectUris;
         private Headers headers = new Headers();
+
+        /** Defense-in-depth ceiling on bulk user-management operations (activate/
+         *  deactivate), enforced at the service layer independent of any per-request
+         *  page-size limit enforced at the API boundary (e.g. UserController's
+         *  {@code @Size(max = 100)} on its bulk endpoints). Externalized so it can be
+         *  tuned per environment without a code change. */
+        private int bulkOperationMaxSize = 1000;
 
         @Data
         public static class Roles {
@@ -79,18 +84,6 @@ public class AppProperties {
             private String referrerPolicy = "no-referrer";
         }
 
-    }
-
-    @Data
-    public static class Swagger {
-        private boolean enabled = true;
-        private Security security = new Security();
-
-        @Data
-        public static class Security {
-            private String authorizationUrl;
-            private String tokenUrl;
-        }
     }
 
     /**
@@ -180,6 +173,7 @@ public class AppProperties {
     public static class Storage {
         private long maxFileSize = 5242880; // 5MB in bytes
         private int maxFiles = 10;
+        private int maxFilenameLength = 255;
         private String allowedMimeTypes = "image/jpeg,image/png,image/webp";
         private String allowedExtensions = "jpg,jpeg,png,webp";
         private int maxImageWidth = 1920;
@@ -372,17 +366,5 @@ public class AppProperties {
         public static class Analytics {
             private int ttl = 600; // seconds
         }
-    }
-
-    /**
-     * OpenAPI configuration
-     */
-    @Data
-    public static class Openapi {
-        private boolean enabled = true;
-        private String title = "E-Shop REST API";
-        private String version = "1.0.0";
-        private String description = "E-Commerce Platform REST API";
-        private String serverUrl;
     }
 }

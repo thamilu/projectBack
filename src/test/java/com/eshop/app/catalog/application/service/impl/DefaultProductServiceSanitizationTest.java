@@ -38,6 +38,7 @@ public class DefaultProductServiceSanitizationTest {
     private ApplicationEventPublisher eventPublisher;
     private ProductServiceHelper helper;
     private com.eshop.app.catalog.application.service.AttributeService attributeService;
+    private ProductCreateService productCreateService;
 
     private DefaultProductService productService;
 
@@ -56,6 +57,7 @@ public class DefaultProductServiceSanitizationTest {
         eventPublisher = mock(ApplicationEventPublisher.class);
         helper = mock(ProductServiceHelper.class);
         attributeService = mock(com.eshop.app.catalog.application.service.AttributeService.class);
+        productCreateService = mock(ProductCreateService.class);
 
         productService = new DefaultProductService(
                 productRepository,
@@ -70,7 +72,8 @@ public class DefaultProductServiceSanitizationTest {
                 productProperties,
                 eventPublisher,
                 helper,
-                attributeService);
+                attributeService,
+                productCreateService);
     }
 
     @Test

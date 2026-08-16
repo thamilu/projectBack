@@ -11,7 +11,7 @@ import com.eshop.app.store.application.port.in.StoreUseCase;
 import com.eshop.app.store.domain.entity.Store;
 import com.eshop.app.store.domain.repository.StoreRepository;
 import com.eshop.app.user.domain.entity.User;
-import com.eshop.app.user.domain.entity.Role;
+import com.eshop.app.user.shared.domain.enums.UserRole;
 import com.eshop.app.user.domain.repository.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -61,8 +61,8 @@ public class StoreUseCaseImpl implements StoreUseCase {
 
         User seller = profile.getUser();
 
-        if (seller.getRole() != Role.SELLER) {
-            seller.setRole(Role.SELLER);
+        if (seller.getRole() != UserRole.SELLER) {
+            seller.setRole(UserRole.SELLER);
             userRepository.save(seller);
         }
 
@@ -210,8 +210,8 @@ public class StoreUseCaseImpl implements StoreUseCase {
                         profile.setApprovedAt(java.time.LocalDateTime.now());
                         profileChanged = true;
                     }
-                    if (user.getRole() != Role.SELLER) {
-                        user.setRole(Role.SELLER);
+                    if (user.getRole() != UserRole.SELLER) {
+                        user.setRole(UserRole.SELLER);
                         userRepository.save(user);
                         log.info("JIT: Synced local User role to SELLER");
                     }

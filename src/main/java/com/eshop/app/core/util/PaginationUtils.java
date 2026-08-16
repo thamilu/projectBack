@@ -1,7 +1,5 @@
 package com.eshop.app.core.util;
 
-import com.eshop.app.core.util.PaginationUtils;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;

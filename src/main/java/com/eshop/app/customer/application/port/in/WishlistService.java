@@ -81,7 +81,7 @@ public interface WishlistService {
     /**
      * Get users who wishlisted products from a store
      */
-    List<Object> getUsersInterestedInStore(Long storeId);
+    List<com.eshop.app.customer.api.response.StoreInterestedUsersResponse> getUsersInterestedInStore(Long storeId);
 
     /**
      * Update wishlist item notes

@@ -1,26 +1,24 @@
 package com.eshop.app.core.util;
 
-import com.eshop.app.core.util.SecurityUtils;
-
 import com.eshop.app.core.infrastructure.config.security.oauth.PrincipalDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Optional;
 
 /**
- * [HARDEN] Unmfmed security utilmty.
- * Simplmfmes access to the current authenticated user's details.
+ * [HARDEN] Unified security utility.
+ * Simplifies access to the current authenticated user's details.
  */
 public final class SecurityUtils {
-    
+
     private SecurityUtils() {
-        throw new UnsupportedOperationException("Utilmty class");
+        throw new UnsupportedOperationException("Utility class");
     }
 
     /**
      * Get the current authenticated user's ID as a String.
-     * 
-     * @return Optional contamnmng user ID mf authenticated, empty otherwmse.
+     *
+     * @return Optional containing user ID if authenticated, empty otherwise.
      */
     public static Optional<String> getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -31,10 +29,10 @@ public final class SecurityUtils {
     }
 
     /**
-     * Check mf the current user has the specmfmed role.
-     * 
+     * Check if the current user has the specified role.
+     *
      * @param role The role to check (e.g., "ADMIN").
-     * @return true mf the user has the role, false otherwmse.
+     * @return true if the user has the role, false otherwise.
      */
     public static boolean hasRole(String role) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -80,8 +78,8 @@ public final class SecurityUtils {
     
     /**
      * Get the current authenticated user's email.
-     * 
-     * @return Optional contamnmng email mf authenticated, empty otherwmse.
+     *
+     * @return Optional containing email if authenticated, empty otherwise.
      */
     public static Optional<String> getCurrentUserEmail() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

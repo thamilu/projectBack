@@ -32,8 +32,18 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     List<Store> findByActiveTrue();
 
     boolean existsByDomain(String domain);
-    
+
     boolean existsByStoreName(String storeName);
+
+    /**
+     * Ownership check used by {@code UserSecurityExpression.ownsStore} — a single
+     * indexed EXISTS query instead of loading the full {@code Store} entity plus its
+     * (LAZY) {@code sellerProfile}/{@code sellerProfile.user} associations, which would
+     * otherwise either trigger extra lazy-load queries or throw
+     * {@code LazyInitializationException} when evaluated outside a transaction (as
+     * {@code @PreAuthorize} on a controller method typically is).
+     */
+    boolean existsByIdAndSellerProfile_UserId(Long id, Long userId);
 
     Page<Store> findByActive(Boolean active, Pageable pageable);
 

@@ -5,13 +5,19 @@ import com.eshop.app.catalog.domain.repository.CategoryRepository;
 import com.eshop.app.pricing.api.request.CouponRequest;
 import com.eshop.app.pricing.api.request.CouponUsageRequest;
 import com.eshop.app.pricing.api.response.CouponResponse;
+import com.eshop.app.order.domain.entity.Order;
+import com.eshop.app.order.domain.repository.OrderRepository;
 import com.eshop.app.pricing.application.port.in.CouponUseCase;
 import com.eshop.app.pricing.domain.entity.Coupon;
+import com.eshop.app.pricing.domain.entity.CouponUsage;
 import com.eshop.app.pricing.domain.repository.CouponRepository;
+import com.eshop.app.pricing.domain.repository.CouponUsageRepository;
 import com.eshop.app.core.api.response.PageResponse;
 import com.eshop.app.core.exception.business.ResourceNotFoundException;
 import com.eshop.app.store.domain.entity.Store;
 import com.eshop.app.store.domain.repository.StoreRepository;
+import com.eshop.app.user.domain.entity.User;
+import com.eshop.app.user.domain.repository.UserRepository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,7 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -29,15 +37,24 @@ import java.util.stream.Collectors;
 public class CouponUseCaseImpl implements CouponUseCase {
 
     private final CouponRepository couponRepository;
+    private final CouponUsageRepository couponUsageRepository;
     private final StoreRepository storeRepository;
     private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
 
     public CouponUseCaseImpl(CouponRepository couponRepository,
+            CouponUsageRepository couponUsageRepository,
             StoreRepository storeRepository,
-            CategoryRepository categoryRepository) {
+            CategoryRepository categoryRepository,
+            UserRepository userRepository,
+            OrderRepository orderRepository) {
         this.couponRepository = couponRepository;
+        this.couponUsageRepository = couponUsageRepository;
         this.storeRepository = storeRepository;
         this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
+        this.orderRepository = orderRepository;
     }
 
     @Override
@@ -111,6 +128,21 @@ public class CouponUseCaseImpl implements CouponUseCase {
                     .build();
         }
 
+        if (userId != null) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+            int userUsageCount = couponUsageRepository.countByCouponIdAndUserId(coupon.getId(), userId);
+            if (!coupon.canBeUsedByUser(user, userUsageCount)) {
+                return CouponResponse.ValidationResult.builder()
+                        .isValid(false)
+                        .message("Coupon usage limit reached for this account, or restricted to new customers")
+                        .errorCode("USER_USAGE_LIMIT_EXCEEDED")
+                        .discountAmount(BigDecimal.ZERO)
+                        .coupon(mapToResponse(coupon))
+                        .build();
+            }
+        }
+
         BigDecimal discount = coupon.calculateDiscount(orderTotal);
 
         return CouponResponse.ValidationResult.builder()
@@ -148,6 +180,7 @@ public class CouponUseCaseImpl implements CouponUseCase {
 
         coupon.use();
         couponRepository.save(coupon);
+        recordUsage(coupon, request, validation.getDiscountAmount());
 
         BigDecimal finalTotal = request.getOrderTotal().subtract(validation.getDiscountAmount());
 
@@ -159,6 +192,26 @@ public class CouponUseCaseImpl implements CouponUseCase {
                 .couponCode(request.getCouponCode())
                 .coupon(mapToResponse(coupon))
                 .build();
+    }
+
+    /** Persists a per-user usage record so future {@code usageLimitPerUser}/{@code firstTimeOnly} checks see it. */
+    private void recordUsage(Coupon coupon, CouponUsageRequest request, BigDecimal discountAmount) {
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + request.getUserId()));
+
+        Order order = null;
+        if (request.getOrderId() != null) {
+            order = orderRepository.findById(request.getOrderId()).orElse(null);
+        }
+
+        CouponUsage usage = CouponUsage.builder()
+                .coupon(coupon)
+                .user(user)
+                .order(order)
+                .discountAmount(discountAmount)
+                .usedAt(LocalDateTime.now())
+                .build();
+        couponUsageRepository.save(usage);
     }
 
     @Override
@@ -217,18 +270,17 @@ public class CouponUseCaseImpl implements CouponUseCase {
 
     @Override
     public PageResponse<Object> getUserCouponUsageHistory(Long userId, Pageable pageable) {
-        PageResponse.PageMetadata metadata = PageResponse.PageMetadata.builder()
-                .page(pageable.getPageNumber())
-                .size(pageable.getPageSize())
-                .totalElements(0L)
-                .totalPages(0)
-                .hasNext(false)
-                .hasPrevious(false)
-                .build();
-        return PageResponse.<Object>builder()
-                .data(List.of())
-                .pagination(metadata)
-                .build();
+        Page<CouponUsage> page = couponUsageRepository.findByUserIdOrderByUsedAtDesc(userId, pageable);
+        return PageResponse.of(page, this::toUsageSummary);
+    }
+
+    private Object toUsageSummary(CouponUsage usage) {
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("couponCode", usage.getCoupon().getCode());
+        summary.put("discountAmount", usage.getDiscountAmount());
+        summary.put("usedAt", usage.getUsedAt());
+        summary.put("orderId", usage.getOrder() != null ? usage.getOrder().getId() : null);
+        return summary;
     }
 
     @Override

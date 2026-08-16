@@ -10,12 +10,16 @@ import lombok.Getter;
 @Getter
 @Builder
 @AllArgsConstructor
-public class PrincipalDetails {
+public class PrincipalDetails implements java.security.Principal {
     private final Long id;
     private final String email;
     private final String keycloakId;
 
     public String getName() {
         return email;
+    }
+
+    public boolean hasResolvedId() {
+        return id != null && id > 0;
     }
 }

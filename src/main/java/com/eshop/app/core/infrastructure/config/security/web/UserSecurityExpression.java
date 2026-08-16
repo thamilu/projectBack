@@ -1,5 +1,6 @@
 package com.eshop.app.core.infrastructure.config.security.web;
 
+import com.eshop.app.core.infrastructure.config.properties.AppProperties;
 import com.eshop.app.core.infrastructure.config.security.oauth.PrincipalDetails;
 import com.eshop.app.order.domain.repository.OrderRepository;
 import com.eshop.app.store.domain.repository.StoreRepository;
@@ -13,37 +14,55 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Security expression component for method-level authorization.
- * 
+ *
  * <p>
  * Provides SpEL-accessible security checks for use in {@code @PreAuthorize},
  * {@code @PostAuthorize}, and {@code @PreFilter} annotations.
  * </p>
- * 
+ *
  * <h3>Usage Examples:</h3>
- * 
+ *
  * <pre>
  * // Check if accessing own resource
  * {@literal @}PreAuthorize("@userSecurity.isCurrentUser(#userId)")
  * public User getUser(Long userId) { ... }
- * 
+ *
  * // Check ownership or admin
  * {@literal @}PreAuthorize("@userSecurity.isCurrentUserOrAdmin(#userId)")
  * public void updateUser(Long userId, UserDto dto) { ... }
- * 
- * // Check shop ownership
- * {@literal @}PreAuthorize("@userSecurity.ownsShop(#shopId)")
- * public void updateShop(Long shopId, ShopDto dto) { ... }
+ *
+ * // Check store ownership (seller or admin)
+ * {@literal @}PreAuthorize("@userSecurity.canManageStore(#storeId)")
+ * public void updateStore(Long storeId, StoreDto dto) { ... }
+ *
+ * // Check order view permission (customer, store owner, or admin)
+ * {@literal @}PreAuthorize("@userSecurity.canViewOrder(#orderId)")
+ * public OrderDto getOrder(Long orderId) { ... }
+ *
+ * // Role checks
+ * {@literal @}PreAuthorize("@userSecurity.isAdmin()")
+ * public AdminDashboardDto getDashboard() { ... }
+ *
+ * {@literal @}PreAuthorize("@userSecurity.hasAnyRole('SELLER', 'ADMIN')")
+ * public void manageListing() { ... }
  * </pre>
- * 
+ *
  * <p>
  * This class is thread-safe and uses the ThreadLocal-based
  * SecurityContextHolder.
  * </p>
- * 
+ *
+ * <p><strong>Ownership checks</strong> ({@link #ownsStore}, {@link #ownsOrder},
+ * {@link #isOrderStoreOwner}) use single, indexed {@code EXISTS}-style repository
+ * queries rather than loading full entity graphs. This matters specifically here: these
+ * methods run inside {@code @PreAuthorize} evaluation on controller methods, which are
+ * typically NOT {@code @Transactional} — loading an entity and then traversing its LAZY
+ * associations (e.g. {@code store.getSellerProfile().getUser()}) would risk
+ * {@code LazyInitializationException} outside an active Hibernate session.</p>
+ *
  * @see org.springframework.security.access.prepost.PreAuthorize
  * @see org.springframework.security.access.prepost.PostAuthorize
  */
@@ -54,6 +73,7 @@ public class UserSecurityExpression {
 
     private final StoreRepository storeRepository;
     private final OrderRepository orderRepository;
+    private final AppProperties appProperties;
 
     // ==================== Core User Checks ====================
 
@@ -117,10 +137,13 @@ public class UserSecurityExpression {
      * @return true if user has the role
      */
     public boolean hasRole(String role) {
-        if (role == null)
+        if (role == null) {
+            log.warn("hasRole called with a null role — likely a configuration error; denying.");
             return false;
+        }
 
-        String roleWithPrefix = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+        String prefix = appProperties.getSecurity().getRolePrefix();
+        String roleWithPrefix = role.startsWith(prefix) ? role : prefix + role;
 
         return getCurrentAuthorities()
                 .stream()
@@ -137,43 +160,49 @@ public class UserSecurityExpression {
         if (roles == null || roles.length == 0)
             return false;
 
-        Set<String> roleSet = Arrays.stream(roles)
-                .map(r -> r.startsWith("ROLE_") ? r : "ROLE_" + r)
-                .collect(Collectors.toSet());
-
-        return getCurrentAuthorities()
-                .stream()
-                .anyMatch(a -> roleSet.contains(a.getAuthority()));
+        for (String role : roles) {
+            if (hasRole(role)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
      * Checks if current user is an administrator.
      */
     public boolean isAdmin() {
-        return hasRole("ADMIN");
+        return hasRole(appProperties.getSecurity().getRoles().getAdmin());
     }
 
     /**
      * Checks if current user is a seller.
      */
     public boolean isSeller() {
-        return hasRole("SELLER");
+        return hasRole(appProperties.getSecurity().getRoles().getSeller());
     }
 
     /**
      * Checks if current user is a customer.
      */
     public boolean isCustomer() {
-        return hasRole("CUSTOMER");
+        return hasRole(appProperties.getSecurity().getRoles().getCustomer());
+    }
+
+    /**
+     * Checks if current user is a delivery agent.
+     */
+    public boolean isDeliveryAgent() {
+        return hasRole(appProperties.getSecurity().getRoles().getDelivery());
     }
 
     // ==================== Resource Ownership Checks ====================
 
     /**
-     * Checks if the current user owns the specified shop.
+     * Checks if the current user owns the specified store.
      *
-     * @param shopId the shop ID to check
-     * @return true if current user is the shop owner
+     * @param storeId the store ID to check
+     * @return true if current user is the store owner
      */
     public boolean ownsStore(Long storeId) {
         if (storeId == null)
@@ -181,10 +210,10 @@ public class UserSecurityExpression {
 
         return getCurrentUserId()
                 .map(userId -> {
-                    boolean owns = storeRepository.findById(storeId)
-                            .map(s -> s.getSellerProfile() != null && s.getSellerProfile().getUser() != null
-                                    && Objects.equals(s.getSellerProfile().getUser().getId(), userId))
-                            .orElse(false);
+                    // Single indexed EXISTS query — see class Javadoc for why this avoids
+                    // loading the Store entity and traversing its LAZY sellerProfile/user
+                    // associations outside a transaction.
+                    boolean owns = storeRepository.existsByIdAndSellerProfile_UserId(storeId, userId);
                     log.debug("ownsStore({}) for user {} = {}", storeId, userId, owns);
                     return owns;
                 })
@@ -192,18 +221,20 @@ public class UserSecurityExpression {
     }
 
     /**
-     * Checks if the current user can manage the specified shop.
-     * Admins can manage all shops; sellers can manage their own.
+     * Checks if the current user can manage the specified store.
+     * Admins can manage all stores; sellers can manage their own.
      *
-     * @param shopId the shop ID
-     * @return true if user can manage the shop
+     * @param storeId the store ID
+     * @return true if user can manage the store
      */
     public boolean canManageStore(Long storeId) {
+        if (storeId == null)
+            return false;
         return isAdmin() || ownsStore(storeId);
     }
 
     /**
-     * Checks if the current user owns the specified order.
+     * Checks if the current user owns (placed) the specified order.
      *
      * @param orderId the order ID to check
      * @return true if current user placed the order
@@ -213,53 +244,60 @@ public class UserSecurityExpression {
             return false;
 
         return getCurrentUserId()
-                .map(userId -> orderRepository.findById(orderId)
-                        .map(o -> o.getCustomer() != null && Objects.equals(o.getCustomer().getId(), userId))
-                        .orElse(false))
+                .map(userId -> orderRepository.existsByIdAndCustomerId(orderId, userId))
                 .orElse(false);
     }
 
     /**
      * Checks if the current user can view the specified order.
-     * Order owners, shop owners (of order items), and admins can view.
+     * Order owners, store owners (of order items), and admins can view.
      *
      * @param orderId the order ID
      * @return true if user can view the order
      */
     public boolean canViewOrder(Long orderId) {
+        if (orderId == null)
+            return false;
         return isAdmin() || ownsOrder(orderId) || isOrderStoreOwner(orderId);
     }
 
     /**
-     * Checks if the current user's shop is associated with the order.
+     * Checks if the current user's store is associated with (i.e. sold a product
+     * within) the specified order.
+     *
+     * @param orderId the order ID
+     * @return true if the current user's store fulfilled any item on this order
      */
     public boolean isOrderStoreOwner(Long orderId) {
         if (orderId == null)
             return false;
 
         return getCurrentUserId()
-                .map(userId -> orderRepository.findById(orderId)
-                        .map(o -> o.getItems().stream()
-                                .anyMatch(i -> i.getProduct() != null
-                                        && i.getProduct().getStore() != null
-                                        && i.getProduct().getStore().getSellerProfile() != null
-                                        && i.getProduct().getStore().getSellerProfile().getUser() != null
-                                        && Objects.equals(
-                                                i.getProduct().getStore().getSellerProfile().getUser().getId(),
-                                                userId)))
-                        .orElse(false))
+                .map(userId -> orderRepository.existsOrderItemByOrderIdAndSellerUserId(orderId, userId))
                 .orElse(false);
     }
 
     // ==================== Helper Methods ====================
 
     /**
-     * Gets the current authenticated user's ID.
+     * Gets the current authenticated user's local database ID.
      *
-     * @return Optional containing user ID, or empty if not authenticated
+     * <p>Returns empty for an unresolved identity, not just an absent one:
+     * {@code PrincipalDetails.id} is set to the sentinel {@code -1L} (see
+     * {@link PrincipalDetails#hasResolvedId()}) when JWT-to-local-identity sync failed
+     * for this request (see {@code SecurityConfig#syncUserIdentity}) — the user IS
+     * authenticated, but their local ID could not be resolved. Treating {@code -1L} as a
+     * real, comparable ID here would let {@link #isCurrentUser} (and every ownership
+     * check built on this method) report a false-positive match between two DIFFERENT
+     * users who both happen to have an unresolved identity at the same time, since
+     * {@code -1L == -1L}. An unresolved identity must never be treated as "this is me."
+     *
+     * @return Optional containing the resolved user ID, or empty if not authenticated or
+     *         the local ID could not be resolved for this request
      */
     public Optional<Long> getCurrentUserId() {
         return getCurrentPrincipal()
+                .filter(PrincipalDetails::hasResolvedId)
                 .map(PrincipalDetails::getId);
     }
 
@@ -276,13 +314,18 @@ public class UserSecurityExpression {
     /**
      * Gets all authorities/roles of the current user.
      *
-     * @return Set of authorities, empty set if not authenticated
+     * <p>Returns the {@link Authentication}'s own authorities collection directly
+     * (Spring guarantees an immutable/defensive collection here) rather than copying
+     * into a new {@link HashSet} on every call — this method is on the hot path for
+     * every role check ({@link #hasRole}, {@link #isAdmin}, etc.).
+     *
+     * @return the current authorities, or an empty collection if not authenticated
      */
-    public Set<GrantedAuthority> getCurrentAuthorities() {
+    public Collection<? extends GrantedAuthority> getCurrentAuthorities() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null)
             return Collections.emptySet();
-        return new HashSet<>(authentication.getAuthorities());
+        return authentication.getAuthorities();
     }
 
     /**
@@ -314,7 +357,17 @@ public class UserSecurityExpression {
             return switch (principal) {
                 case PrincipalDetails pd -> Optional.of(pd);
                 case Jwt jwt -> {
-                    log.trace("JWT principal detected, extracting user details");
+                    // Should not be reached in normal operation: SecurityConfig's
+                    // jwtAuthenticationConverter always converts a Jwt into a
+                    // PrincipalDetails before method security runs. Logged at ERROR
+                    // (not trace) so a regression here is immediately visible rather
+                    // than silently manifesting as "why can't I access my own data"
+                    // support tickets — see getCurrentUserId()'s Javadoc for why a raw
+                    // Jwt principal safely fails closed (denies) rather than throwing.
+                    log.error("[SECURITY] Raw JWT principal in security context for subject={} — " +
+                            "expected jwtAuthenticationConverter to have already resolved this to " +
+                            "a PrincipalDetails. Ownership checks will deny for this request.",
+                            jwt.getSubject());
                     yield extractFromJwt(jwt);
                 }
                 case String s -> {
@@ -322,7 +375,8 @@ public class UserSecurityExpression {
                     yield Optional.empty();
                 }
                 default -> {
-                    log.warn("Unknown principal type: {}", principal.getClass().getName());
+                    log.error("[SECURITY] Unexpected principal type: {} — likely a security " +
+                            "configuration error. Denying.", principal.getClass().getName());
                     yield Optional.empty();
                 }
             };
@@ -344,7 +398,8 @@ public class UserSecurityExpression {
             // Numeric IDs are local database IDs.
             // PrincipalDetails.id should be resolved from the database using
             // findUserIdByKeycloakId.
-            // If it's not available yet, we leave it null or -1L.
+            // If it's not available yet, we leave it null (hasResolvedId() correctly
+            // treats null the same as the -1L sentinel — see getCurrentUserId()).
 
             return Optional.of(PrincipalDetails.builder()
                     .id(null) // ID resolution should happen in a filter or service

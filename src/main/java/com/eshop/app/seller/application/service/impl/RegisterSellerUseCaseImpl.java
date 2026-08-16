@@ -6,6 +6,7 @@ import com.eshop.app.seller.application.mapper.SellerMapper;
 import com.eshop.app.seller.application.port.in.RegisterSellerUseCase;
 import com.eshop.app.seller.shared.domain.enums.SellerIdentityType;
 import com.eshop.app.seller.shared.domain.enums.SellerStatus;
+import com.eshop.app.seller.shared.domain.enums.SellerBusinessType;
 import com.eshop.app.core.exception.business.ResourceNotFoundException;
 import com.eshop.app.core.exception.business.ValidationException;
 import com.eshop.app.seller.application.strategy.SellerRegistrationValidator;
@@ -14,6 +15,7 @@ import com.eshop.app.user.domain.entity.SellerProfile;
 import com.eshop.app.user.domain.entity.User;
 import com.eshop.app.user.domain.repository.SellerProfileRepository;
 import com.eshop.app.user.domain.repository.UserRepository;
+import com.eshop.app.user.application.service.ProfileSyncService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,7 +33,7 @@ public class RegisterSellerUseCaseImpl implements RegisterSellerUseCase {
     private final SellerProfileRepository sellerProfileRepository;
     private final UserRepository userRepository;
     private final SellerMapper sellerMapper;
-    private final com.eshop.app.user.application.service.ProfileSyncService profileSyncService;
+    private final ProfileSyncService profileSyncService;
     private final Map<SellerIdentityType, SellerRegistrationValidator> identityValidators;
     private final List<SellerRegistrationValidator> activityValidators;
     private final List<SellerModuleProcessor> moduleProcessors;
@@ -39,7 +41,7 @@ public class RegisterSellerUseCaseImpl implements RegisterSellerUseCase {
     public RegisterSellerUseCaseImpl(SellerProfileRepository sellerProfileRepository,
                                        UserRepository userRepository,
                                        SellerMapper sellerMapper,
-                                       com.eshop.app.user.application.service.ProfileSyncService profileSyncService,
+                                       ProfileSyncService profileSyncService,
                                        List<SellerRegistrationValidator> validatorList,
                                        List<SellerModuleProcessor> processorList) {
         this.sellerProfileRepository = sellerProfileRepository;
@@ -63,6 +65,13 @@ public class RegisterSellerUseCaseImpl implements RegisterSellerUseCase {
     @Override
     @Transactional
     public SellerProfileResponse registerSeller(Long userId, SellerRegisterRequest request) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId must not be null");
+        }
+        if (request == null) {
+            throw new IllegalArgumentException("request must not be null");
+        }
+
         if (!request.isAcceptedTerms()) {
             throw new ValidationException("Terms must be accepted", "TERMS_NOT_ACCEPTED");
         }
@@ -77,9 +86,6 @@ public class RegisterSellerUseCaseImpl implements RegisterSellerUseCase {
         validateRegistration(request);
 
         String handle = generateOrValidateHandle(request);
-        if (sellerProfileRepository.existsByShopHandle(handle)) {
-            throw new ValidationException("Shop handle already taken. Please choose a different one.", "DUPLICATE_SHOP_HANDLE");
-        }
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -95,13 +101,14 @@ public class RegisterSellerUseCaseImpl implements RegisterSellerUseCase {
 
         profileSyncService.ensureProfileExists(
                 user,
-                request.getFirstName(),
-                request.getLastName(),
-                request.getPhone(),
-                request.getAlternatePhone(),
-                request.getGender(),
-                request.getPreferredLanguage(),
-                request.getDateOfBirth()
+                new com.eshop.app.user.application.service.ProfileSyncCommand(
+                        request.getFirstName(),
+                        request.getLastName(),
+                        request.getPhone(),
+                        request.getAlternatePhone(),
+                        request.getGender(),
+                        request.getPreferredLanguage(),
+                        request.getDateOfBirth())
         );
         
         profileSyncService.syncSellerAddressToUser(user, profile);
@@ -118,7 +125,7 @@ public class RegisterSellerUseCaseImpl implements RegisterSellerUseCase {
     }
 
     private void cleanupOrphanedModules(SellerProfile profile) {
-        if (profile.getBusinessTypes() == null || !profile.getBusinessTypes().contains(com.eshop.app.seller.shared.domain.enums.SellerBusinessType.FARMER)) {
+        if (profile.getBusinessTypes() == null || !profile.getBusinessTypes().contains(SellerBusinessType.FARMER)) {
             profile.setFarmerDetails(null);
         }
         if (profile.getIdentityType() != SellerIdentityType.BUSINESS) {
@@ -128,10 +135,15 @@ public class RegisterSellerUseCaseImpl implements RegisterSellerUseCase {
 
     private String generateOrValidateHandle(SellerRegisterRequest request) {
         if (request.getShopHandle() != null && !request.getShopHandle().isBlank()) {
-            return request.getShopHandle().toLowerCase().replaceAll("[^a-z0-9-]", "-");
+            String customHandle = request.getShopHandle().toLowerCase().replaceAll("[^a-z0-9-]", "-");
+            if (sellerProfileRepository.existsByShopHandle(customHandle)) {
+                throw new ValidationException("Shop handle already taken. Please choose a different one.", "DUPLICATE_SHOP_HANDLE");
+            }
+            return customHandle;
         }
         
-        String base = (request.getShopName() + "-" + request.getCity())
+        String city = request.getCity() != null ? request.getCity() : "";
+        String base = (request.getShopName() + "-" + city)
                 .toLowerCase()
                 .replaceAll("[^a-z0-9-]", "-")
                 .replaceAll("-+", "-");

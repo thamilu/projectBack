@@ -1,0 +1,76 @@
+/* ==========================================================================
+   E-Shop RTL (Right-to-Left) Overrides
+   ========================================================================== */
+
+[dir="rtl"] .form-section,
+[dir="rtl"] .kc-form-section-wrapper {
+    border-left: none !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+[dir="rtl"] .pf-c-login__main-header {
+    text-align: right !important;
+}
+
+[dir="rtl"] .pf-c-form__helper-text {
+    text-align: right !important;
+}
+
+/* Password wrapper & toggle flips to left side in RTL */
+[dir="rtl"] .kc-password-toggle {
+    right: auto !important;
+    left: 12px !important;
+}
+
+[dir="rtl"] .kc-password-wrapper .kc-password-toggle {
+    right: auto !important;
+    left: 0 !important;
+    border-radius: var(--kc-radius-md, 16px) 0 0 var(--kc-radius-md, 16px) !important;
+}
+
+[dir="rtl"] .kc-password-wrapper .pf-c-form-control {
+    padding-right: 1rem !important;
+    padding-left: 45px !important;
+}
+
+/* Forgot password link alignment */
+[dir="rtl"] .kc-form-options {
+    flex-direction: row-reverse !important;
+}
+
+[dir="rtl"] .kc-forgot-password {
+    text-align: left !important;
+}
+
+/* Social options and buttons */
+[dir="rtl"] .kc-social-list__item {
+    text-align: right !important;
+}
+
+[dir="rtl"] .kc-social-button {
+    flex-direction: row-reverse !important;
+}
+
+/* Registration container alignment */
+[dir="rtl"] .kc-registration-text {
+    direction: rtl !important;
+}
+
+/* RTL overrides for Forgot Password components */
+[dir="rtl"] .kc-info-panel {
+    flex-direction: row-reverse !important;
+    text-align: right !important;
+}
+
+[dir="rtl"] .kc-form-options--centered {
+    direction: rtl !important;
+}
+
+[dir="rtl"] .kc-form-nav__back svg {
+    transform: scaleX(-1) !important;
+}
+
+[dir="rtl"] .kc-form-nav__back:hover svg {
+    transform: scaleX(-1) translateX(-4px) !important;
+}
+

@@ -11,14 +11,14 @@ class UserProfileTest {
                 .firstName("John")
                 .lastName("Doe")
                 .phone("1234567890")
-                .gender("Male")
+                .gender(com.eshop.app.user.domain.enums.Gender.MALE)
                 .preferredLanguage("English")
                 .build();
 
         assertThat(profile.getFirstName()).isEqualTo("John");
         assertThat(profile.getLastName()).isEqualTo("Doe");
         assertThat(profile.getPhone()).isEqualTo("1234567890");
-        assertThat(profile.getGender()).isEqualTo("Male");
+        assertThat(profile.getGender()).isEqualTo(com.eshop.app.user.domain.enums.Gender.MALE);
         assertThat(profile.getPreferredLanguage()).isEqualTo("English");
     }
 

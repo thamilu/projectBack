@@ -39,6 +39,7 @@ import com.eshop.app.core.api.response.PageResponse;
 import com.eshop.app.core.exception.business.DuplicateResourceException;
 import com.eshop.app.catalog.shared.exception.DuplicateSkuException;
 import com.eshop.app.core.exception.business.ResourceNotFoundException;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 import com.eshop.app.store.api.response.StoreResponse;
 import com.eshop.app.store.application.port.in.StoreUseCase;
 import com.eshop.app.store.domain.entity.Store;
@@ -107,6 +108,7 @@ public class DefaultProductService implements ProductUseCase {
     // private final com.eshop.app.catalog.domain.entity.ProductRepositoryEnhanced
     // productRepositoryEnhanced; // Removed
     private final AttributeService attributeService;
+    private final ProductCreateService productCreateService;
 
     // Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
     // LIFECYCLE
@@ -154,7 +156,7 @@ public class DefaultProductService implements ProductUseCase {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SELLER')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Retryable(retryFor = { org.springframework.dao.OptimisticLockingFailureException.class,
             org.springframework.dao.ConcurrencyFailureException.class }, maxAttempts = 3, backoff = @Backoff(delay = 500, multiplier = 2))
     public ProductResponse createProduct(@Valid @NotNull ProductCreateRequest request, String userId) {
@@ -264,7 +266,7 @@ public class DefaultProductService implements ProductUseCase {
     @Override
     @Transactional // Explicit write transaction
     @CachePut(value = "products", key = "#id")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SELLER')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Retryable(retryFor = { org.springframework.dao.OptimisticLockingFailureException.class,
             org.springframework.dao.ConcurrencyFailureException.class }, maxAttempts = 3, backoff = @Backoff(delay = 500, multiplier = 2))
     public ProductResponse updateProduct(Long id, ProductUpdateRequest request) {
@@ -332,7 +334,7 @@ public class DefaultProductService implements ProductUseCase {
     @Override
     @CacheEvict(value = "products", key = "#id")
     @Transactional
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SELLER')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     public void deleteProduct(Long id) {
         if (!productRepository.existsById(id)) {
             throw new ProductNotFoundException(id);
@@ -357,7 +359,7 @@ public class DefaultProductService implements ProductUseCase {
      */
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SELLER')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     public ProductResponse createProductWithAutoCategory(
             com.eshop.app.catalog.api.request.ProductCreateWithCategoryRequest request) {
         Category category = null;
@@ -618,7 +620,7 @@ public class DefaultProductService implements ProductUseCase {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @CacheEvict(cacheNames = { "products", "productList", "productCount", "productSearch" }, allEntries = true)
     @Retryable(retryFor = { org.springframework.dao.OptimisticLockingFailureException.class,
             org.springframework.dao.ConcurrencyFailureException.class }, maxAttempts = 3, backoff = @Backoff(delay = 500, multiplier = 2))
@@ -662,7 +664,7 @@ public class DefaultProductService implements ProductUseCase {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @CacheEvict(cacheNames = { "products", "productList", "productCount", "productSearch" }, allEntries = true)
     @Retryable(retryFor = { org.springframework.dao.OptimisticLockingFailureException.class,
             org.springframework.dao.ConcurrencyFailureException.class }, maxAttempts = 3, backoff = @Backoff(delay = 500, multiplier = 2))
@@ -770,7 +772,7 @@ public class DefaultProductService implements ProductUseCase {
      */
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @CacheEvict(value = "products", key = "#id")
     @Retryable(retryFor = {
             PessimisticLockingFailureException.class }, maxAttempts = 3, backoff = @Backoff(delay = 100, multiplier = 2))
@@ -811,7 +813,7 @@ public class DefaultProductService implements ProductUseCase {
      */
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SELLER')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Retryable(retryFor = {
             PessimisticLockingFailureException.class }, maxAttempts = 3, backoff = @Backoff(delay = 100, multiplier = 2))
     public void updateStock(Long productId, Integer quantity) {
@@ -832,7 +834,7 @@ public class DefaultProductService implements ProductUseCase {
      */
     @Override
     @Transactional
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SELLER')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     @Retryable(retryFor = {
             PessimisticLockingFailureException.class }, maxAttempts = 3, backoff = @Backoff(delay = 100, multiplier = 2))
     public void adjustStock(Long productId, int delta) {
@@ -885,29 +887,25 @@ public class DefaultProductService implements ProductUseCase {
     @Override
     @Transactional(readOnly = true)
     public long getTotalProductCount() {
-        // Mock implementation
-        return 1000;
+        return productRepository.count();
     }
 
     @Override
     @Transactional(readOnly = true)
     public long getProductCountBySellerId(Long sellerId) {
-        // Mock implementation
-        return 200;
+        return productRepository.countByStoreSellerProfileUserId(sellerId);
     }
 
     @Override
     @Transactional(readOnly = true)
     public long getActiveProductCountBySellerId(Long sellerId) {
-        // Mock implementation
-        return 180;
+        return productRepository.countByStoreSellerProfileUserIdAndStatus(sellerId, ProductStatus.ACTIVE);
     }
 
     @Override
     @Transactional(readOnly = true)
     public long getOutOfStockCountBySellerId(Long sellerId) {
-        // Mock implementation
-        return 20;
+        return productRepository.countByStoreSellerProfileUserIdAndStockQuantity(sellerId, 0);
     }
 
     @Override
@@ -941,7 +939,7 @@ public class DefaultProductService implements ProductUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ProductStatistics getGlobalStatistics() {
         // Example implementation (replace with real queries as needed)
         long totalProducts = productRepository.count();
@@ -986,7 +984,7 @@ public class DefaultProductService implements ProductUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasRole('ADMIN') or (hasRole('SELLER') and #sellerId == principal.id)")
+    @PreAuthorize(IS_ADMIN_OR_SELLER_SELF_BY_SELLER_ID)
     public SellerProductDashboard getSellerDashboard(Long sellerId, int topProductsLimit) {
         // Example implementation (replace with real queries as needed)
         long totalProducts = productRepository.countByStoreSellerProfileUserId(sellerId);
@@ -1045,7 +1043,7 @@ public class DefaultProductService implements ProductUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('ADMIN','SELLER','CUSTOMER')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER_OR_CUSTOMER)
     public List<TopSellingProductResponse> getTopSellingProducts(int limit) {
         List<Product> products = productRepository.findTopSellingProducts(PageRequest.of(0, limit));
         // Map to DTOs (mock sales data)
@@ -1101,5 +1099,30 @@ public class DefaultProductService implements ProductUseCase {
     // Delegates to ProductMapper.getPrimaryImageUrl() to avoid duplication.
     private String getPrimaryImageUrl(Product product) {
         return productMapper.getPrimaryImageUrl(product);
+    }
+
+    @Override
+    @Transactional
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
+    public ProductResponse cloneProductToSellerStore(Long masterProductId, String userId) {
+        return productCreateService.cloneProductToSellerStore(masterProductId, userId);
+    }
+
+    @Override
+    @Transactional
+    @Caching(
+            put = { @CachePut(value = "products", key = "#id") },
+            evict = { @CacheEvict(cacheNames = { "productList", "productCount", "productSearch" }, allEntries = true) })
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
+    public ProductResponse toggleProductStatus(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        if (product.getStatus() == ProductStatus.ACTIVE) {
+            product.setStatus(ProductStatus.INACTIVE);
+        } else {
+            product.setStatus(ProductStatus.ACTIVE);
+        }
+        product = productRepository.save(product);
+        return productMapper.toProductResponse(product);
     }
 }

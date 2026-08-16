@@ -903,6 +903,10 @@ public class Product {
     @JoinColumn(name = "tax_class_id", foreignKey = @ForeignKey(name = "fk_product_tax_class"))
     private TaxClass taxClass;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "master_product_id", foreignKey = @ForeignKey(name = "fk_product_master_product"))
+    private MasterProduct masterProduct;
+
     /**
      * Parent product (for variants).
      */

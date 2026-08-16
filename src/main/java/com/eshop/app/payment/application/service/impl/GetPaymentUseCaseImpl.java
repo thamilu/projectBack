@@ -8,6 +8,8 @@ import com.eshop.app.payment.domain.repository.PaymentRepository;
 import com.eshop.app.payment.domain.model.PaymentStatus;
 import com.eshop.app.core.api.response.PageResponse;
 import com.eshop.app.core.exception.business.ResourceNotFoundException;
+import com.eshop.app.core.exception.security.UnauthorizedException;
+import com.eshop.app.core.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,22 +30,53 @@ public class GetPaymentUseCaseImpl implements GetPaymentUseCase {
 
     @Override
     public PaymentResponse getPaymentByTransactionId(String transactionId) {
-        return paymentRepository.findByTransactionId(transactionId)
-                .map(paymentMapper::toResponse)
+        Payment payment = paymentRepository.findByTransactionId(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found: " + transactionId));
+        verifyOwnership(payment);
+        return paymentMapper.toResponse(payment);
     }
 
     @Override
     public List<PaymentResponse> getPaymentsByOrderId(Long orderId) {
-        return paymentRepository.findByOrderIdOrderByCreatedAtDesc(orderId).stream()
+        List<Payment> payments = paymentRepository.findByOrderIdOrderByCreatedAtDesc(orderId);
+        if (!payments.isEmpty()) {
+            verifyOwnership(payments.get(0));
+        }
+        return payments.stream()
                 .map(paymentMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public PageResponse<PaymentResponse> getUserPayments(Long userId, Pageable pageable) {
+        if (!SecurityUtils.hasRole("ADMIN")) {
+            Long currentUserId = SecurityUtils.getAuthenticatedUserId();
+            if (currentUserId == null || !currentUserId.equals(userId)) {
+                throw new UnauthorizedException("You do not have permission to view this payment history");
+            }
+        }
         Page<Payment> page = paymentRepository.findByUserId(userId, pageable);
         return PageResponse.of(page, paymentMapper::toResponse);
+    }
+
+    /**
+     * Payment ownership is resolved via the parent order's customer — {@code @PreAuthorize} on the
+     * controller only checks role, not resource ownership. Without this, any authenticated
+     * CUSTOMER could view any other customer's payment/card/transaction details by guessing a
+     * sequential order ID.
+     */
+    private void verifyOwnership(Payment payment) {
+        if (SecurityUtils.hasRole("ADMIN")) {
+            return;
+        }
+        Long currentUserId = SecurityUtils.getAuthenticatedUserId();
+        boolean isOwner = currentUserId != null
+                && payment.getOrder() != null
+                && payment.getOrder().getCustomer() != null
+                && currentUserId.equals(payment.getOrder().getCustomer().getId());
+        if (!isOwner) {
+            throw new UnauthorizedException("You do not have permission to access this payment");
+        }
     }
 
     @Override

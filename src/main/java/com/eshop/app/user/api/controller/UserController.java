@@ -9,6 +9,8 @@ import com.eshop.app.core.api.response.ApiResponse;
 import com.eshop.app.core.api.response.BulkOperationResult;
 import com.eshop.app.core.api.response.PageResponse;
 import com.eshop.app.core.infrastructure.config.security.oauth.PrincipalDetails;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.IS_ADMIN;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.IS_ADMIN_OR_SELF;
 import com.eshop.app.user.api.request.RoleChangeRequest;
 import com.eshop.app.user.api.request.UserSelfUpdateRequest;
 import com.eshop.app.user.api.request.UserUpdateRequest;
@@ -20,6 +22,7 @@ import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import jakarta.validation.Valid;
@@ -42,7 +45,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -58,7 +61,14 @@ import java.util.concurrent.TimeUnit;
 @SecurityRequirement(name = "Bearer Authentication")
 public class UserController {
 
-    private static final Set<String> ALLOWED_SORT_FIELDS = Set.of("id", "createdAt", "firstName", "lastName", "role");
+    // Canonical-case lookup: validated case-insensitively, but the mapped value is always
+    // passed to Sort.by(...) in the exact case Hibernate/JPA expects for the entity property.
+    private static final Map<String, String> ALLOWED_SORT_FIELDS = Map.of(
+            "id", "id",
+            "createdat", "createdAt",
+            "firstname", "firstName",
+            "lastname", "lastName",
+            "role", "role");
     private static final int MAX_PAGE_SIZE = 100;
 
     private final com.eshop.app.user.application.port.in.ManageUserUseCase manageUserUseCase;
@@ -76,32 +86,7 @@ public class UserController {
             @AuthenticationPrincipal PrincipalDetails principalDetails,
             org.springframework.security.core.Authentication authentication) {
 
-        Long userId = principalDetails.getId();
-
-        // Resilience: If local ID is missing, try a last-resort sync
-        if (userId == null || userId == -1L) {
-            log.warn("Principal {} has missing local ID. Attempting last-resort resolution.",
-                    principalDetails.getEmail());
-
-            if (authentication.getCredentials() instanceof Jwt jwt) {
-                try {
-                    userId = identitySyncUseCase.syncUserFromKeycloak(
-                            jwt.getSubject(),
-                            jwt.getClaimAsString("email"),
-                            jwt.getClaimAsString("given_name"),
-                            jwt.getClaimAsString("family_name"),
-                            jwt.getClaimAsString("phone_number"),
-                            jwt.getClaim("email_verified"));
-                    log.info("[HARDEN] Resolved local identity for user {} as ID: {}", principalDetails.getEmail(),
-                            userId);
-                } catch (Exception e) {
-                    // [HARDEN] Log full context for backend diagnosis without exposing internal
-                    // details to client
-                    log.error("[HARDEN] Last-resort identity resolution failed for email={} sub={} | error={}",
-                            principalDetails.getEmail(), jwt.getSubject(), e.getMessage());
-                }
-            }
-        }
+        Long userId = resolveUserId(principalDetails, authentication);
 
         if (userId == null || userId == -1L) {
             // [HARDEN] Graceful degradation: Return 503 (transient) not 500 (fatal).
@@ -128,23 +113,13 @@ public class UserController {
             @Valid @RequestBody UserSelfUpdateRequest request,
             org.springframework.security.core.Authentication authentication) {
 
-        Long userId = principalDetails.getId();
+        Long userId = resolveUserId(principalDetails, authentication);
 
         if (userId == null || userId == -1L) {
-            // Try resolution if credentials available
-            if (authentication.getCredentials() instanceof Jwt jwt) {
-                userId = identitySyncUseCase.syncUserFromKeycloak(
-                        jwt.getSubject(),
-                        jwt.getClaimAsString("email"),
-                        jwt.getClaimAsString("given_name"),
-                        jwt.getClaimAsString("family_name"),
-                        jwt.getClaimAsString("phone_number"),
-                        jwt.getClaim("email_verified"));
-            }
-        }
-
-        if (userId == null || userId == -1L) {
-            return ResponseEntity.status(500).body(ApiResponse.<UserResponse>error("Identity resolution failure"));
+            log.error("[HARDEN] Identity unresolvable for email={}. Returning 503 for client retry.",
+                    principalDetails.getEmail());
+            return ResponseEntity.status(503).body(
+                    ApiResponse.<UserResponse>error("Profile temporarily unavailable. Please try again in a moment."));
         }
 
         log.info("User {} updating own profile", userId);
@@ -155,10 +130,47 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", response));
     }
 
+    /**
+     * Shared JIT identity-resolution fallback for /me endpoints. Used by both GET and PUT
+     * so a Keycloak-authenticated principal missing its local user ID gets identical,
+     * exception-safe resolution and identical 503-on-failure semantics either way.
+     */
+    private Long resolveUserId(PrincipalDetails principalDetails,
+            org.springframework.security.core.Authentication authentication) {
+        Long userId = principalDetails.getId();
+        if (userId != null && userId != -1L) {
+            return userId;
+        }
+
+        log.warn("Principal {} has missing local ID. Attempting last-resort resolution.",
+                principalDetails.getEmail());
+
+        if (authentication.getCredentials() instanceof Jwt jwt) {
+            try {
+                userId = identitySyncUseCase.syncUserFromKeycloak(
+                        jwt.getSubject(),
+                        jwt.getClaimAsString("email"),
+                        jwt.getClaimAsString("given_name"),
+                        jwt.getClaimAsString("family_name"),
+                        jwt.getClaimAsString("phone_number"),
+                        jwt.getClaim("email_verified"));
+                log.info("[HARDEN] Resolved local identity for user {} as ID: {}", principalDetails.getEmail(),
+                        userId);
+            } catch (Exception e) {
+                // [HARDEN] Log full context for backend diagnosis without exposing internal
+                // details to client
+                log.error("[HARDEN] Last-resort identity resolution failed for email={} sub={} | error={}",
+                        principalDetails.getEmail(), jwt.getSubject(), e.getMessage());
+                return null;
+            }
+        }
+        return userId;
+    }
+
     // ==================== USER CRUD ENDPOINTS ====================
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole(@appProperties.security.roles.admin) or @userSecurity.isCurrentUser(#id)")
+    @PreAuthorize(IS_ADMIN_OR_SELF)
     @Timed(value = "user.get", description = "Time to get user by ID")
     @Operation(summary = "Get user by ID", description = "Users can view own profile, admins can view any")
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(
@@ -179,10 +191,13 @@ public class UserController {
                 .body(ApiResponse.success(response));
     }
 
+    // Admin-only: UserUpdateRequest exposes fields (e.g. email) that the self-service
+    // UserSelfUpdateRequest deliberately omits. Self-updates go through PUT /me instead,
+    // which uses the restricted DTO/use case — do not grant self-access here.
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#id)")
+    @PreAuthorize(IS_ADMIN)
     @Timed(value = "user.update", description = "Time to update user")
-    @Operation(summary = "Update user profile")
+    @Operation(summary = "Update user profile (Admin only — use PUT /me for self-service)")
     public ResponseEntity<ApiResponse<UserResponse>> updateUser(
             @PathVariable @Positive Long id,
             @Valid @RequestBody UserUpdateRequest request,
@@ -197,21 +212,20 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole(@appProperties.security.roles.admin)")
+    @PreAuthorize(IS_ADMIN)
     @RateLimiter(name = "adminOperations")
     @Timed(value = "user.delete", description = "Time to delete user")
     @Operation(summary = "Delete user (Admin only)")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403",
+                    description = "Forbidden - admins cannot delete their own account")
+    })
     public ResponseEntity<ApiResponse<Void>> deleteUser(
             @PathVariable @Positive Long id,
             @RequestParam(defaultValue = "false") boolean hardDelete,
             @AuthenticationPrincipal PrincipalDetails currentUser) {
 
-        // Prevent self-deletion
-        if (id.equals(currentUser.getId())) {
-            log.warn("Admin {} attempted self-deletion", currentUser.getId());
-            throw new BusinessException("Cannot delete your own account", "USER_SELF_DELETE", HttpStatus.BAD_REQUEST);
-        }
-
+        // Self-deletion is blocked by UserSelfProtectionGuard inside the service layer.
         log.info("Admin {} deleting user {} (hardDelete={})", currentUser.getId(), id, hardDelete);
 
         if (hardDelete) {
@@ -229,7 +243,7 @@ public class UserController {
     // ==================== ADMIN LIST ENDPOINTS ====================
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Timed(value = "user.list", description = "Time to list users")
     @Operation(summary = "Get all users (Admin only)")
     public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> getAllUsers(
@@ -239,13 +253,15 @@ public class UserController {
             @RequestParam(defaultValue = "ASC") String sortDirection,
             @RequestParam(required = false) Boolean active) {
 
-        validateSortField(sortBy);
+        String canonicalSortBy = validateAndNormalizeSortField(sortBy);
 
         Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection)
                 .orElse(Sort.Direction.ASC);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, canonicalSortBy));
 
-        PageResponse<UserResponse> response = getUserUseCase.getAllUsers(pageable);
+        PageResponse<UserResponse> response = active != null
+                ? getUserUseCase.getUsersByActiveStatus(active, pageable)
+                : getUserUseCase.getAllUsers(pageable);
 
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(10, TimeUnit.SECONDS).cachePrivate())
@@ -253,25 +269,28 @@ public class UserController {
     }
 
     @GetMapping("/role/{role}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Timed(value = "user.byRole", description = "Time to get users by role")
     @Operation(summary = "Get users by role (Admin only)")
     public ResponseEntity<ApiResponse<PageResponse<UserResponse>>> getUsersByRole(
             @PathVariable UserRole role, // Spring auto-validates enum
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(MAX_PAGE_SIZE) int size,
-            @RequestParam(defaultValue = "id") String sortBy) {
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDirection) {
 
-        validateSortField(sortBy);
+        String canonicalSortBy = validateAndNormalizeSortField(sortBy);
+        Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection)
+                .orElse(Sort.Direction.ASC);
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, canonicalSortBy));
         PageResponse<UserResponse> response = getUserUseCase.getUsersByRole(role.name(), pageable);
 
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @RateLimiter(name = "searchApi")
     @Timed(value = "user.search", description = "Time to search users")
     @Operation(summary = "Search users (Admin only)")
@@ -280,11 +299,15 @@ public class UserController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "10") @Min(1) @Max(MAX_PAGE_SIZE) int size) {
 
-        String sanitizedKeyword = sanitizeSearchKeyword(keyword);
-        log.debug("Searching users with keyword: '{}'", sanitizedKeyword);
+        // Sanitization (SQL wildcard escaping) is already performed by SearchUtils.sanitize()
+        // inside UserQueryService#searchUsers against a parameterized JPQL query — no need
+        // to duplicate/destructively re-sanitize here (previously stripped valid characters
+        // like apostrophes, corrupting names such as "O'Brien").
+        String trimmedKeyword = keyword.trim();
+        log.debug("Searching users with keyword: '{}'", trimmedKeyword);
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id"));
-        PageResponse<UserResponse> response = getUserUseCase.searchUsers(sanitizedKeyword, pageable);
+        PageResponse<UserResponse> response = getUserUseCase.searchUsers(trimmedKeyword, pageable);
 
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -292,9 +315,14 @@ public class UserController {
     // ==================== ADMIN STATUS MANAGEMENT ====================
 
     @PutMapping("/{id}/activate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @RateLimiter(name = "adminOperations")
+    @Timed(value = "user.activate", description = "Time to activate user")
     @Operation(summary = "Activate user account (Admin only)")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403",
+                    description = "Forbidden - admins cannot activate their own account")
+    })
     public ResponseEntity<ApiResponse<UserResponse>> activateUser(
             @PathVariable @Positive Long id,
             @AuthenticationPrincipal PrincipalDetails currentUser) {
@@ -308,20 +336,19 @@ public class UserController {
     }
 
     @PutMapping("/{id}/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @RateLimiter(name = "adminOperations")
+    @Timed(value = "user.deactivate", description = "Time to deactivate user")
     @Operation(summary = "Deactivate user account (Admin only)")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403",
+                    description = "Forbidden - admins cannot deactivate their own account")
+    })
     public ResponseEntity<ApiResponse<UserResponse>> deactivateUser(
             @PathVariable @Positive Long id,
             @AuthenticationPrincipal PrincipalDetails currentUser) {
 
-        // Prevent self-deactivation
-        if (id.equals(currentUser.getId())) {
-            log.warn("Admin {} attempted self-deactivation", currentUser.getId());
-            throw new BusinessException("Cannot deactivate your own account", "USER_SELF_DEACTIVATE",
-                    HttpStatus.BAD_REQUEST);
-        }
-
+        // Self-deactivation is blocked by UserSelfProtectionGuard inside the service layer.
         log.info("Admin {} deactivating user {}", currentUser.getId(), id);
 
         UserResponse response = manageUserUseCase.deactivateUser(id);
@@ -331,19 +358,20 @@ public class UserController {
     }
 
     @PutMapping("/{id}/role")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @RateLimiter(name = "adminOperations")
+    @Timed(value = "user.role.change", description = "Time to change user role")
     @Operation(summary = "Change user role (Admin only)")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403",
+                    description = "Forbidden - admins cannot change their own role")
+    })
     public ResponseEntity<ApiResponse<UserResponse>> changeUserRole(
             @PathVariable @Positive Long id,
             @RequestBody @Valid RoleChangeRequest request,
             @AuthenticationPrincipal PrincipalDetails currentUser) {
 
-        // Prevent changing own role
-        if (id.equals(currentUser.getId())) {
-            throw new BusinessException("Cannot change your own role", "USER_SELF_ROLE_CHANGE", HttpStatus.BAD_REQUEST);
-        }
-
+        // Self-role-change is blocked by UserSelfProtectionGuard inside the service layer.
         log.info("Admin {} changing role of user {} to {}",
                 currentUser.getId(), id, request.getNewRole());
 
@@ -356,9 +384,14 @@ public class UserController {
     // ==================== BULK OPERATIONS ====================
 
     @PostMapping("/bulk/activate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @RateLimiter(name = "bulkOperations")
+    @Timed(value = "user.bulk.activate", description = "Time to bulk activate users")
     @Operation(summary = "Bulk activate users (Admin only)")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403",
+                    description = "Forbidden - the ID list includes the requesting admin's own account")
+    })
     public ResponseEntity<ApiResponse<BulkOperationResult>> bulkActivate(
             @RequestBody @Size(min = 1, max = 100, message = "Must provide 1-100 user IDs") List<@Positive Long> userIds,
             @AuthenticationPrincipal PrincipalDetails currentUser) {
@@ -372,19 +405,19 @@ public class UserController {
     }
 
     @PostMapping("/bulk/deactivate")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @RateLimiter(name = "bulkOperations")
+    @Timed(value = "user.bulk.deactivate", description = "Time to bulk deactivate users")
     @Operation(summary = "Bulk deactivate users (Admin only)")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403",
+                    description = "Forbidden - the ID list includes the requesting admin's own account")
+    })
     public ResponseEntity<ApiResponse<BulkOperationResult>> bulkDeactivate(
             @RequestBody @Size(min = 1, max = 100) List<@Positive Long> userIds,
             @AuthenticationPrincipal PrincipalDetails currentUser) {
 
-        // Prevent self-deactivation
-        if (userIds.contains(currentUser.getId())) {
-            throw new BusinessException("Cannot deactivate your own account", "USER_SELF_DEACTIVATE",
-                    HttpStatus.BAD_REQUEST);
-        }
-
+        // Bulk self-deactivation is blocked by UserSelfProtectionGuard inside the service layer.
         log.info("Admin {} bulk deactivating {} users", currentUser.getId(), userIds.size());
 
         BulkOperationResult result = manageUserUseCase.bulkDeactivate(userIds);
@@ -396,8 +429,9 @@ public class UserController {
     // ==================== EXPORT ====================
 
     @GetMapping("/export")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @RateLimiter(name = "exportApi")
+    @Timed(value = "user.export", description = "Time to export users")
     @Operation(summary = "Export users (Admin only)")
     public ResponseEntity<Resource> exportUsers(
             @RequestParam(defaultValue = "CSV") ExportFormat format,
@@ -421,20 +455,20 @@ public class UserController {
 
     // ==================== HELPER METHODS ====================
 
-    private void validateSortField(String sortBy) {
-        if (!ALLOWED_SORT_FIELDS.contains(sortBy.toLowerCase())) {
+    // Validates sortBy case-insensitively but returns the CANONICAL, correctly-cased field
+    // name that Sort.by(...) must actually use — the previous implementation validated
+    // case-insensitively yet passed the caller's raw casing to Hibernate/JPA, so an
+    // accepted value like "CREATEDAT" would still fail downstream with an unhandled
+    // PropertyReferenceException.
+    private String validateAndNormalizeSortField(String sortBy) {
+        String canonical = ALLOWED_SORT_FIELDS.get(sortBy == null ? "" : sortBy.toLowerCase());
+        if (canonical == null) {
             throw new BusinessException(
-                    "Invalid sort field '" + sortBy + "'. Allowed fields: " + ALLOWED_SORT_FIELDS,
+                    "Invalid sort field '" + sortBy + "'. Allowed fields: " + ALLOWED_SORT_FIELDS.values(),
                     "INVALID_SORT_FIELD",
                     HttpStatus.BAD_REQUEST);
         }
-    }
-
-    private String sanitizeSearchKeyword(String keyword) {
-        return keyword.trim()
-                .replaceAll("[%_\\[\\]\\\\]", "")
-                .replaceAll("\\s+", " ")
-                .replaceAll("[<>\"';]", "");
+        return canonical;
     }
 
     private String generateETag(UserResponse response) {

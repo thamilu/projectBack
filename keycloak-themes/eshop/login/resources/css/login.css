@@ -1,0 +1,75 @@
+@charset "UTF-8";
+
+/**
+ * ============================================================
+ * KEYCLOAK ESHOP THEME — CSS Entry Point
+ * ============================================================
+ *
+ * Architecture:  7-1 Pattern (adapted for single-page theme)
+ * Methodology:   BEM + Design Tokens
+ * Processor:     PostCSS (postcss-import, autoprefixer, cssnano)
+ * Output:        login.min.css
+ * SRI:           Updated automatically via npm run build
+ *
+ * IMPORT ORDER (critical — do not reorder):
+ * ─────────────────────────────────────────
+ * 1. keyframes   No visual output. Global animation frames.
+ * 2. Base        Browser normalization + global defaults.
+ * 3. Layout      Page structure and containers.
+ * 4. Components  UI building blocks.
+ * 5. Utilities   Atomic helpers and accessibility.
+ * 6. Themes      Color scheme + direction overrides.
+ *                ⚠️  Themes MUST be last.
+ *
+ * ============================================================
+ */
+
+@layer reset, base, layout, components, utilities, themes;
+
+/* ── 1. ABSTRACTS ──────────────────────────────────────────── */
+/* Global keyframe animations (no visual output until referenced) */
+@import './abstracts/keyframes.css';
+
+/* ── 2. BASE ───────────────────────────────────────────────── */
+/* Browser normalization and reset rules */
+@import './base/reset.css' layer(reset);
+
+/* Body background noise, scrollbars, static orbs */
+@import './base/base.css' layer(base);
+
+/* Heading scale, base typography, font face rules */
+@import './base/typography.css' layer(base);
+
+/* ── 3. LAYOUT ─────────────────────────────────────────────── */
+/* Zenith premium split view, card layout and desktop grid */
+@import './layout/layout.css' layer(layout);
+
+/* ── 4. COMPONENTS ─────────────────────────────────────────── */
+/* Form inputs, group blocks, error message alerts */
+@import './components/forms.css' layer(components);
+
+/* Buttons, spinner animations, loading buttons */
+@import './components/button.css' layer(components);
+
+/* Password reveal button container and layouts */
+@import './components/password-toggle.css' layer(components);
+
+/* Password strength meter and validation requirements */
+@import './components/password-strength.css' layer(components);
+
+/* Social providers layout, dividers, and loading states */
+@import './components/social.css' layer(components);
+
+/* ── 5. UTILITIES ──────────────────────────────────────────── */
+/* Screen reader only, noscript fallback, skip links */
+@import './utilities/accessibility.css' layer(utilities);
+
+/* focus-visible outline rings for keyboard users */
+@import './utilities/focus.css' layer(utilities);
+
+/* ── 6. THEMES (MUST BE LAST) ──────────────────────────────── */
+/* Dark mode color variable overrides */
+@import './themes/dark.css' layer(themes);
+
+/* RTL directional overrides for Arabic layout flows */
+@import './themes/rtl.css' layer(themes);

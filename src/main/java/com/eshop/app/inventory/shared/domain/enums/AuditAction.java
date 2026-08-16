@@ -5,7 +5,12 @@ package com.eshop.app.inventory.shared.domain.enums;
  */
 public enum AuditAction {
     USER_LOGIN("User logged in"),
+    USER_LOGIN_FAILED("User login failed"),
     USER_LOGOUT("User logged out"),
+    USER_TOKEN_REFRESH("User token refreshed"),
+    USER_TOKEN_REFRESH_FAILED("User token refresh failed"),
+    OAUTH2_CSRF_ATTEMPT("OAuth2 CSRF attempt detected"),
+    TOKEN_INTROSPECT("Token introspected"),
     USER_REGISTER("User registered"),
     USER_UPDATE("User profile updated"),
     USER_DELETE("User deleted"),

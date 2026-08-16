@@ -100,7 +100,10 @@ public class DefaultCartService implements CartService {
     }
 
     private Cart getOrCreateCart() {
-        Long userId = getCurrentUserId();
+        return getOrCreateCartForUser(getCurrentUserId());
+    }
+
+    private Cart getOrCreateCartForUser(Long userId) {
         return cartRepository.findByUserId(userId)
                 .orElseGet(() -> {
                     User user = userRepository.findById(userId)
@@ -315,15 +318,17 @@ public class DefaultCartService implements CartService {
 
     @Override
     public CartResponse createCustomerCart(Long customerId) {
-        // Mock implementation
-        return new CartResponse();
+        Cart cart = getOrCreateCartForUser(customerId);
+        cart.calculateTotalAmount();
+        return cartMapper.toCartResponse(cart);
     }
 
     @Override
     @Transactional(readOnly = true)
     public CartResponse getCustomerCart(Long customerId) {
-        // Mock implementation
-        return new CartResponse();
+        Cart cart = getOrCreateCartForUser(customerId);
+        cart.calculateTotalAmount();
+        return cartMapper.toCartResponse(cart);
     }
 
     // Helper Methods

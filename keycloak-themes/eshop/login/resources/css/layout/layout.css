@@ -1,0 +1,326 @@
+/* ==========================================================================
+   E-Shop Layout & Split View CSS
+   ========================================================================== */
+
+/* Nebula-Tier Premium Split Layout (The Zenith) */
+.kc-layout--split {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    background: #000; /* Pure black for maximum contrast */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Data-Stream Scanline Effect */
+.kc-layout--split::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 50%, rgba(16, 185, 129, 0.02) 50%);
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Brand Side (Balanced Nebula-Tier) */
+.kc-brand-section {
+    display: none;
+    flex: 0.9; /* Balanced Split */
+    position: relative;
+    overflow: hidden;
+    padding: 6rem;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (min-width: 1024px) {
+    .kc-brand-section {
+        display: flex;
+    }
+}
+
+.kc-brand-content {
+    position: relative;
+    z-index: 100;
+    max-width: 600px;
+    animation: cardEnter 1.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Holographic Chrome Logo */
+.kc-brand-logo {
+    width: 100px;
+    height: 100px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    margin-bottom: 3.5rem;
+    filter: drop-shadow(0 0 40px rgba(16, 185, 129, 0.3))
+            drop-shadow(0 0 80px rgba(59, 130, 246, 0.15));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.kc-brand-title {
+    font-size: 5rem;
+    font-weight: 950;
+    margin: 0;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    background: linear-gradient(to bottom, #fff, #94a3b8, #475569);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8));
+    text-transform: uppercase;
+}
+
+.kc-brand-subtitle {
+    font-size: 1.5rem;
+    color: var(--kc-color-text-secondary, #94a3b8);
+    margin: 1.5rem 0 4rem 0;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+/* Holographic Feature Cards */
+.kc-brand-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.kc-feature-item {
+    background: rgba(15, 23, 42, 0.6) !important;
+    backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    padding: 1.5rem 2rem;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.4);
+}
+
+.kc-feature-item:hover {
+    transform: translateX(30px) translateY(-5px);
+    border-color: #ec4899; /* Holographic pink accent */
+    box-shadow: 0 30px 60px rgba(236, 72, 153, 0.1);
+}
+
+.kc-feature-icon {
+    font-size: 1.5rem;
+    color: var(--kc-color-primary, #10b981);
+    text-shadow: 0 0 15px var(--kc-color-primary, #10b981);
+}
+
+.kc-feature-text h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--kc-color-text-primary, #f8fafc) !important;
+}
+
+.kc-feature-text p {
+    margin: 0.25rem 0 0 0;
+    font-size: 0.875rem;
+    color: var(--kc-color-text-secondary, #94a3b8) !important;
+}
+
+/* Form Side (High-Fashion) */
+.kc-form-section-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center; /* Center vertically for cleaner aesthetic */
+    justify-content: center;
+    padding: 4vh 2rem; /* Compact padding */
+    position: relative;
+    z-index: 200;
+    background: #000;
+    overflow-y: auto;
+}
+
+/* Prism Glass Card */
+.kc-form-section {
+    --shadow-card-premium: 0 120px 240px -60px rgba(0, 0, 0, 1), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    background: var(--kc-color-bg-card, rgba(15, 23, 42, 0.65)) !important;
+    backdrop-filter: blur(24px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+    border: 1px solid var(--kc-color-border, rgba(255, 255, 255, 0.08)) !important;
+    border-top: 1px solid var(--kc-color-border-bright, rgba(255, 255, 255, 0.25)) !important;
+    border-radius: var(--kc-radius-lg, 8px) !important;
+    box-shadow: var(--shadow-card-premium) !important;
+    padding: 3rem 2.25rem !important; /* Solved size login window - made compact */
+    width: 100% !important;
+    max-width: 440px !important;
+}
+
+/* Standard Mobile/Tablet logic */
+@media (max-width: 767px) {
+    .kc-form-section {
+        padding: 2.25rem 1.75rem !important;
+        border-radius: var(--kc-radius-lg, 28px) !important;
+        margin: 2rem 1rem;
+    }
+}
+
+/* ─── Loading Overlay ────────────────────────────────────────── */
+.kc-loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.75);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--kc-z-modal, 1000);
+    animation: fadeIn var(--kc-duration-base, 200ms) var(--kc-ease-out) forwards;
+}
+
+.kc-loading-overlay[hidden] {
+    display: none !important;
+}
+
+.kc-loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--kc-spacing-4, 16px);
+    color: var(--kc-color-primary, #10b981);
+}
+
+.kc-spinner {
+    width: 50px;
+    height: 50px;
+    animation: kc-spin var(--kc-duration-spin, 1s) linear infinite;
+}
+
+.kc-spinner circle {
+    stroke: currentColor;
+    stroke-linecap: round;
+    animation: dash var(--kc-duration-pulse, 2s) ease-in-out infinite;
+}
+
+@keyframes dash {
+    0% {
+        stroke-dasharray: 1, 150;
+        stroke-dashoffset: 0;
+    }
+    50% {
+        stroke-dasharray: 90, 150;
+        stroke-dashoffset: -35;
+    }
+    100% {
+        stroke-dasharray: 90, 150;
+        stroke-dashoffset: -124;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* ─── Forgot Password Navigation ──────────────────────────────── */
+.kc-form-nav {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--kc-spacing-6, 24px);
+}
+
+.kc-form-nav__back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--kc-spacing-2, 8px);
+    font-size: var(--kc-font-size-sm, 0.875rem);
+    color: var(--kc-color-text-secondary, #94a3b8) !important;
+    transition: color var(--kc-duration-fast, 150ms) ease;
+    text-decoration: none !important;
+}
+
+.kc-form-nav__back:hover {
+    color: var(--kc-color-primary, #10b981) !important;
+}
+
+.kc-form-nav__back svg {
+    transition: transform var(--kc-duration-fast, 150ms) ease;
+}
+
+.kc-form-nav__back:hover svg {
+    transform: translateX(-4px);
+}
+
+@media (max-width: 1023px) {
+    .kc-brand-section {
+        display: none !important;
+    }
+    .kc-form-section-wrapper {
+        border-left: none !important;
+        padding: 2rem 1rem !important;
+    }
+    .kc-form-section {
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+}
+
+.kc-brand-trust-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 3.5rem;
+    padding: 0.625rem 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9999px;
+    animation: cardEnter 2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.kc-brand-trust-badge__icon {
+    color: var(--kc-color-primary);
+}
+.kc-brand-trust-badge__text {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--kc-color-text-secondary);
+}
+.kc-brand-certifications {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--kc-spacing-3, 0.75rem);
+    margin-top: var(--kc-spacing-6, 1.5rem);
+    animation: cardEnter 2.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.kc-cert-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--kc-spacing-2, 0.5rem);
+    padding: 0.375rem var(--kc-spacing-3, 0.75rem);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--kc-radius-md, 6px);
+    font-size: var(--kc-font-size-xs, 0.75rem);
+    font-weight: 500;
+    color: var(--kc-color-text-secondary, #94a3b8);
+    transition: all var(--kc-duration-fast, 150ms) ease;
+}
+
+.kc-cert-badge:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--kc-color-text-primary, #f8fafc);
+}
+
+.kc-cert-badge__icon {
+    color: var(--kc-color-primary, #10b981);
+    flex-shrink: 0;
+}

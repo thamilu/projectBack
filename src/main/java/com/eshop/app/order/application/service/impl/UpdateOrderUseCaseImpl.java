@@ -7,7 +7,7 @@ import com.eshop.app.order.domain.repository.OrderRepository;
 import com.eshop.app.order.application.mapper.OrderMapper;
 import com.eshop.app.core.exception.business.ResourceNotFoundException;
 import com.eshop.app.user.domain.entity.User;
-import com.eshop.app.user.domain.entity.Role;
+import com.eshop.app.user.shared.domain.enums.UserRole;
 import com.eshop.app.user.domain.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -67,7 +67,7 @@ public class UpdateOrderUseCaseImpl implements UpdateOrderUseCase {
         User agent = userRepository.findById(agentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Delivery agent not found"));
 
-        if (agent.getRole() != Role.DELIVERY_AGENT) {
+        if (agent.getRole() != UserRole.DELIVERY_AGENT) {
             throw new IllegalArgumentException("User is not a delivery agent");
         }
 

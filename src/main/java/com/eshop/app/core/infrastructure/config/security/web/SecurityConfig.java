@@ -3,25 +3,28 @@ package com.eshop.app.core.infrastructure.config.security.web;
 import com.eshop.app.core.infrastructure.config.security.oauth.PrincipalDetails;
 
 import com.eshop.app.core.infrastructure.config.properties.AppProperties;
-import com.eshop.app.core.api.response.ApiError;
+import com.eshop.app.user.application.security.JwtClaimExtractor;
 import com.eshop.app.user.application.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletResponse;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -30,15 +33,17 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.time.Duration;
 import java.util.*;
 
 /**
- * ðŸ›¡ï¸ Hardened Consolidated Security Configuration
- * 
+ * Hardened Consolidated Security Configuration
+ *
  * Unified security policy for the E-Shop platform.
  * Supports dual-realm validation (Admin/User) and automatic user identity
  * syncing.
@@ -54,12 +59,29 @@ public class SecurityConfig {
     private final ObjectMapper objectMapper;
     private final ObjectProvider<UserService> userServiceProvider;
     private final ObjectProvider<JwtDecoder> jwtDecoderProvider;
+    private final AuthenticationEntryPoint authenticationEntryPoint;
+    private final AccessDeniedHandler accessDeniedHandler;
+    private final JwtClaimExtractor jwtClaimExtractor;
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String userRealmIssuer;
 
     @Value("${app.security.admin.issuer-uri:}")
     private String adminRealmIssuer;
+
+    // Caches the (keycloakId -> local user ID) sync outcome for a short window so the
+    // identity-sync DB round trip does not run on every single authenticated request —
+    // this is a stateless resource server, so without this, every request re-derives the
+    // Authentication from the raw JWT, and syncUserIdentity's DB writes previously ran
+    // unconditionally each time. Safe from a real-time-authorization standpoint: role
+    // enforcement (@PreAuthorize/hasRole) reads authorities built directly from the JWT's
+    // own claims every request (see extractAuthorities/extractRawRoles below), which is
+    // NOT affected by this cache — only the background bookkeeping write to the local
+    // `users` table (profile fields, locally-synced role) is deferred, for up to the TTL.
+    private final Cache<String, Long> identitySyncCache = Caffeine.newBuilder()
+            .maximumSize(50_000)
+            .expireAfterWrite(Duration.ofSeconds(60))
+            .build();
 
     // --- Security Filter Chains ---
 
@@ -77,17 +99,17 @@ public class SecurityConfig {
     }
 
     /**
-     * ðŸ” Chain 1: ADMIN API -> Validates with 'eshop-admin' realm if configured
+     * Chain 1: ADMIN API -> Validates with the admin realm. Only registered when
+     * {@code app.security.admin.issuer-uri} is configured — {@code @ConditionalOnProperty}
+     * is the idiomatic way to express "this bean only exists when this property is set,"
+     * clearer than the property being present-but-blank (its {@code @Value} default is
+     * {@code ""}, never {@code null}) and returning {@code null} from the factory method.
      */
     @Bean
     @Order(1)
+    @ConditionalOnProperty(name = "app.security.admin.issuer-uri")
     public SecurityFilterChain adminSecurityFilterChain(HttpSecurity http) throws Exception {
-        if (adminRealmIssuer == null || adminRealmIssuer.isBlank()) {
-            log.warn("âš ï¸ Admin Realm Issuer not configured. Admin chain will be inactive.");
-            return null;
-        }
-
-        log.info("ðŸ›¡ï¸ Configuring ADMIN Security Chain (Issuer: {})", adminRealmIssuer);
+        log.info("[SECURITY] Configuring ADMIN security chain (issuer: {})", adminRealmIssuer);
 
         http
                 .securityMatcher(
@@ -101,27 +123,55 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(
-                        auth -> auth.anyRequest().hasRole(appProperties.getSecurity().getRoles().getAdmin()))
+                .authorizeHttpRequests(auth -> auth
+                        // Defense in depth beyond the ADMIN role check below: the shared,
+                        // multi-tenant JwtDecoder bean correctly verifies signatures for
+                        // EITHER realm (issuer-based routing — see MultiTenantJwtConfiguration),
+                        // so a role-claim misconfiguration on the user realm's side is the
+                        // only thing standing between a non-admin-realm token and this chain
+                        // without this check. Pinning the issuer here means admin endpoints
+                        // reject any token not actually issued by the admin realm outright,
+                        // regardless of what role claims it carries.
+                        .anyRequest().access(adminRealmIssuerMatches())
+                )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .bearerTokenResolver(new CustomBearerTokenResolver(objectMapper))
                         .jwt(jwt -> jwt
                                 .decoder(jwtDecoderProvider.getIfAvailable(
                                         () -> NimbusJwtDecoder.withIssuerLocation(adminRealmIssuer).build()))
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                        .authenticationEntryPoint(authenticationEntryPoint())
-                        .accessDeniedHandler(accessDeniedHandler()));
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler));
 
         return http.build();
     }
 
     /**
-     * ðŸ›’ Chain 2: USER API -> Primary application endpoints
+     * Requires BOTH the admin role AND that the authenticated token's issuer is the
+     * admin realm. Role check first (cheap, and produces the existing 403 semantics for
+     * an admin-realm-but-non-admin-role token); issuer check second, as the
+     * defense-in-depth layer described above.
+     */
+    private org.springframework.security.authorization.AuthorizationManager<RequestAuthorizationContext> adminRealmIssuerMatches() {
+        String requiredRole = "ROLE_" + appProperties.getSecurity().getRoles().getAdmin();
+        return (authentication, context) -> {
+            Authentication auth = authentication.get();
+            boolean hasAdminRole = auth != null && auth.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .anyMatch(requiredRole::equals);
+            boolean isAdminRealmToken = auth != null && auth.getCredentials() instanceof Jwt jwt
+                    && adminRealmIssuer.equals(jwt.getIssuer() != null ? jwt.getIssuer().toString() : null);
+            return new AuthorizationDecision(hasAdminRole && isAdminRealmToken);
+        };
+    }
+
+    /**
+     * Chain 2: USER API -> Primary application endpoints
      */
     @Bean
     @Order(2)
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        log.info("ðŸ›¡ï¸ Configuring PRIMARY Security Chain (Issuer: {})", userRealmIssuer);
+        log.info("[SECURITY] Configuring PRIMARY security chain (issuer: {})", userRealmIssuer);
         AppProperties.Security.Roles roles = appProperties.getSecurity().getRoles();
 
         http
@@ -136,6 +186,11 @@ public class SecurityConfig {
                                 "/api/v1/locations/**", "/v1/locations/**",
                                 "/swagger-ui/**", "/v3/api-docs/**", "/error")
                         .permitAll()
+                        // Payment gateway webhooks: gateways cannot present a Keycloak bearer
+                        // token, so these must be public — authenticity is instead enforced by
+                        // per-gateway signature verification inside ProcessPaymentUseCaseImpl.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/webhooks/**")
+                        .permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/products/**", "/v1/products/**",
                                 "/api/v1/categories/**", "/v1/categories/**",
@@ -147,6 +202,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/sellers/register").authenticated()
                         .requestMatchers("/api/v1/sellers/profile/exists", "/api/v1/sellers/profile").authenticated()
                         .requestMatchers("/api/v1/sellers/check-handle/**").authenticated()
+                        .requestMatchers("/api/v1/sellers/verify/**").authenticated()
 
                         // Role-based restrictions
                         .requestMatchers("/api/v1/sellers/**").hasAnyRole(roles.getSeller(), roles.getAdmin())
@@ -163,8 +219,8 @@ public class SecurityConfig {
                                 .decoder(jwtDecoderProvider.getIfAvailable(
                                         () -> NimbusJwtDecoder.withIssuerLocation(userRealmIssuer).build()))
                                 .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                        .authenticationEntryPoint(authenticationEntryPoint())
-                        .accessDeniedHandler(accessDeniedHandler()));
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler));
 
         return http.build();
     }
@@ -173,18 +229,21 @@ public class SecurityConfig {
 
     @Bean
     public org.springframework.core.convert.converter.Converter<Jwt, org.springframework.security.authentication.AbstractAuthenticationToken> jwtAuthenticationConverter() {
-        log.debug("ðŸ”§ Initializing JWT Converter with Identity Sync");
-        AppProperties.Security sec = appProperties.getSecurity();
-        String rolePrefix = sec.getRolePrefix();
+        log.debug("[SECURITY] Initializing JWT converter with identity sync");
 
         return jwt -> {
-            // 1. Extract Authorities (Roles)
+            // Read at invocation time, not bean-construction time, in case
+            // app.security.role-prefix is ever changed via a config refresh mechanism.
+            String rolePrefix = appProperties.getSecurity().getRolePrefix();
+
+            // 1. Extract Authorities (Roles) — read fresh from the JWT's own claims on
+            // every request; NOT affected by identitySyncCache below.
             Collection<GrantedAuthority> authorities = extractAuthorities(jwt, rolePrefix);
             Set<String> rawRoles = extractRawRoles(jwt);
 
             // 2. Resolve/Sync Local Identity
             String keycloakId = jwt.getSubject();
-            Long localUserId = syncUserIdentity(jwt, rawRoles);
+            Long localUserId = syncUserIdentity(keycloakId, jwt, rawRoles);
 
             // 3. Construct Principal
             String emailClaim = jwt.getClaimAsString("email");
@@ -198,8 +257,11 @@ public class SecurityConfig {
         };
     }
 
-    private Long syncUserIdentity(Jwt jwt, Set<String> roles) {
-        String keycloakId = jwt.getSubject();
+    private Long syncUserIdentity(String keycloakId, Jwt jwt, Set<String> roles) {
+        Long cached = identitySyncCache.getIfPresent(keycloakId);
+        if (cached != null) {
+            return cached;
+        }
         try {
             UserService userService = userServiceProvider.getIfAvailable();
             if (userService != null) {
@@ -212,11 +274,12 @@ public class SecurityConfig {
                 Long id = userService.syncUserFromKeycloak(keycloakId, email, firstName, lastName, phone,
                         emailVerified);
                 userService.syncUserRoles(id, roles);
+                identitySyncCache.put(keycloakId, id);
                 return id;
             }
         } catch (Exception e) {
             log.error(
-                    "ðŸš¨ CRITICAL: Identity sync failed for Keycloak user {} (email: {}): {}. This will cause 500 errors in downstream services.",
+                    "[SECURITY][CRITICAL] Identity sync failed for Keycloak user {} (email: {}): {}. This will cause 500 errors in downstream services.",
                     keycloakId, jwt.getClaimAsString("email"), e.getMessage(), e);
         }
         return null;
@@ -232,138 +295,79 @@ public class SecurityConfig {
         return authorities;
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Delegates to {@link JwtClaimExtractor#extractEffectiveRoles(Jwt)} — the single,
+     * canonical implementation of Keycloak role-claim navigation (realm + client-scoped
+     * + root-level + groups), shared with diagnostic endpoints ({@code SessionController},
+     * {@code MeController}) so the roles they report a user always match the
+     * {@code GrantedAuthority} set actually driving {@code @PreAuthorize} decisions here.
+     */
     private Set<String> extractRawRoles(Jwt jwt) {
-        Set<String> roles = new HashSet<>();
-        AppProperties.Security sec = appProperties.getSecurity();
-
-        log.debug("DEBUG: Extracting roles from JWT. Subject: {}, Issuer: {}", jwt.getSubject(), jwt.getIssuer());
-
-        // 1. Realm Roles (Standard Keycloak)
-        Object rolesObj = null;
-        if (sec.getClaimRealms().contains(".")) {
-            // Handle composite path like realm_access.roles
-            String[] parts = sec.getClaimRealms().split("\\.");
-            Map<String, Object> current = jwt.getClaims();
-            for (int i = 0; i < parts.length - 1; i++) {
-                Object next = current.get(parts[i]);
-                if (next instanceof Map) {
-                    current = (Map<String, Object>) next;
-                } else {
-                    current = null;
-                    break;
-                }
-            }
-            if (current != null) {
-                rolesObj = current.get(parts[parts.length - 1]);
-            }
-        } else {
-            Map<String, Object> realmAccess = jwt.getClaim(sec.getClaimRealms());
-            if (realmAccess != null) {
-                rolesObj = realmAccess.get(sec.getClaimRoles());
-            }
-        }
-
-        if (rolesObj instanceof List) {
-            List<String> realmRoles = (List<String>) rolesObj;
-            roles.addAll(realmRoles);
-            log.debug("DEBUG: Found realm roles via path {}: {}", sec.getClaimRealms(), realmRoles);
-        }
-
-        // 2. Resource/Client Roles (Keycloak Client Roles)
-        Map<String, Object> resourceAccess = jwt.getClaim("resource_access");
-        if (resourceAccess != null) {
-            resourceAccess.values().forEach(resource -> {
-                if (resource instanceof Map && ((Map<?, ?>) resource).get(sec.getClaimRoles()) instanceof List) {
-                    List<String> clientRoles = (List<String>) ((Map<?, ?>) resource).get(sec.getClaimRoles());
-                    roles.addAll(clientRoles);
-                    log.debug("DEBUG: Found client roles: {}", clientRoles);
-                }
-            });
-        }
-
-        // 3. Root-level 'roles' claim (Alternative/Simplified structure)
-        if (jwt.hasClaim("roles") && jwt.getClaim("roles") instanceof List) {
-            List<String> rootRoles = jwt.getClaim("roles");
-            roles.addAll(rootRoles);
-            log.debug("DEBUG: Found root-level roles: {}", rootRoles);
-        }
-
-        // 4. 'groups' claim (Commonly used in OIDC for organizational roles)
-        if (jwt.hasClaim("groups") && jwt.getClaim("groups") instanceof List) {
-            List<String> groups = jwt.getClaim("groups");
-            roles.addAll(groups);
-            log.debug("DEBUG: Found roles in 'groups' claim: {}", groups);
-        }
-
-        log.info("DEBUG: Final extracted roles for user {}: {}", jwt.getSubject(), roles);
-        return roles;
-    }
-
-    // --- Error Handlers ---
-
-    @Bean
-    public AuthenticationEntryPoint authenticationEntryPoint() {
-        return (request, response, ex) -> {
-            log.error("âŒ Authentication error on {}: {}", request.getRequestURI(), ex.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            ApiError error = ApiError.of(401, "Unauthorized", "Authentication required", request.getRequestURI());
-            objectMapper.writeValue(response.getOutputStream(), error);
-        };
-    }
-
-    @Bean
-    public AccessDeniedHandler accessDeniedHandler() {
-        return (request, response, ex) -> {
-            // [HARDEN] Log principal + authorities to diagnose exactly why 403 was issued
-            String principal = "anonymous";
-            try {
-                org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder
-                        .getContext().getAuthentication();
-                if (auth != null && auth.isAuthenticated()) {
-                    principal = auth.getName() + " authorities=" + auth.getAuthorities();
-                }
-            } catch (Exception ignored) {
-            }
-            log.warn("ðŸš« [ACCESS_DENIED] {} {} | principal={} | reason={}",
-                    request.getMethod(), request.getRequestURI(), principal, ex.getMessage());
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            ApiError error = ApiError.of(403, "Forbidden", "You do not have permission to perform this action",
-                    request.getRequestURI());
-            objectMapper.writeValue(response.getOutputStream(), error);
-        };
+        return new LinkedHashSet<>(jwtClaimExtractor.extractEffectiveRoles(jwt));
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         AppProperties.Cors cors = appProperties.getCors();
+
+        List<String> allowedOrigins = Arrays.stream(cors.getAllowedOrigins().split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
+
+        if (allowedOrigins.contains("*") && cors.isAllowCredentials()) {
+            // Spring's CorsConfiguration itself rejects this combination at request time,
+            // but failing fast here at startup gives a clear, actionable error instead of
+            // a runtime CORS failure discovered later.
+            throw new IllegalStateException(
+                    "Invalid CORS configuration: allowed-origins contains a wildcard ('*') while " +
+                    "allow-credentials is true. A wildcard origin combined with credentials would " +
+                    "permit any origin to make credentialed requests. Configure explicit origins.");
+        }
+
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(Arrays.asList(cors.getAllowedOrigins().split(",")));
+        config.setAllowedOriginPatterns(allowedOrigins);
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "X-Request-ID",
                 "X-Idempotency-Key", "X-Correlation-ID", "Accept", "Origin"));
-        config.setExposedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Request-ID", "X-Idempotency-Key", "X-Correlation-ID"));
-        config.setAllowCredentials(true);
-        config.setMaxAge(3600L);
+        // Authorization intentionally NOT exposed: ExposedHeaders controls which response
+        // headers cross-origin JavaScript may read. There is no legitimate reason for
+        // client-side JS to read an Authorization *response* header, and exposing it
+        // would matter the moment anything ever echoes it back.
+        config.setExposedHeaders(Arrays.asList("Content-Type", "X-Request-ID", "X-Idempotency-Key", "X-Correlation-ID"));
+        config.setAllowCredentials(cors.isAllowCredentials());
+        config.setMaxAge(cors.getMaxAge());
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
     }
 
     /**
-     * [HARDEN] Custom Bearer Token Resolver that bypasses expired JWT validation
-     * to avoid 401 Unauthorized on whitelisted public endpoints for guests with stale sessions.
+     * Custom Bearer Token Resolver that treats a bearer token as absent (rather than
+     * forwarding it to the JWT decoder) for requests matching this app's public URL
+     * whitelist.
+     *
+     * <p>This exists because of a genuine Spring Security OAuth2 resource-server
+     * behavior, not a misunderstanding of {@code permitAll()}: the resource-server
+     * filter authenticates a PRESENTED bearer token before the authorization decision is
+     * made, regardless of whether the target endpoint actually requires authentication.
+     * A guest browser with a stale/expired token still attached (e.g. leftover in
+     * localStorage) would otherwise get 401'd on public pages like product listings,
+     * purely because it presented an invalid credential — even though the endpoint
+     * itself permits anonymous access. Dropping the token before Spring's filter sees it
+     * makes the request look like a plain anonymous request instead.</p>
      */
     @Slf4j
     private static class CustomBearerTokenResolver implements org.springframework.security.oauth2.server.resource.web.BearerTokenResolver {
-        private final org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver defaultResolver = 
-                new org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver();
-        private final ObjectMapper objectMapper;
+        private final org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver defaultResolver;
 
         public CustomBearerTokenResolver(ObjectMapper objectMapper) {
-            this.objectMapper = objectMapper;
+            this.defaultResolver = new org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver();
+            // Bearer tokens must only be presented via the Authorization header — never a
+            // query parameter (ends up in access logs, browser history, Referer headers
+            // sent to third parties) or a form-encoded body parameter.
+            this.defaultResolver.setAllowUriQueryParameter(false);
+            this.defaultResolver.setAllowFormEncodedBodyParameter(false);
         }
 
         private boolean isPublicEndpoint(jakarta.servlet.http.HttpServletRequest request) {
@@ -404,32 +408,17 @@ public class SecurityConfig {
                 log.debug("Public endpoint detected: {}. Bypassing bearer token resolution to allow anonymous guest access.", request.getRequestURI());
                 return null;
             }
-
-            String token = defaultResolver.resolve(request);
-            if (token == null) {
-                return null;
-            }
-            try {
-                String[] parts = token.split("\\.");
-                if (parts.length == 3) {
-                    byte[] decoded = Base64.getUrlDecoder().decode(parts[1]);
-                    Map<?, ?> payload = objectMapper.readValue(decoded, Map.class);
-                    Number expNum = (Number) payload.get("exp");
-                    if (expNum != null) {
-                        long expTime = expNum.longValue();
-                        long currentTime = System.currentTimeMillis() / 1000;
-                        if (expTime < currentTime) {
-                            log.info("Expired JWT detected (expired at {}). Treating as anonymous to avoid 401 on public endpoints.", expTime);
-                            return null;
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("Failed to parse JWT for expiration check: {}", e.getMessage());
-                return null;
-            }
-            return token;
+            // For every other endpoint, delegate entirely to the standard resolver and
+            // let the real JwtDecoder's own validators (signature, expiry, issuer,
+            // audience — see MultiTenantJwtConfiguration) make the call. A prior version
+            // of this method additionally pre-parsed the token's payload here to check
+            // 'exp' before signature verification, to short-circuit expired tokens to
+            // "anonymous" instead of letting the decoder reject them with 401. That
+            // pre-check was removed: it produced the exact same end result (401 on a
+            // protected endpoint either way) while relying on unverified, attacker-
+            // modifiable payload data and duplicating validation the decoder already
+            // performs correctly, post-signature-verification.
+            return defaultResolver.resolve(request);
         }
     }
 }
-

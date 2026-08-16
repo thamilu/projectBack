@@ -1,0 +1,35 @@
+/* ==========================================================================
+   E-Shop Focus Indicator Styling
+   ========================================================================== */
+
+/* Global focus visible — replaces default browser rendering */
+:focus-visible {
+    outline: 3px solid var(--kc-color-primary, #10b981) !important;
+    outline-offset: 2px !important;
+    border-radius: 2px !important;
+}
+
+/* Remove default focus outline for mouse users */
+:focus:not(:focus-visible) {
+    outline: none !important;
+}
+
+/* Password Toggle Focus */
+.kc-password-toggle:focus-visible {
+    outline: 3px solid var(--kc-color-primary, #10b981) !important;
+    outline-offset: -2px !important;
+    border-radius: var(--kc-radius-sm, 12px) !important;
+}
+
+/* Social Button Focus */
+.kc-social-button:focus-visible {
+    outline: 3px solid var(--kc-color-primary, #10b981) !important;
+    outline-offset: 2px !important;
+    border-radius: var(--kc-radius-sm, 12px) !important;
+}
+
+/* Checkbox Focus */
+.pf-c-check__input:focus-visible {
+    outline: 3px solid var(--kc-color-primary, #10b981) !important;
+    outline-offset: 2px !important;
+}

@@ -51,6 +51,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
        @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.deleted = false AND p.status = com.eshop.app.catalog.domain.entity.ProductStatus.ACTIVE")
        Page<ProductSummaryProjection> findSummariesByCategory(@Param("categoryId") Long categoryId, Pageable pageable);
 
+       @Query("SELECT p FROM Product p WHERE p.brand.id = :brandId AND p.deleted = false AND p.status = com.eshop.app.catalog.domain.entity.ProductStatus.ACTIVE")
+       Page<ProductSummaryProjection> findSummariesByBrand(@Param("brandId") Long brandId, Pageable pageable);
+
        /**
         * Find product detail by ID using DTO projection.
         * Optimized for detail view with single query.

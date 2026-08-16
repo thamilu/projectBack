@@ -1,0 +1,181 @@
+/* ==========================================================================
+   E-Shop Button Styling
+   ========================================================================== */
+
+/* Ultra-Premium Primary Button */
+.pf-c-button.pf-m-primary {
+    --shadow-button: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
+    --shadow-button-hover: 0 20px 25px -5px rgba(16, 185, 129, 0.5);
+    background: linear-gradient(135deg, var(--kc-color-primary), var(--kc-color-primary-hover)) !important;
+    border: none !important;
+    border-radius: var(--kc-radius-md, 6px) !important;
+    padding: 0.875rem 1.25rem !important; /* Solved size - compact buttons */
+    font-size: 0.9375rem !important;
+    font-weight: 700 !important;
+    color: white !important;
+    cursor: pointer;
+    width: 100% !important;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    box-shadow: var(--shadow-button) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.pf-c-button.pf-m-primary:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: var(--shadow-button-hover), 0 0 15px var(--kc-color-primary) !important;
+}
+
+.pf-c-button.pf-m-primary:focus {
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5) !important;
+    outline: none !important;
+}
+
+/* Secondary / Provider Buttons */
+.pf-c-button.pf-m-secondary {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--kc-color-border, rgba(255, 255, 255, 0.08)) !important;
+    border-radius: var(--kc-radius-md, 6px) !important;
+    color: var(--kc-color-text-primary) !important;
+    padding: 0.625rem 1rem !important; /* Compact button */
+    font-weight: 600 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease !important;
+    width: 100% !important;
+}
+
+.pf-c-button.pf-m-secondary:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.pf-c-button.pf-m-secondary:focus {
+    border-color: var(--kc-color-primary) !important;
+    outline: none !important;
+}
+
+.pf-c-button:disabled {
+    opacity: 0.6 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* ── Submit Button Loading State ──────────────────────────────── */
+.kc-login-button--loading {
+    opacity: 0.8 !important;
+    cursor: wait !important;
+    pointer-events: none !important;
+}
+
+.kc-login-button--loading .kc-spinner {
+    display: inline-block !important;
+    animation: kc-spin var(--kc-duration-spin, 1s) linear infinite !important;
+}
+
+.kc-login-button--loading .kc-login-button__text {
+    opacity: 0.85 !important;
+}
+
+/* ── Spinner Utility (Co-located) ─────────────────────────────── */
+.kc-spinner {
+    stroke: currentColor;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .kc-spinner {
+        animation: kc-spin var(--kc-duration-spin, 1s) linear infinite !important;
+        transform-origin: center !important;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .kc-spinner {
+        animation: none !important;
+        opacity: 0.7 !important;
+    }
+}
+
+/* ─── Enterprise-Grade Custom Button Classes ──────────────────── */
+.kc-btn {
+    --shadow-button: 0 10px 20px -5px rgba(16, 185, 129, 0.4);
+    --shadow-button-hover: 0 20px 25px -5px rgba(16, 185, 129, 0.5);
+    background: linear-gradient(135deg, var(--kc-color-primary), var(--kc-color-primary-hover));
+    border: none;
+    border-radius: var(--kc-radius-md, 6px);
+    padding: 0.875rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: var(--shadow-button);
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.kc-btn:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: var(--shadow-button-hover), 0 0 15px var(--kc-color-primary);
+    color: white;
+}
+
+.kc-btn:focus {
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5);
+    outline: none;
+}
+
+.kc-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.kc-btn--block {
+    display: flex !important;
+    width: 100% !important;
+}
+
+.kc-btn--loading {
+    opacity: 0.85 !important;
+    cursor: wait !important;
+    pointer-events: none !important;
+}
+
+.kc-btn--loading .kc-spinner {
+    display: inline-block !important;
+    animation: kc-spin var(--kc-duration-spin, 1s) linear infinite !important;
+}
+
+.kc-btn--loading .kc-btn__text {
+    opacity: 0.8 !important;
+}
+
+.kc-btn__content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .pf-c-button.pf-m-primary,
+    .kc-btn {
+        animation: elasticEnter 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+    }
+}
+

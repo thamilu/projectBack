@@ -1,0 +1,152 @@
+/* ==========================================================================
+   E-Shop Social Authentication Styling (Merged)
+   ========================================================================== */
+
+/* 1. .kc-social-section (layout) */
+.kc-social-section {
+    margin-top: 1.5rem !important;
+    padding-top: 1.25rem !important;
+    border-top: 1px solid var(--kc-color-border) !important;
+}
+
+/* 2. .kc-social-divider (divider component) */
+.kc-social-divider {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 1rem !important;
+    margin: 1.5rem 0 !important;
+}
+
+.kc-social-divider__line {
+    flex: 1 !important;
+    height: 1px !important;
+    background-color: var(--kc-color-border, rgba(255, 255, 255, 0.1)) !important;
+    border: none !important;
+}
+
+.kc-social-divider__dot {
+    width: 6px !important;
+    height: 6px !important;
+    border-radius: 50% !important;
+    background-color: var(--kc-color-primary, #10b981) !important;
+    flex-shrink: 0 !important;
+}
+
+.kc-social-heading {
+    margin: 0 !important;
+}
+
+.kc-social-label {
+    text-align: center !important;
+    margin: 0 0 1rem !important;
+    color: var(--kc-color-text-secondary) !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* 3. .kc-social-list (list container) */
+.kc-social-list {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 0 1.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+}
+
+.kc-social-list__item {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* 4. .kc-social-button (base button) */
+.kc-social-button {
+    text-decoration: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.75rem !important;
+}
+
+/* 5. .kc-social-button--loading (state) */
+.kc-social-button--loading {
+    opacity: 0.7 !important;
+    cursor: wait !important;
+    pointer-events: none !important;
+    position: relative !important;
+}
+
+.kc-social-button--loading::after {
+    content: '' !important;
+    position: absolute !important;
+    right: var(--kc-spacing-3, 0.75rem) !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 14px !important;
+    height: 14px !important;
+    border: 2px solid currentColor !important;
+    border-top-color: transparent !important;
+    border-radius: 50% !important;
+    animation: kc-spin-center var(--kc-duration-spin, 1s) linear infinite !important;
+}
+
+@keyframes kc-spin-center {
+    to {
+        transform: translateY(-50%) rotate(360deg) !important;
+    }
+}
+
+/* 6. .kc-social-icon (icon sizing) */
+.kc-social-icon {
+    width: 20px !important;
+    height: 20px !important;
+    flex-shrink: 0 !important;
+}
+
+.kc-social-button__icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 18px !important;
+    height: 18px !important;
+    color: currentColor !important;
+}
+
+.kc-social-button__icon svg {
+    width: 100% !important;
+    height: 100% !important;
+    fill: currentColor !important;
+}
+
+/* 7. .kc-social-button__label (text) */
+.kc-social-button__label {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+}
+
+/* 8. .kc-social-button__icon-fallback (fallback) */
+.kc-social-button__icon-fallback {
+    font-size: 0.8125rem !important;
+    font-weight: 700 !important;
+}
+
+/* ── RTL Style Overrides ───────────────────────────────────────── */
+[dir="rtl"] .kc-social-button--loading::after {
+    right: auto !important;
+    left: var(--kc-spacing-3, 0.75rem) !important;
+}
+
+[dir="rtl"] .kc-social-button {
+    flex-direction: row-reverse !important;
+}
+
+/* ── Prefers Reduced Motion ────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .kc-social-button--loading::after {
+        animation: none !important;
+        opacity: 0.5 !important;
+    }
+}

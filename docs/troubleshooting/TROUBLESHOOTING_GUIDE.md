@@ -62,7 +62,7 @@ If the backend application fails with `HTTP 401 Unauthorized` during Keycloak in
 ## Resolution Steps
 
 ### 1. Retrieve New Secret from Keycloak
-1.  Log in to **Keycloak Admin Console** (http://localhost:8080/admin).
+1.  Log in to **Keycloak Admin Console** (http://127.0.0.1:8080/admin) — use `127.0.0.1` not `localhost`.
 2.  Navigate to **Clients** -> **`eshop-backend`** -> **Credentials**.
 3.  Click **Regenerate** (if needed) and copy the **Client Secret**.
 
@@ -507,4 +507,100 @@ curl http://localhost:8082/actuator/prometheus | grep app_
 4. **Review logs** for any remaining warnings
 
 All Spring Boot 4.0 configuration warnings are now resolved! 🎉
+
+
+# --- File: testcontainers-docker-connectivity.md ---
+
+# Testcontainers / Docker Connectivity Failures (Integration Tests)
+
+## Affected Tests
+- `BulkOperationIntegrationTest`
+- `UserControllerIntegrationTest`
+- `UserFilterCriteriaRepositoryTest`
+
+All three extend `AbstractIntegrationTest` (`src/test/java/com/eshop/app/core/infrastructure/config/security/AbstractIntegrationTest.java`), which spins up real `postgres:16` and `redis:7` containers via Testcontainers for each test run.
+
+There are **two distinct failure modes** that look similar in the test report but have completely different causes and fixes. Read the exception message carefully before assuming it's the same issue as last time.
+
+---
+
+## Failure Mode 1 — Testcontainers version too old for the installed Docker (✅ code fix, already applied)
+
+### Symptom
+```
+org.testcontainers.containers.ContainerLaunchException: Container startup failed
+Caused by: org.testcontainers.containers.ContainerFetchException: Can't get Docker image: testcontainers/ryuk:0.3.4
+Caused by: com.github.dockerjava.api.exception.BadRequestException: Status 400: {"message":"client version 1.32 is too old.
+Minimum supported API version is 1.40, please upgrade your client to a newer version"}
+```
+
+### Root Cause
+`build.gradle` was pinned to `org.testcontainers:*:1.17.6` (mid-2022). That release's bundled `docker-java` client negotiates a very old Docker Engine API version (1.32). Modern Docker Desktop releases refuse to serve clients below API 1.40, so **every** Testcontainers-based test fails before the Spring context even starts — regardless of whether Docker itself is installed and running correctly.
+
+The `testcontainers/ryuk:0.3.4` image reference in the stack trace is itself a strong tell: current Testcontainers releases pull a much newer Ryuk (the container-cleanup sidecar), so seeing that ancient tag confirms the library version is the culprit before you even read the "client version" message.
+
+### Fix Applied (2026-08-15)
+Bumped the pinned version in `build.gradle`:
+```gradle
+// was:
+testImplementation 'org.testcontainers:junit-jupiter:1.17.6'
+testImplementation 'org.testcontainers:testcontainers:1.17.6'
+testImplementation 'org.testcontainers:postgresql:1.17.6'
+
+// now:
+testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
+testImplementation 'org.testcontainers:testcontainers:1.20.4'
+testImplementation 'org.testcontainers:postgresql:1.20.4'
+```
+`testImplementation` only — zero production/runtime impact. The `@Container`/`@Testcontainers`/`PostgreSQLContainer`/`GenericContainer` APIs used in `AbstractIntegrationTest` are long-stable across Testcontainers versions, so this upgrade did not require any test code changes.
+
+### ⚠️ This is a pinned version, not a self-updating one
+If a future Docker Desktop release raises its minimum supported API version again past whatever `1.20.4`'s client negotiates, this exact failure signature can recur — and will require **another manual version bump** in `build.gradle`, the same way this one was fixed. That's expected, normal dependency-maintenance behavior (deliberately *not* using version ranges like `1.20.+`, since those make builds non-reproducible and can silently pull in breaking changes) — not a bug in the fix.
+
+**If you see the "client version ... too old" message again:** check the current Testcontainers version at https://testcontainers.com/ and bump the three coordinates above to match. That's a code change (this file), and a normal one.
+
+---
+
+## Failure Mode 2 — Docker Desktop named-pipe routing on Windows (❌ NOT a code issue — machine/environment)
+
+### Symptom
+```
+java.lang.IllegalStateException: Could not find a valid Docker environment. Please see logs and check configuration
+	NpipeSocketClientProviderStrategy: failed with exception BadRequestException (Status 400: {"ID":"","Containers":0, ... "Labels":["com.docker.desktop.address=npipe://\\\\.\\pipe\\docker_cli"], ...})
+```
+Note the mostly-empty/zeroed JSON body (`"ID":"", "ServerVersion":"", "OSType":""`, etc.) returned with an HTTP 400 status, and the `docker_cli` (not `docker_engine`) pipe referenced in `Labels`.
+
+### Root Cause
+Docker Desktop on Windows exposes several named pipes (`docker_engine`, `docker_cli`, `dockerDesktopLinuxEngine`, etc. — list them with `Get-ChildItem \\.\pipe\ | Where-Object { $_.Name -like "*docker*" }` in PowerShell). Testcontainers' `NpipeSocketClientProviderStrategy` is getting routed to the `docker_cli` pipe — a restricted/proxy endpoint, not the full Docker Engine API — even when `DOCKER_HOST` is explicitly set to `npipe:////./pipe/docker_engine`. On this machine, `docker_engine` itself appears to forward into the same limited endpoint.
+
+**This is Docker Desktop's own Windows networking stack, not project code or configuration.** There is no `build.gradle`, `application.properties`, or Java source change that reaches this layer.
+
+### Troubleshooting steps (try in order, no code changes involved)
+1. **Restart Docker Desktop completely** (not just the containers — quit and relaunch the app). This pipe-routing confusion is a known pattern after a Docker Desktop version update.
+2. **Enable the TCP daemon exposure**: Docker Desktop → Settings → General → "Expose daemon on tcp://localhost:2375 without TLS". Then run tests with:
+   ```
+   export DOCKER_HOST=tcp://localhost:2375
+   ./gradlew.bat test --tests "*IntegrationTest"
+   ```
+   This bypasses named-pipe routing entirely.
+3. Clear the cached strategy and let Testcontainers re-probe fresh: delete (or rename) `~/.testcontainers.properties` and re-run. (Confirmed in the 2026-08-15 investigation that this alone does *not* fix a `docker_cli`-routing problem, but it's a cheap, safe thing to rule out first.)
+4. Check Docker Desktop's release notes for the installed version for any known `docker_cli`/`docker_engine` pipe-routing regressions.
+5. As a last resort, use WSL2 directly (run the Gradle build from inside a WSL2 distro with its own Docker Engine, rather than through the Windows named-pipe bridge).
+
+### How to tell which failure mode you're looking at
+| | Failure Mode 1 | Failure Mode 2 |
+|---|---|---|
+| Message | `"client version 1.32 is too old"` | `"Could not find a valid Docker environment"` |
+| Status body | Explicit version-mismatch error text | Mostly-empty JSON with `docker_cli` in `Labels` |
+| Fix location | `build.gradle` (Testcontainers version) | Docker Desktop settings (this machine) |
+| Fix type | Code change | Environment/local-machine change |
+
+### Verification
+Once Docker connectivity is genuinely fixed (either mode), confirm with:
+```bash
+./gradlew.bat test --tests "com.eshop.app.user.api.controller.BulkOperationIntegrationTest" \
+  --tests "com.eshop.app.user.api.controller.UserControllerIntegrationTest" \
+  --tests "com.eshop.app.user.domain.repository.UserFilterCriteriaRepositoryTest" --console=plain
+```
+All three should report `BUILD SUCCESSFUL` with real Postgres/Redis containers starting (visible in the log as `Container postgres:16 started` / `Container redis:7 started`).
 

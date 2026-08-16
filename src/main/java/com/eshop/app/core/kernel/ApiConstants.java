@@ -67,6 +67,7 @@ public final class ApiConstants {
         public static final String SHOPPING_CART = BASE_PATH + "/shoppingCart";
         public static final String LOCATIONS = BASE_PATH + "/locations";
         public static final String PARSE = BASE_PATH + "/parse";
+        public static final String MEDIA = BASE_PATH + "/media";
 
         public static final String ID_PATH = "/{id}";
         public static final String SLUG_PATH = "/{slug}";

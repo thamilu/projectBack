@@ -61,9 +61,11 @@ public class PaymentWebhookController {
 
     @PostMapping("/upi")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Webhook processed successfully")
-    public ResponseEntity<String> handleUpiWebhook(@RequestBody String payload) {
+    public ResponseEntity<String> handleUpiWebhook(
+            @RequestBody String payload,
+            @RequestHeader(value = "X-Signature", required = false) String signature) {
         log.info("Received UPI webhook");
-        processPaymentUseCase.handleUpiWebhook(payload);
+        processPaymentUseCase.handleUpiWebhook(payload, signature);
         return ResponseEntity.ok("OK");
     }
 }

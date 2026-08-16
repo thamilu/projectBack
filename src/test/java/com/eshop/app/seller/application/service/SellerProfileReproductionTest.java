@@ -8,8 +8,8 @@ import com.eshop.app.user.domain.entity.UserProfile;
 import com.eshop.app.seller.shared.domain.enums.SellerIdentityType;
 import com.eshop.app.seller.shared.domain.enums.SellerStatus;
 import com.eshop.app.seller.application.port.in.RegisterSellerUseCase;
-import com.eshop.app.seller.application.port.in.SellerAdminUseCase;
-import com.eshop.app.user.domain.entity.Role;
+import com.eshop.app.seller.application.port.in.SellerApprovalUseCase;
+import com.eshop.app.user.shared.domain.enums.UserRole;
 import com.eshop.app.user.domain.repository.SellerProfileRepository;
 import com.eshop.app.user.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +42,7 @@ public class SellerProfileReproductionTest {
     private SellerProfileService sellerProfileService;
 
     @Autowired
-    private SellerAdminUseCase sellerAdminService;
+    private SellerApprovalUseCase sellerAdminService;
 
     @Autowired
     private UserRepository userRepository;
@@ -60,11 +60,19 @@ public class SellerProfileReproductionTest {
         // Mock Keycloak calls
         doNothing().when(keycloakService).assignRole(anyString(), anyString());
 
+        // Create an admin user to process approvals
+        User admin = User.builder()
+                .keycloakId("admin-user")
+                .email("admin@example.com")
+                .role(UserRole.ADMIN)
+                .build();
+        userRepository.save(admin);
+
         // Create a test user with proper back-reference
         testUser = User.builder()
                 .keycloakId("test-keycloak-id")
                 .email("test.seller@example.com")
-                .role(Role.CUSTOMER) // Starts as CUSTOMER
+                .role(UserRole.CUSTOMER) // Starts as CUSTOMER
                 .build();
 
         UserProfile profile = UserProfile.builder()

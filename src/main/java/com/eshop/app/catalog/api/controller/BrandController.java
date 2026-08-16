@@ -7,6 +7,7 @@ import com.eshop.app.catalog.application.port.in.BrandUseCase;
 import com.eshop.app.core.kernel.ApiConstants;
 import com.eshop.app.core.api.response.ApiResponse;
 import com.eshop.app.core.api.response.PageResponse;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -33,7 +34,7 @@ public class BrandController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Operation(summary = "Create new brand (Admin only)", description = "Create a new product brand. Only accessible by administrators.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<BrandResponse>> createBrand(
             @Valid @RequestBody BrandRequest request) {
@@ -44,7 +45,7 @@ public class BrandController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Operation(summary = "Update brand (Admin only)", description = "Update an existing brand. Only accessible by administrators.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<BrandResponse>> updateBrand(
             @Parameter(description = "Brand ID") @PathVariable Long id,
@@ -54,7 +55,7 @@ public class BrandController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     @Operation(summary = "Delete brand (Admin only)", description = "Delete a brand. Only accessible by administrators.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<Void>> deleteBrand(
             @Parameter(description = "Brand ID") @PathVariable Long id) {

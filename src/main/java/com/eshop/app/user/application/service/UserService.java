@@ -73,6 +73,8 @@ public interface UserService {
     Long syncUserFromKeycloak(String keycloakId, String email, String firstName, String lastName, String phoneNumber,
             Boolean emailVerified);
 
+    Long syncUserFromKeycloak(com.eshop.app.user.application.command.UserSyncCommand command);
+
     void syncKeycloakId(Long userId, String keycloakId);
 
     /**

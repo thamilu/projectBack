@@ -4,6 +4,9 @@ import com.eshop.app.pricing.shared.exception.InvalidPriceException;
 import com.eshop.app.core.api.response.ApiResponse;
 import com.eshop.app.core.exception.infrastructure.OptimisticLockException;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,10 +18,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Global exception handler for all product-related endpoints.
- * Handles custom and standard exceptions for ProductUseCase.
+ * Exception handler for product-specific exceptions not otherwise covered by
+ * {@code GlobalExceptionHandler} (which uses a different response DTO, {@code ApiError}, so is
+ * not a drop-in replacement for this class's {@code ApiResponse}-shaped contract).
+ *
+ * <p>{@code @Order(HIGHEST_PRECEDENCE + 10)} is required: without an explicit order this advice
+ * defaults to the same {@code LOWEST_PRECEDENCE} as {@code GlobalExceptionHandler}'s catch-all,
+ * making resolution between the two non-deterministic (classpath-scan-order dependent) for any
+ * exception type only one of them can catch-all. The {@code +10} keeps it below
+ * {@code AuthControllerExceptionHandler} (plain {@code HIGHEST_PRECEDENCE}), which is unrelated
+ * to product exceptions and should not be affected by this ordering.
  */
 @RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE + 10)
+@Slf4j
 public class ProductExceptionHandler {
 
     @ExceptionHandler(ProductNotFoundException.class)
@@ -74,7 +87,8 @@ public class ProductExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGeneric(Exception ex) {
+        log.error("Unexpected error in product endpoint: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("Internal server error: " + ex.getMessage()));
+                .body(ApiResponse.error("An unexpected error occurred. Please try again later."));
     }
 }

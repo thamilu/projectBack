@@ -6,6 +6,7 @@ import com.eshop.app.pricing.api.request.CouponUsageRequest;
 import com.eshop.app.pricing.api.response.CouponResponse;
 import com.eshop.app.pricing.application.port.in.CouponUseCase;
 import com.eshop.app.core.api.response.PageResponse;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -45,7 +46,7 @@ public class CouponController {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Coupon created successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid coupon data")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "409", description = "Coupon code already exists")
-    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     public ResponseEntity<CouponResponse> createCoupon(@Valid @RequestBody CouponRequest request) {
         CouponResponse response = couponService.createCoupon(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
@@ -53,7 +54,7 @@ public class CouponController {
 
     @PutMapping("/{couponId}")
     @Operation(summary = "Update Coupon", description = "Update existing coupon details")
-    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     public ResponseEntity<CouponResponse> updateCoupon(
             @Parameter(description = "Coupon ID") @PathVariable Long couponId,
             @Valid @RequestBody CouponRequest request) {
@@ -63,7 +64,7 @@ public class CouponController {
 
     @GetMapping("/{couponId}")
     @Operation(summary = "Get Coupon by ID", description = "Retrieve coupon details by ID")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     public ResponseEntity<CouponResponse> getCouponById(
             @Parameter(description = "Coupon ID") @PathVariable Long couponId) {
         CouponResponse response = couponService.getCouponById(couponId);
@@ -72,7 +73,7 @@ public class CouponController {
 
     @GetMapping("/code/{code}")
     @Operation(summary = "Get Coupon by Code", description = "Retrieve coupon details by coupon code")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     public ResponseEntity<CouponResponse> getCouponByCode(
             @Parameter(description = "Coupon code") @PathVariable String code) {
         CouponResponse response = couponService.getCouponByCode(code);
@@ -81,7 +82,7 @@ public class CouponController {
 
     @GetMapping
     @Operation(summary = "Get All Coupons", description = "Retrieve paginated list of all coupons")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<PageResponse<CouponResponse>> getAllCoupons(
             @PageableDefault(size = 20) Pageable pageable) {
         PageResponse<CouponResponse> coupons = couponService.getAllCoupons(pageable);
@@ -90,7 +91,7 @@ public class CouponController {
 
     @GetMapping("/active")
     @Operation(summary = "Get Active Coupons", description = "Retrieve paginated list of currently active coupons")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     public ResponseEntity<PageResponse<CouponResponse>> getActiveCoupons(
             @PageableDefault(size = 20) Pageable pageable) {
         PageResponse<CouponResponse> coupons = couponService.getActiveCoupons(pageable);
@@ -99,7 +100,7 @@ public class CouponController {
 
     @GetMapping("/store/{storeId}")
     @Operation(summary = "Get Store Coupons", description = "Retrieve coupons for a specific store")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     public ResponseEntity<PageResponse<CouponResponse>> getCouponsByStore(
             @Parameter(description = "Store ID") @PathVariable Long storeId,
             @PageableDefault(size = 20) Pageable pageable) {
@@ -109,7 +110,7 @@ public class CouponController {
 
     @GetMapping("/category/{categoryId}")
     @Operation(summary = "Get Category Coupons", description = "Retrieve coupons for a specific category")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     public ResponseEntity<PageResponse<CouponResponse>> getCouponsByCategory(
             @Parameter(description = "Category ID") @PathVariable Long categoryId,
             @PageableDefault(size = 20) Pageable pageable) {
@@ -120,7 +121,7 @@ public class CouponController {
     @PostMapping("/validate")
     @Operation(summary = "Validate Coupon", description = "Validate coupon for specific order and calculate discount")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Coupon validation result")
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     public ResponseEntity<CouponResponse.ValidationResult> validateCoupon(
             @Parameter(description = "Coupon code") @RequestParam String code,
             @Parameter(description = "User ID") @RequestParam Long userId,
@@ -136,7 +137,7 @@ public class CouponController {
     @Operation(summary = "Apply Coupon", description = "Apply coupon to order and get final discount")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Coupon applied successfully")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid coupon or cannot be applied")
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     public ResponseEntity<CouponResponse.ApplicationResult> applyCoupon(
             @Valid @RequestBody CouponUsageRequest request) {
         CouponResponse.ApplicationResult result = couponService.applyCoupon(request);
@@ -145,7 +146,7 @@ public class CouponController {
 
     @GetMapping("/applicable")
     @Operation(summary = "Get Applicable Coupons", description = "Get all coupons that can be applied to current order")
-    @PreAuthorize("hasRole('CUSTOMER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     public ResponseEntity<List<CouponResponse>> getApplicableCoupons(
             @Parameter(description = "User ID") @RequestParam Long userId,
             @Parameter(description = "Order total") @RequestParam BigDecimal orderTotal,
@@ -157,7 +158,7 @@ public class CouponController {
 
     @GetMapping("/global/active")
     @Operation(summary = "Get Global Active Coupons", description = "Get global coupons that are currently active")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     public ResponseEntity<List<CouponResponse>> getGlobalActiveCoupons() {
         List<CouponResponse> coupons = couponService.getGlobalActiveCoupons();
         return ResponseEntity.ok(coupons);
@@ -165,7 +166,7 @@ public class CouponController {
 
     @GetMapping("/search")
     @Operation(summary = "Search Coupons", description = "Search coupons by code or name")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<PageResponse<CouponResponse>> searchCoupons(
             @Parameter(description = "Search keyword") @RequestParam String keyword,
             @PageableDefault(size = 20) Pageable pageable) {
@@ -175,7 +176,7 @@ public class CouponController {
 
     @DeleteMapping("/{couponId}")
     @Operation(summary = "Delete Coupon", description = "Soft delete coupon (mark as inactive)")
-    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     public ResponseEntity<Void> deleteCoupon(
             @Parameter(description = "Coupon ID") @PathVariable Long couponId) {
         couponService.deleteCoupon(couponId);
@@ -184,7 +185,7 @@ public class CouponController {
 
     @GetMapping("/statistics")
     @Operation(summary = "Get Coupon Statistics", description = "Get coupon usage statistics")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<Object> getCouponStatistics() {
         Object statistics = couponService.getCouponStatistics();
         return ResponseEntity.ok(statistics);
@@ -192,7 +193,7 @@ public class CouponController {
 
     @GetMapping("/expiring")
     @Operation(summary = "Get Expiring Coupons", description = "Get coupons expiring in specified days")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<List<CouponResponse>> getCouponsExpiringSoon(
             @Parameter(description = "Days until expiration") @RequestParam(defaultValue = "7") int days) {
         List<CouponResponse> coupons = couponService.getCouponsExpiringSoon(days);
@@ -201,7 +202,7 @@ public class CouponController {
 
     @PostMapping("/generate-code")
     @Operation(summary = "Generate Coupon Code", description = "Generate unique coupon code with prefix")
-    @PreAuthorize("hasRole('SELLER') or hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_SELLER)
     public ResponseEntity<String> generateCouponCode(
             @Parameter(description = "Code prefix") @RequestParam(required = false) String prefix) {
         String code = couponService.generateCouponCode(prefix);

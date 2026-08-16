@@ -2,6 +2,7 @@ package com.eshop.app.tax.api.controller;
 
 import com.eshop.app.core.kernel.ApiConstants;
 import com.eshop.app.core.api.response.ApiResponse;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class TaxController {
 
     @Operation(summary = "Get all tax rates")
     @GetMapping("/rates")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<ApiResponse<List<com.eshop.app.tax.api.response.TaxRateResponse>>> getAllTaxRates() {
         log.info("GET /admin/tax/rates");
         return ResponseEntity.ok(ApiResponse.success(taxService.getAllTaxRates()));
@@ -39,7 +40,7 @@ public class TaxController {
 
     @Operation(summary = "Get all tax classes")
     @GetMapping("/classes")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize(IS_ADMIN)
     public ResponseEntity<ApiResponse<List<com.eshop.app.tax.api.response.TaxClassResponse>>> getAllTaxClasses() {
         log.info("GET /admin/tax/classes");
         return ResponseEntity.ok(ApiResponse.success(taxService.getAllTaxClasses()));

@@ -53,17 +53,17 @@
   ],
   "defaultLocale": "en",
   "smtpServer": {
-    "host": "${SMTP_HOST}",
-    "port": "${SMTP_PORT}",
-    "from": "${SMTP_FROM_EMAIL}",
+    "host": "${env.SMTP_HOST:mailhog}",
+    "port": "${env.SMTP_PORT:1025}",
+    "from": "${env.SMTP_FROM_EMAIL:noreply@eshop-admin.com}",
     "fromDisplayName": "E-Shop Admin",
-    "replyTo": "${SMTP_REPLY_TO}",
-    "ssl": "false",
-    "starttls": "true",
-    "auth": "true",
-    "user": "${SMTP_USER}",
-    "password": "${SMTP_PASSWORD}",
-    "envelopeFrom": "${SMTP_FROM_EMAIL}"
+    "replyTo": "${env.SMTP_REPLY_TO:support@eshop-admin.com}",
+    "ssl": "${env.SMTP_SSL:false}",
+    "starttls": "${env.SMTP_STARTTLS:false}",
+    "auth": "${env.SMTP_AUTH:false}",
+    "user": "${env.SMTP_USER:}",
+    "password": "${env.SMTP_PASSWORD:}",
+    "envelopeFrom": "${env.SMTP_FROM_EMAIL:noreply@eshop-admin.com}"
   },
   "roles": {
     "realm": [

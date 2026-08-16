@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>${msg("loginTitle",(realm.displayName!''))}</title>
-    <link rel="icon" href="${url.resourcesPath}/img/favicon.ico" />
+    <link rel="icon" type="image/svg+xml" href="${url.resourcesPath}/img/favicon.svg" />
     <#if properties.stylesCommon?has_content>
         <#list properties.stylesCommon?split(' ') as style>
             <link href="${url.resourcesCommonPath}/${style}" rel="stylesheet" />
@@ -17,6 +17,17 @@
     <#if properties.styles?has_content>
         <#list properties.styles?split(' ') as style>
             <link href="${url.resourcesPath}/${style}" rel="stylesheet" />
+        </#list>
+    </#if>
+    <#-- properties.scripts (js/login.min.js, set by scripts/build.js) had no
+         corresponding render block here — the built JS bundle (login-form.js +
+         password-toggle.js) existed on disk but was never actually loaded by the page,
+         so the password-toggle button and the live strength-meter/requirements
+         checklist never worked. `defer` so it never blocks first paint; deferred
+         scripts still execute in order, after the DOM (rendered below) is parsed. -->
+    <#if properties.scripts?has_content>
+        <#list properties.scripts?split(' ') as script>
+            <script src="${url.resourcesPath}/${script}" defer></script>
         </#list>
     </#if>
 </head>

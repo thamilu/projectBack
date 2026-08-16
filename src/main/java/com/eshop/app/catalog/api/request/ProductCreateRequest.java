@@ -123,6 +123,13 @@ public class ProductCreateRequest {
     @Builder.Default
     private Boolean featured = false;
 
+    @Schema(description = "Parent Master Product ID if this product is derived from an existing master product", example = "1")
+    private Long parentMasterProductId;
+
+    @Schema(description = "Reason for deriving this product from the master product", example = "Customized specifications for local market", maxLength = 500)
+    @Size(max = 500, message = "Derived reason must not exceed 500 characters")
+    private String derivedReason;
+
     // ==================== CUSTOM VALIDATION ====================
 
     /**

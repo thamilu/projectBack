@@ -19,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import static com.eshop.app.core.infrastructure.config.security.SecurityExpressions.*;
 import org.springframework.web.bind.annotation.*;
 
 @io.swagger.v3.oas.annotations.tags.Tag(name = "Product Reviews", description = "Product review management endpoints")
@@ -33,7 +34,7 @@ public class ProductReviewController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     @Operation(summary = "Create product review", description = "Create a new review for a product (CUSTOMER and ADMIN only). Users can only review products they have purchased.", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<ProductReviewResponse>> createReview(
             @Valid @RequestBody ProductReviewRequest request) {
@@ -44,7 +45,7 @@ public class ProductReviewController {
     }
 
     @PutMapping("/{reviewId}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     @Operation(summary = "Update product review", description = "Update an existing review (users can only update their own reviews, admins can update any)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<ProductReviewResponse>> updateReview(
             @Parameter(description = "Review ID") @PathVariable Long reviewId,
@@ -54,7 +55,7 @@ public class ProductReviewController {
     }
 
     @DeleteMapping("/{reviewId}")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     @Operation(summary = "Delete product review", description = "Delete a review (users can only delete their own reviews, admins can delete any)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<Void>> deleteReview(
             @Parameter(description = "Review ID") @PathVariable Long reviewId) {
@@ -87,7 +88,7 @@ public class ProductReviewController {
     }
 
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#userId)")
+    @PreAuthorize(IS_ADMIN_OR_SELF_BY_USER_ID)
     @Operation(summary = "Get user reviews", description = "Get all reviews by a specific user (users can only see their own reviews, admins can see any)", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<PageResponse<ProductReviewResponse>>> getUserReviews(
             @Parameter(description = "User ID") @PathVariable Long userId,
@@ -104,7 +105,7 @@ public class ProductReviewController {
     }
 
     @GetMapping("/my-reviews")
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @PreAuthorize(IS_ADMIN_OR_CUSTOMER)
     @Operation(summary = "Get current user reviews", description = "Get all reviews by the currently authenticated user", security = @SecurityRequirement(name = "Bearer Authentication"))
     public ResponseEntity<ApiResponse<PageResponse<ProductReviewResponse>>> getCurrentUserReviews(
             @RequestParam(defaultValue = "0") int page,

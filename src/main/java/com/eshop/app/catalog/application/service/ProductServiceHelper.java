@@ -240,6 +240,20 @@ public class ProductServiceHelper {
         }
         return org.springframework.web.util.HtmlUtils.htmlEscape(content);
     }
+
+    /**
+     * Generate a unique SKU for a store product cloned from a master product.
+     */
+    public String generateUniqueSku(Long storeId, Long masterProductId) {
+        String baseSku = String.format("SKU-%d-%d", storeId, masterProductId);
+        String uniqueSku = baseSku;
+        int counter = 1;
+        while (productRepository.existsBySku(uniqueSku)) {
+            uniqueSku = baseSku + "-" + counter;
+            counter++;
+        }
+        return uniqueSku;
+    }
 }
 
 

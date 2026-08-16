@@ -34,7 +34,7 @@ public class UpdateInventoryUseCaseImpl implements UpdateInventoryUseCase {
 
     @Override
     public void confirmSale(Long productId, int quantity) {
-        Inventory inventory = inventoryRepository.findByProductId(productId)
+        Inventory inventory = inventoryRepository.findByProductIdForUpdate(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Inventory not found for product: " + productId));
         inventory.confirmSale(quantity);
         inventoryRepository.save(inventory);

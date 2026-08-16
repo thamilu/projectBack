@@ -55,17 +55,12 @@ import java.util.concurrent.Executors;
 @Slf4j
 public class VirtualThreadConfiguration {
     
-    /**
-     * Configure Tomcat to use virtual threads for request handling.
-     * Each HTTP request gets its own virtual thread.
-     * 
-     * @return customizer that replaces Tomcat's thread pool with virtual threads
-     */
-    // Tomcat connector-level virtual thread customization removed to avoid compile-time
-    // dependency on embedded container classes. If you run with embedded Tomcat and
-    // want connector-level virtual thread executor, add a conditional customizer
-    // that checks for presence of Tomcat classes at runtime.
-    
+    // Tomcat request-handling threads: NOT configured here. They're enabled via the official
+    // Spring Boot mechanism instead — `spring.threads.virtual.enabled=true` in
+    // application.properties — which Spring Boot's own auto-configuration uses to wire the
+    // embedded Tomcat connector to a virtual-thread-per-request executor with no custom code
+    // needed. This class only configures the separate @Async executor below.
+
     /**
      * Configure Spring's async task executor to use virtual threads.
      * Used by @Async methods across the application.

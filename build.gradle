@@ -64,10 +64,14 @@ dependencies {
 	implementation 'io.lettuce:lettuce-core'
 	implementation 'org.apache.commons:commons-pool2:2.12.0'
 
-	// Testcontainers for integration tests (use stable compatible version)
-	testImplementation 'org.testcontainers:junit-jupiter:1.17.6'
-	testImplementation 'org.testcontainers:testcontainers:1.17.6'
-	testImplementation 'org.testcontainers:postgresql:1.17.6'
+	// Testcontainers for integration tests
+	// NOTE: previously pinned to 1.17.6 (mid-2022) — its bundled docker-java client
+	// negotiates down to Docker API 1.32, which current Docker Desktop releases reject
+	// (minimum supported: 1.40), making every Testcontainers-based test fail locally
+	// regardless of whether Docker itself is running.
+	testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
+	testImplementation 'org.testcontainers:testcontainers:1.20.4'
+	testImplementation 'org.testcontainers:postgresql:1.20.4'
 	implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 	
 	// Ehcache for JCache (JSR-107) support
