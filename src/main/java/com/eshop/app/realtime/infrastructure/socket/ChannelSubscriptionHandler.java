@@ -2,9 +2,6 @@ package com.eshop.app.realtime.infrastructure.socket;
 
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
-import com.corundumstudio.socketio.annotation.OnConnect;
-import com.corundumstudio.socketio.annotation.OnDisconnect;
-import com.corundumstudio.socketio.annotation.OnEvent;
 import com.eshop.app.core.infrastructure.config.security.oauth.PrincipalDetails;
 import com.eshop.app.core.infrastructure.config.security.web.UserSecurityExpression;
 import jakarta.annotation.PostConstruct;

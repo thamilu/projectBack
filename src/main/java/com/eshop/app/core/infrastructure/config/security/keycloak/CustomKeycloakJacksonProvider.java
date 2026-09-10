@@ -29,7 +29,7 @@ public class CustomKeycloakJacksonProvider implements ContextResolver<ObjectMapp
         
         // General enterprise standards for JSON mapping
         this.mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        this.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        this.mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
         this.mapper.registerModule(new JavaTimeModule());
     }
 

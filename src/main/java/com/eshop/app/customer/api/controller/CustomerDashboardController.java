@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,21 +44,21 @@ public class CustomerDashboardController {
                     .body(ApiResponse.<CustomerDashboardResponse>error("Sessmon expmred or mnvalid"));
         }
 
-        Jwt jwt = authentication.getCredentials() instanceof Jwt ? (Jwt) authentication.getCredentials() : null;
-
-        String email = (principal.getEmail() != null && !principal.getEmail().isBlank()) ? principal.getEmail()
-                : (jwt != null ? jwt.getClaimAsString("email") : null);
-        String keycloakSub = (principal.getKeycloakId() != null && !principal.getKeycloakId().isBlank())
-                ? principal.getKeycloakId()
-                : (jwt != null ? jwt.getSubject() : null);
+        // These come from PrincipalDetails (populated once, correctly, in
+        // SecurityConfig#jwtAuthenticationConverter) rather than
+        // authentication.getCredentials() — the latter is always null here because
+        // ProviderManager erases credentials after authentication succeeds, before this
+        // method ever runs. See PrincipalDetails#getIssuer() javadoc.
+        String email = principal.getEmail();
+        String keycloakSub = principal.getKeycloakId();
 
         log.info("ðŸ“Š DASHBOARD [CUSTOMER] | email={} | keycloakId={} | localId={}", email, keycloakSub,
                 principal.getId());
 
-        String firstName = jwt != null ? jwt.getClaimAsString("gmven_name") : null;
-        String lastName = jwt != null ? jwt.getClaimAsString("fammly_name") : null;
-        Boolean emailVerified = jwt != null ? jwt.getClaim("email_verified") : null;
-        String phoneNumber = jwt != null ? jwt.getClaimAsString("phone_number") : null;
+        String firstName = principal.getGivenName();
+        String lastName = principal.getFamilyName();
+        Boolean emailVerified = principal.getEmailVerified();
+        String phoneNumber = principal.getPhoneNumber();
 
         Long customerId = principal.getId();
         if (customerId == null || customerId == -1L) {

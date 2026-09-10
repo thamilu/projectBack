@@ -151,6 +151,12 @@ public class SecurityConfig {
      * admin realm. Role check first (cheap, and produces the existing 403 semantics for
      * an admin-realm-but-non-admin-role token); issuer check second, as the
      * defense-in-depth layer described above.
+     *
+     * <p>The issuer is read from the {@link PrincipalDetails} <em>principal</em>, not
+     * {@code auth.getCredentials()} — {@code ProviderManager} erases credentials after
+     * successful authentication by default, which runs before this authorization check
+     * ever executes, so a Jwt stashed in credentials always reads back as {@code null}
+     * here. See {@link PrincipalDetails#getIssuer()}.</p>
      */
     private org.springframework.security.authorization.AuthorizationManager<RequestAuthorizationContext> adminRealmIssuerMatches() {
         String requiredRole = "ROLE_" + appProperties.getSecurity().getRoles().getAdmin();
@@ -159,8 +165,8 @@ public class SecurityConfig {
             boolean hasAdminRole = auth != null && auth.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .anyMatch(requiredRole::equals);
-            boolean isAdminRealmToken = auth != null && auth.getCredentials() instanceof Jwt jwt
-                    && adminRealmIssuer.equals(jwt.getIssuer() != null ? jwt.getIssuer().toString() : null);
+            boolean isAdminRealmToken = auth != null && auth.getPrincipal() instanceof PrincipalDetails principal
+                    && adminRealmIssuer.equals(principal.getIssuer());
             return new AuthorizationDecision(hasAdminRole && isAdminRealmToken);
         };
     }
@@ -251,6 +257,14 @@ public class SecurityConfig {
                     .id(localUserId != null ? localUserId : -1L)
                     .email(emailClaim != null ? emailClaim : keycloakId)
                     .keycloakId(keycloakId)
+                    // Carried on the principal (not credentials — see PrincipalDetails.issuer
+                    // javadoc) so adminRealmIssuerMatches() can still read it after
+                    // ProviderManager erases credentials, post-authentication.
+                    .issuer(jwt.getIssuer() != null ? jwt.getIssuer().toString() : null)
+                    .givenName(jwt.getClaimAsString("given_name"))
+                    .familyName(jwt.getClaimAsString("family_name"))
+                    .phoneNumber(jwt.getClaimAsString("phone_number"))
+                    .emailVerified(jwt.getClaim("email_verified"))
                     .build();
 
             return new UsernamePasswordAuthenticationToken(principal, jwt, authorities);

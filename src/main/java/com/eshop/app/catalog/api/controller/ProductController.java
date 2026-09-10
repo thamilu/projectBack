@@ -6,6 +6,7 @@ import com.eshop.app.catalog.api.request.ProductCreateWithCategoryRequest;
 import com.eshop.app.catalog.api.request.ProductUpdateRequest;
 import com.eshop.app.catalog.api.response.ProductListResponse;
 import com.eshop.app.catalog.api.response.ProductResponse;
+import com.eshop.app.catalog.api.response.TopSellingProductResponse;
 import com.eshop.app.catalog.application.port.in.ProductUseCase;
 import com.eshop.app.core.kernel.ApiConstants;
 import com.eshop.app.inventory.api.request.StockUpdateRequest;
@@ -42,6 +43,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.List;
 
 /**
  * Product management REST API controller.
@@ -382,6 +384,14 @@ public class ProductController extends BaseController {
     public ResponseEntity<ApiResponse<PageResponse<ProductResponse>>> getFeaturedProducts(
             @ParameterObject Pageable pageable) {
         PageResponse<ProductResponse> response = productService.getFeaturedProducts(pageable);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @GetMapping("/top-selling")
+    @Operation(summary = "Get top-selling products", description = "Retrieve the catalog-wide top-selling products for public storefront widgets (e.g. the global search \"Trending Now\" panel). No authentication required.")
+    public ResponseEntity<ApiResponse<List<TopSellingProductResponse>>> getTopSellingProducts(
+            @RequestParam(name = "size", defaultValue = "10") @Min(1) @Max(ProductUseCase.MAX_TOP_PRODUCTS) int size) {
+        List<TopSellingProductResponse> response = productService.getPublicTopSellingProducts(size);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

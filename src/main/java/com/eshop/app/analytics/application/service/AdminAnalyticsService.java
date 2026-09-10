@@ -65,7 +65,11 @@ public class AdminAnalyticsService {
      * 
      * @return admin statistics with all aggregates
      */
-    @Cacheable(value = "adminStatistics", key = "'admin-stats'", unless = "#result == null", sync = true)
+    // `sync = true` (prevents cache-stampede under concurrent misses) is not supported
+    // together with `unless` by Spring's caching abstraction — throws IllegalStateException
+    // on every invocation. Keeping `sync` for the stampede protection; a null result
+    // simply won't populate the cache entry's value either way.
+    @Cacheable(value = "adminStatistics", key = "'admin-stats'", sync = true)
     public AdminStatistics getAdminStatistics() {
         log.debug("Calculating admin statistics with parallel execution");
 
@@ -158,7 +162,9 @@ public class AdminAnalyticsService {
      * @param days number of days to include
      * @return daily sales data
      */
-    @Cacheable(value = "dailySalesData", key = "#days", unless = "#result == null || #result.isEmpty()", sync = true)
+    // `sync = true` + `unless` is unsupported by Spring's caching abstraction (throws
+    // IllegalStateException on every call) — see getAdminStatistics() above.
+    @Cacheable(value = "dailySalesData", key = "#days", sync = true)
     public List<Map<String, Object>> getDailySalesData(int days) {
         LocalDateTime endDate = LocalDateTime.now();
         LocalDateTime startDate = endDate.minusDays(days);
@@ -182,7 +188,9 @@ public class AdminAnalyticsService {
      * 
      * @return category revenue map
      */
-    @Cacheable(value = "revenueByCategory", unless = "#result == null || #result.isEmpty()", sync = true)
+    // `sync = true` + `unless` is unsupported by Spring's caching abstraction (throws
+    // IllegalStateException on every call) — see getAdminStatistics() above.
+    @Cacheable(value = "revenueByCategory", sync = true)
     public List<Map<String, Object>> getRevenueByCategory() {
         log.debug("Fetching revenue by category");
         return analyticsOrderRepository.getRevenueByCategory();

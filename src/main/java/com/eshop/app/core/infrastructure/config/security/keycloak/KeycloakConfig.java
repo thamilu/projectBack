@@ -136,6 +136,19 @@ public class KeycloakConfig {
     public String getAdminClientId() { return admin == null ? null : admin.getClientId(); }
     public String getAdminUsername() { return admin == null ? null : admin.getUsername(); }
     public String getAdminPassword() { return admin == null ? null : admin.getPassword(); }
+    public String getAdminClientSecret() { return admin == null ? null : admin.getClientSecret(); }
+
+    /** Realm the admin service-account client authenticates against. Falls back to the
+     *  main {@link #realm} only if no dedicated admin realm is configured — production
+     *  and dev both configure a separate "eshop-admin" realm (see keycloak-import/
+     *  eshop-admin-realm.json), which is where the {@code eshop-admin-backend} client
+     *  and its realm-admin service account actually live. */
+    public String getAdminRealm() {
+        if (admin != null && admin.getRealm() != null && !admin.getRealm().isBlank()) {
+            return admin.getRealm();
+        }
+        return realm;
+    }
 
     @Override
     public String toString() {
@@ -152,21 +165,29 @@ public class KeycloakConfig {
         private final String username;
         private final String password;
         private final String clientId;
+        private final String clientSecret;
+        private final String realm;
 
-        public Admin(String username, String password, String clientId) {
+        public Admin(String username, String password, String clientId,
+                     @DefaultValue("") String clientSecret, @DefaultValue("") String realm) {
             this.username = username;
             this.password = password;
             this.clientId = clientId;
+            this.clientSecret = clientSecret;
+            this.realm = realm;
         }
 
         // package-private access only
         String getUsername() { return username; }
         String getPassword() { return password; }
         String getClientId() { return clientId; }
+        String getClientSecret() { return clientSecret; }
+        String getRealm() { return realm; }
 
         @Override
         public String toString() {
-            return "Admin{username='" + username + "', password='***REDACTED***', clientId='" + clientId + "'}";
+            return "Admin{username='" + username + "', password='***REDACTED***', clientId='" + clientId
+                + "', clientSecret='***REDACTED***', realm='" + realm + "'}";
         }
     }
 }

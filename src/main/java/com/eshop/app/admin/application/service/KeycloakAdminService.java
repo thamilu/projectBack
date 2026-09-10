@@ -72,16 +72,21 @@ public class KeycloakAdminService {
     private Mono<AdminTokenHolder> fetchAdminTokenHolder() {
         log.debug("Requesting admin token (cache miss or expired)");
 
+        // eshop-admin-backend is a confidential service-account client scoped to the
+        // eshop-admin realm (see keycloak-import/eshop-admin-realm.json), not a client
+        // in Keycloak's own "master" realm — and it has directAccessGrantsEnabled=false,
+        // so a "password" grant is rejected. Match KeycloakAdminClientConfig: authenticate
+        // via client_credentials against the eshop-admin realm.
         String tokenUrl = String.format(
-            "%s/realms/master/protocol/openid-connect/token",
-            keycloakConfig.getAuthServerUrl()
+            "%s/realms/%s/protocol/openid-connect/token",
+            keycloakConfig.getAuthServerUrl(),
+            keycloakConfig.getAdminRealm()
         );
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-        formData.add("grant_type", "password");
+        formData.add("grant_type", "client_credentials");
         formData.add("client_id", keycloakConfig.getAdminClientId());
-        formData.add("username", keycloakConfig.getAdminUsername());
-        formData.add("password", keycloakConfig.getAdminPassword());
+        formData.add("client_secret", keycloakConfig.getAdminClientSecret());
 
         return webClient.post()
                 .uri(tokenUrl)

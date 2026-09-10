@@ -1,6 +1,5 @@
 package com.eshop.app.realtime.infrastructure.config;
 
-import com.corundumstudio.socketio.AuthorizationListener;
 import com.corundumstudio.socketio.AuthorizationResult;
 import com.corundumstudio.socketio.HandshakeData;
 import com.corundumstudio.socketio.SocketConfig;

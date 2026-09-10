@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import jakarta.annotation.PreDestroy;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
 
 /**
  * Managed Keycloak admin client bean.
@@ -23,15 +25,30 @@ public class KeycloakAdminClientConfig {
     @Bean
     @ConditionalOnProperty(name = "keycloak.admin.enabled", havingValue = "true", matchIfMissing = true)
     public Keycloak keycloakAdminClient(KeycloakConfig config) {
-        log.info("Initializing Keycloak admin client for realm: {}", config.getRealm());
+        log.info("Initializing Keycloak admin client for realm: {}", config.getAdminRealm());
+
+        // eshop-admin-backend is a confidential service-account client (see
+        // keycloak-import/eshop-admin-realm.json: publicClient=false,
+        // directAccessGrantsEnabled=false, serviceAccountsEnabled=true with the
+        // realm-management "realm-admin" role) living in the eshop-admin realm, not
+        // the eshop realm. It must authenticate via client_credentials + client
+        // secret, not a username/password "password" grant — Keycloak rejects
+        // password grants for clients with direct access grants disabled (401).
+        // Registers CustomKeycloakJacksonProvider so the admin REST client tolerates
+        // fields the running Keycloak server sends that this keycloak-admin-client
+        // version's DTOs don't yet know about (e.g. FeatureRepresentation.deprecated) —
+        // Keycloak's server release cadence outpaces the admin-client artifact's.
+        Client resteasyClient = ClientBuilder.newBuilder()
+            .register(new CustomKeycloakJacksonProvider())
+            .build();
 
         this.keycloakAdminClient = KeycloakBuilder.builder()
             .serverUrl(config.getAuthServerUrl())
-            .realm(config.getRealm())
+            .realm(config.getAdminRealm())
             .clientId(config.getAdminClientId())
-            .username(config.getAdminUsername())
-            .password(config.getAdminPassword())
-            .grantType("password")
+            .clientSecret(config.getAdminClientSecret())
+            .grantType("client_credentials")
+            .resteasyClient(resteasyClient)
             .build();
 
         try {

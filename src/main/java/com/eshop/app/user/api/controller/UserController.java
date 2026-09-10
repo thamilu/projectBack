@@ -41,7 +41,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -145,24 +144,32 @@ public class UserController {
         log.warn("Principal {} has missing local ID. Attempting last-resort resolution.",
                 principalDetails.getEmail());
 
-        if (authentication.getCredentials() instanceof Jwt jwt) {
-            try {
-                userId = identitySyncUseCase.syncUserFromKeycloak(
-                        jwt.getSubject(),
-                        jwt.getClaimAsString("email"),
-                        jwt.getClaimAsString("given_name"),
-                        jwt.getClaimAsString("family_name"),
-                        jwt.getClaimAsString("phone_number"),
-                        jwt.getClaim("email_verified"));
-                log.info("[HARDEN] Resolved local identity for user {} as ID: {}", principalDetails.getEmail(),
-                        userId);
-            } catch (Exception e) {
-                // [HARDEN] Log full context for backend diagnosis without exposing internal
-                // details to client
-                log.error("[HARDEN] Last-resort identity resolution failed for email={} sub={} | error={}",
-                        principalDetails.getEmail(), jwt.getSubject(), e.getMessage());
-                return null;
-            }
+        // Resolved from PrincipalDetails (populated once, correctly, in
+        // SecurityConfig#jwtAuthenticationConverter) — NOT authentication.getCredentials(),
+        // which is always null here: ProviderManager erases credentials after
+        // authentication succeeds, before this method ever runs. See
+        // PrincipalDetails#getIssuer() javadoc. keycloakId is required for identity sync;
+        // without it there's nothing to resolve against.
+        if (principalDetails.getKeycloakId() == null || principalDetails.getKeycloakId().isBlank()) {
+            return userId;
+        }
+
+        try {
+            userId = identitySyncUseCase.syncUserFromKeycloak(
+                    principalDetails.getKeycloakId(),
+                    principalDetails.getEmail(),
+                    principalDetails.getGivenName(),
+                    principalDetails.getFamilyName(),
+                    principalDetails.getPhoneNumber(),
+                    principalDetails.getEmailVerified());
+            log.info("[HARDEN] Resolved local identity for user {} as ID: {}", principalDetails.getEmail(),
+                    userId);
+        } catch (Exception e) {
+            // [HARDEN] Log full context for backend diagnosis without exposing internal
+            // details to client
+            log.error("[HARDEN] Last-resort identity resolution failed for email={} sub={} | error={}",
+                    principalDetails.getEmail(), principalDetails.getKeycloakId(), e.getMessage());
+            return null;
         }
         return userId;
     }

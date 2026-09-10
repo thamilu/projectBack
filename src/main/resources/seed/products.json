@@ -20,5 +20,89 @@
     "brandName": "Nike",
     "storeName": "Tech Retail Store",
     "tags": ["sale"]
+  },
+  {
+    "name": "Compact Smartphone",
+    "sku": "PHONE-COMPACT-001",
+    "price": 799.00,
+    "discountPrice": 699.00,
+    "description": "Feature-packed smartphone with a bright display and all-day battery life.",
+    "categoryName": "Smartphones",
+    "brandName": "Apple",
+    "storeName": "Tech Retail Store",
+    "tags": ["new"],
+    "featured": true,
+    "imageUrls": ["/images/products/iphone15.png"]
+  },
+  {
+    "name": "Running Sports Shoes",
+    "sku": "SHOES-RUN-001",
+    "price": 139.00,
+    "discountPrice": 99.00,
+    "description": "Lightweight athletic sneakers built for everyday training runs.",
+    "categoryName": "Men's Sports Shoes",
+    "storeName": "FlexiMart",
+    "tags": ["sale", "popular"],
+    "featured": true,
+    "imageUrls": ["/images/products/nike.png"]
+  },
+  {
+    "name": "Wireless Bluetooth Headphones",
+    "sku": "AUDIO-WBH-001",
+    "price": 299.00,
+    "discountPrice": 249.00,
+    "description": "Over-ear noise-cancelling headphones with premium sound.",
+    "categoryName": "Speakers",
+    "brandName": "Sony",
+    "storeName": "Tech Retail Store",
+    "tags": ["popular"],
+    "featured": true,
+    "imageUrls": ["/images/products/sony.png"]
+  },
+  {
+    "name": "Ultra-Slim Laptop",
+    "sku": "COMPUTE-USL-001",
+    "price": 1099.00,
+    "discountPrice": 999.00,
+    "description": "Ultra-light, ultra-fast portable laptop for work and travel.",
+    "categoryName": "Laptops",
+    "storeName": "Tech Retail Store",
+    "tags": ["new"],
+    "featured": true,
+    "imageUrls": ["/images/products/macbook.png"]
+  },
+  {
+    "name": "Smart Fitness Watch",
+    "sku": "WEAR-SFW-001",
+    "price": 349.00,
+    "discountPrice": 299.00,
+    "description": "Advanced fitness tracking and notifications on your wrist.",
+    "categoryName": "Smart Watches",
+    "brandName": "Apple",
+    "storeName": "Tech Retail Store",
+    "tags": ["popular"],
+    "imageUrls": ["/images/products/applewatch.png"]
+  },
+  {
+    "name": "Mirrorless Digital Camera",
+    "sku": "CAM-MDC-001",
+    "price": 899.00,
+    "discountPrice": 799.00,
+    "description": "Mirrorless camera with a high-resolution sensor for sharp, detailed shots.",
+    "categoryName": "Mirrorless",
+    "storeName": "Tech Retail Store",
+    "tags": ["new"],
+    "imageUrls": ["/images/products/canon.png"]
+  },
+  {
+    "name": "Weatherproof Travel Backpack",
+    "sku": "BAG-WTB-001",
+    "price": 79.00,
+    "discountPrice": 59.00,
+    "description": "Multi-compartment weatherproof backpack built for travel.",
+    "categoryName": "Handbags",
+    "storeName": "FlexiMart",
+    "tags": ["sale"],
+    "imageUrls": ["/images/products/backpack.png"]
   }
 ]

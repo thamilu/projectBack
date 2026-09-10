@@ -96,6 +96,15 @@ public interface ProductUseCase {
     List<TopSellingProductResponse> getTopSellingProducts(
             @Min(1) @Max(MAX_TOP_PRODUCTS) int limit);
 
+    /**
+     * Same catalog-wide top-selling list as {@link #getTopSellingProducts(int)}, but for
+     * unauthenticated storefront widgets (e.g. the global search "Trending Now" panel) — this
+     * one is {@code permitAll()} rather than gated to admin/seller/customer, since the data
+     * returned is generic catalog info with no per-user or per-seller sensitivity.
+     */
+    List<TopSellingProductResponse> getPublicTopSellingProducts(
+            @Min(1) @Max(MAX_TOP_PRODUCTS) int limit);
+
     // Additional convenience query methods used by controllers/services
     ProductResponse getProductBySku(@NotBlank String sku);
 

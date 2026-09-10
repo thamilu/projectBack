@@ -3,6 +3,7 @@ package com.eshop.app.seed.seeders;
 import com.eshop.app.catalog.domain.repository.ProductRepository;
 import com.eshop.app.catalog.domain.entity.ProductStatus;
 import com.eshop.app.catalog.domain.entity.Product;
+import com.eshop.app.catalog.domain.entity.ProductImage;
 import com.eshop.app.catalog.domain.entity.Category;
 import com.eshop.app.catalog.domain.entity.Brand;
 import com.eshop.app.store.domain.entity.Store;
@@ -72,7 +73,7 @@ public class ProductSeeder extends BaseSeeder<Product, SeederContext> {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
 
-        return Optional.of(Product.builder()
+        Product product = Product.builder()
                 .name(cfg.name())
                 .description(cfg.description())
                 .sku(cfg.sku())
@@ -85,12 +86,32 @@ public class ProductSeeder extends BaseSeeder<Product, SeederContext> {
                 .brand(brand)
                 .store(store)
                 .tags(tags)
-                // .featured(cfg.isFeatured()) // Missed in model
-                .featured(false)
+                // Previously hardcoded false regardless of the JSON — the homepage's
+                // "Featured Products" section (filters on featured=true) therefore
+                // always fell through to 100% demo/placeholder data, no matter how
+                // large the seeded catalog was. Now driven by the seed file.
+                .featured(Boolean.TRUE.equals(cfg.featured()))
                 // .status(cfg.isActive() ? ProductStatus.ACTIVE : ProductStatus.INACTIVE) //
                 // Missed in model
                 .status(ProductStatus.ACTIVE)
-                .build());
+                .build();
+
+        // Images are a separate relation (ProductImage), not a scalar column —
+        // addImage() must run after build() since it mutates the built instance
+        // (adds to its `images` list and sets `primaryImage` on the first call).
+        // cascade=ALL on Product.images means these persist together with the
+        // product on the saveAll() below — no separate repository needed.
+        List<String> imageUrls = Optional.ofNullable(cfg.imageUrls()).orElse(Collections.emptyList());
+        for (int i = 0; i < imageUrls.size(); i++) {
+            product.addImage(ProductImage.builder()
+                    .url(imageUrls.get(i))
+                    .altText(cfg.name())
+                    .sortOrder(i)
+                    .isPrimary(i == 0)
+                    .build());
+        }
+
+        return Optional.of(product);
     }
 
 }

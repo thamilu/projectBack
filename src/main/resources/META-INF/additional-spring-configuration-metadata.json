@@ -164,6 +164,17 @@
       "defaultValue": "admin-cli"
     },
     {
+      "name": "keycloak.admin.client-secret",
+      "type": "java.lang.String",
+      "description": "Client secret for the confidential eshop-admin-backend service-account client (client_credentials grant), stored in secrets manager"
+    },
+    {
+      "name": "keycloak.admin.realm",
+      "type": "java.lang.String",
+      "description": "Realm the admin service-account client authenticates against (separate from keycloak.realm)",
+      "defaultValue": "eshop-admin"
+    },
+    {
       "name": "keycloak.admin.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Keycloak admin client for user management operations",

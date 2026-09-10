@@ -1056,7 +1056,17 @@ public class DefaultProductService implements ProductUseCase {
     @Transactional(readOnly = true)
     @PreAuthorize(IS_ADMIN_OR_SELLER_OR_CUSTOMER)
     public List<TopSellingProductResponse> getTopSellingProducts(int limit) {
-        List<Product> products = productRepository.findTopSellingProducts(PageRequest.of(0, limit));
+        return mapToTopSellingResponses(productRepository.findTopSellingProducts(PageRequest.of(0, limit)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    @PreAuthorize("permitAll()")
+    public List<TopSellingProductResponse> getPublicTopSellingProducts(int limit) {
+        return mapToTopSellingResponses(productRepository.findTopSellingProducts(PageRequest.of(0, limit)));
+    }
+
+    private List<TopSellingProductResponse> mapToTopSellingResponses(List<Product> products) {
         // Map to DTOs (mock sales data)
         List<TopSellingProductResponse> result = new ArrayList<>();
         int rank = 1;

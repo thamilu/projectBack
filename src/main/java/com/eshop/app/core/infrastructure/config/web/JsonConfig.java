@@ -58,7 +58,7 @@ public class JsonConfig {
         mapper.disable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);
 
         // Null handling
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL);
         applySecurityConstraints(mapper);
         return mapper;
     }

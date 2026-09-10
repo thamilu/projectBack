@@ -218,7 +218,14 @@ dependencies {
 	testAnnotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
 	// Keycloak admin client and RESTEasy providers
-	implementation 'org.keycloak:keycloak-admin-client:23.0.3'
+	// Bumped from 23.0.3 toward the Keycloak server image (quay.io/keycloak/keycloak:26.7.1,
+	// see docs/setup/KEYCLOAK_ACCESS.md) — 26.0.5 is the newest release actually published
+	// to Maven Central (Keycloak's later 26.x patch releases are not). The version gap was
+	// masking a real deserialization bug: CustomKeycloakJacksonProvider already exists to
+	// make the admin client tolerate unknown fields from newer server responses, but was
+	// never registered with the RESTEasy client — see the .resteasyClient(...) wiring in
+	// KeycloakAdminClientConfig, which now actually attaches it.
+	implementation 'org.keycloak:keycloak-admin-client:26.0.5'
 	implementation 'org.jboss.resteasy:resteasy-client:6.2.5.Final'
 	implementation 'org.jboss.resteasy:resteasy-jackson2-provider:6.2.5.Final'
 
@@ -272,6 +279,18 @@ tasks.named('bootRun').configure {
     } else {
         println "⚠️ .env file not found. System environment variables will be used."
     }
+
+    // Diagnostics for the recurring native JVM crash (0xC0000005 / access
+    // violation, "unknown" faulting module — consistent with a HotSpot C2 JIT
+    // miscompile) seen on this machine. No hs_err_pid log has ever turned up
+    // for it in any of the usual locations, which is itself unusual since
+    // HotSpot writes one automatically on a fatal error — pinning an explicit,
+    // stable path rules out a silently-failing default (bad cwd, AV deleting
+    // it, etc.) and gives the next crash a real stack/frame to diagnose from
+    // instead of just an exit code. Remove once root-caused.
+    jvmArgs += [
+        "-XX:ErrorFile=${projectDir}/logs/crash/hs_err_pid%p.log"
+    ]
 }
 
 tasks.named('test').configure {

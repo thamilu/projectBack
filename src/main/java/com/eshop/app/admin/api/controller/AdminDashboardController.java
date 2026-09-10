@@ -27,7 +27,6 @@ import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -80,9 +79,9 @@ public class AdminDashboardController {
     @PreAuthorize("hasRole(@appProperties.security.roles.admin)")
     @Operation(summary = "Get Admin Statistics", description = "Aggregated system statistics optmmmzed with parallel query executmon")
     public ResponseEntity<ApiResponse<AdminStatistics>> getAdminStatistics(
-            @AuthenticationPrincipal Jwt jwt) {
+            @AuthenticationPrincipal PrincipalDetails principal) {
 
-        log.info("Admin statistics requested by user: {}", jwt.getClaimAsString("email"));
+        log.info("Admin statistics requested by user: {}", principal.getEmail());
         AdminStatistics statistics = adminAnalyticsService.getAdminStatistics();
 
         return ResponseEntity.ok()
